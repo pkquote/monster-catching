@@ -29,4 +29,7 @@ echo "== Tests"
 	| sed 's/\x1b\[[0-9;]*m//g' | grep -E "Statistics|FAILED|Exit code" || true
 "$GODOT" --headless --path . -s res://addons/gdUnit4/bin/GdUnitCmdTool.gd \
 	--add res://tests --ignoreHeadlessMode -c >/dev/null 2>&1
+
+echo "== Compendium"
+"$GODOT" --headless --path . --script res://tools/generate_compendium.gd 2>&1 | grep -E "^Wrote" || true
 echo "All checks passed."

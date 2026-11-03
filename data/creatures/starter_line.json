@@ -7,7 +7,8 @@
       "catch_rate": 0.4, "xp_yield": 60,
       "learnset": [
         { "level": 1, "move": "tackle" }, { "level": 1, "move": "splash_jab" },
-        { "level": 5, "move": "drench" }, { "level": 9, "move": "riptide" }
+        { "level": 5, "move": "drench" }, { "level": 9, "move": "riptide" },
+        { "level": 12, "move": "taunting_howl" }
       ],
       "growth": [
         { "level": 16, "affinity": "striker", "into": "torrentusk" },

@@ -5,6 +5,9 @@ field states with combo reactions, behavior-shaped growth, and N-vs-M battles wi
 
 Design spec: [documentation/specs/2026-11-03-monster-rpg-design.md](documentation/specs/2026-11-03-monster-rpg-design.md)
 
+Content reference (every creature, move, item, status, field state, reaction, tamer and encounter):
+[documentation/compendium.md](documentation/compendium.md). It is generated from `data/`, so don't edit it by hand.
+
 ## Layout
 
 | Folder | Contents |
@@ -14,7 +17,7 @@ Design spec: [documentation/specs/2026-11-03-monster-rpg-design.md](documentatio
 | `data/` | All content as JSON (creatures, moves, items, tamers, encounters, ...). |
 | `dialogue/` | Dialogue Manager `.dialogue` files for conversations and cutscenes. |
 | `tests/` | gdUnit4 suites. |
-| `tools/` | Headless scripts (data validator, dialogue checker). |
+| `tools/` | Headless scripts (data validator, dialogue checker, compendium generator). |
 | `addons/` | gdUnit4 6.2.3, Dialogue Manager 4.2.0. |
 
 ## Adding content
@@ -26,7 +29,14 @@ Drop entries into any `.json` file under a category folder, e.g. `data/moves/my_
 ```
 
 Every field is checked against `core/data/schemas.gd`. New effect behaviors are added as an `op`
-in `DataSchemas.EFFECT_OPS` (and as a handler in the battle engine).
+in `DataSchemas.EFFECT_OPS` (and as a handler in the battle engine). When you add an op, also give it a
+readable description in `tools/generate_compendium.gd` (`_effect()`).
+
+After changing content, regenerate the compendium (`scripts/check.sh` does this too):
+
+```bash
+godot --headless --path . --script res://tools/generate_compendium.gd
+```
 
 ## Checks
 

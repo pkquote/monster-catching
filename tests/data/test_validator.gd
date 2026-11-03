@@ -4,7 +4,8 @@ extends GdUnitTestSuite
 
 func _base() -> RawData:
 	var raw := RawData.new()
-	raw.add_entry("types", {"id": "water", "name": "Water"})
+	raw.add_entry("types", {"id": "water", "name": "Water", "description": "Wet.",
+		"pros": ["Splashy"], "cons": ["Soggy"]})
 	for aff in ["striker", "warden", "catalyst", "trickster"]:
 		raw.add_entry("affinities", {"id": aff, "name": aff.capitalize()})
 	raw.add_entry("statuses", {"id": "burn", "name": "Burn", "turns": 3,
@@ -69,6 +70,15 @@ func test_duplicate_ids() -> void:
 	var raw := _base()
 	raw.add_entry("moves", _move(), "data/moves/other.json")
 	assert_str(_errors_for(raw)).contains("duplicate id")
+
+
+func test_types_need_summary_fields() -> void:
+	var raw := _base()
+	raw.add_entry("types", {"id": "fire", "name": "Fire", "pros": []})
+	var errs := _errors_for(raw)
+	assert_str(errs).contains("[types:fire] description: missing required field")
+	assert_str(errs).contains("[types:fire] pros: expected at least 1 element(s)")
+	assert_str(errs).contains("[types:fire] cons: missing required field")
 
 
 func test_bad_id_format() -> void:

@@ -75,8 +75,46 @@ func _build() -> void:
 
 
 func _types() -> void:
-	_section("Types", "Damage multiplier when the **row** type attacks the **column** type. Blank means x1.")
-	var ids := _sorted_ids("types")
+	var ids := Array(db.ids("types"))  # data order, so related types stay together
+	var max_types := int(DataSchemas.ENTRY.creatures.types.max)
+	var combos := ids.size()
+	if max_types >= 2:
+		combos += ids.size() * (ids.size() - 1) / 2
+	var used := {}
+	for cid in db.ids("creatures"):
+		var key := " / ".join(Array(db.creature(cid).types).map(func(t): return db.type_def(t).name))
+		used[key] = true
+	_section("Types", "%d types. Creatures can have up to %d, giving %d possible single and dual types; %d are in use so far." % [
+		ids.size(), max_types, combos, used.size()])
+	_w("### Type guide")
+	_w("")
+	_w("*Pros* and *cons* are written in `data/types.json`. The matchup lines are computed from the chart below.")
+	_w("")
+	for id in ids:
+		var t := db.type_def(id)
+		_w("#### %s" % t.name)
+		_w("")
+		_w("*%s*" % t.description)
+		_w("")
+		_w("- **Pros:** %s" % "; ".join(t.pros))
+		_w("- **Cons:** %s" % "; ".join(t.cons))
+		_w("- **Hits hard:** %s" % _type_list(ids.filter(func(d): return t.multiplier_against(d) > 1.0)))
+		_w("- **Hits weakly:** %s" % _type_list(ids.filter(func(d): return t.multiplier_against(d) > 0.0 and t.multiplier_against(d) < 1.0)))
+		var no_effect := ids.filter(func(d): return t.multiplier_against(d) == 0.0)
+		if not no_effect.is_empty():
+			_w("- **No effect on:** %s" % _type_list(no_effect))
+		_w("- **Weak to:** %s" % _type_list(ids.filter(func(a): return db.type_def(a).multiplier_against(id) > 1.0)))
+		_w("- **Resists:** %s" % _type_list(ids.filter(func(a): var m := db.type_def(a).multiplier_against(id); return m > 0.0 and m < 1.0)))
+		var immune := ids.filter(func(a): return db.type_def(a).multiplier_against(id) == 0.0)
+		if not immune.is_empty():
+			_w("- **Immune to:** %s" % _type_list(immune))
+		var members := Array(db.ids("creatures")).filter(func(cid): return db.creature(cid).types.has(id))
+		_w("- **Creatures:** %s" % _or_dash(", ".join(members.map(func(cid): return db.creature(cid).name))))
+		_w("")
+	_w("### Type chart")
+	_w("")
+	_w("Damage multiplier when the **row** type attacks the **column** type. Blank means x1.")
+	_w("")
 	var header := "| Attacker \\ Defender |"
 	var rule := "|---|"
 	for id in ids:
@@ -91,6 +129,10 @@ func _types() -> void:
 			row += " %s |" % ("" if m == 1.0 else "x" + _num(m))
 		_w(row)
 	_w("")
+
+
+func _type_list(ids: Array) -> String:
+	return _or_dash(", ".join(ids.map(func(t): return db.type_def(t).name)))
 
 
 func _statuses() -> void:

@@ -1,12 +1,88 @@
 {
   "schema": 1,
   "entries": [
-    { "id": "neutral", "name": "Neutral", "matchups": { "earth": 0.75 } },
-    { "id": "fire", "name": "Fire", "matchups": { "grass": 2.0, "ice": 2.0, "water": 0.5, "fire": 0.5, "earth": 0.5 } },
-    { "id": "water", "name": "Water", "matchups": { "fire": 2.0, "earth": 2.0, "water": 0.5, "grass": 0.5 } },
-    { "id": "grass", "name": "Grass", "matchups": { "water": 2.0, "earth": 2.0, "fire": 0.5, "grass": 0.5 } },
-    { "id": "electric", "name": "Electric", "matchups": { "water": 2.0, "earth": 0.0, "electric": 0.5, "grass": 0.5 } },
-    { "id": "ice", "name": "Ice", "matchups": { "grass": 2.0, "earth": 2.0, "fire": 0.5, "ice": 0.5 } },
-    { "id": "earth", "name": "Earth", "matchups": { "fire": 2.0, "electric": 2.0, "grass": 0.5 } }
+    { "id": "neutral", "name": "Neutral",
+      "description": "Ordinary creatures relying on plain strength and instinct, with no elemental or otherworldly nature.",
+      "pros": ["Hits almost everything for normal damage", "Has only one weakness", "Pairs with any second type without adding weaknesses"],
+      "cons": ["Never hits anything for bonus damage", "Its blows glance off Earth, Iron and Ghost", "Unguarded minds make it weak to Mental"],
+      "matchups": { "earth": 0.75, "iron": 0.75, "ghost": 0.5 } },
+
+    { "id": "fire", "name": "Fire",
+      "description": "Heat, flame and fury. Burns living things and melts metal.",
+      "pros": ["Strong against Grass, Ice and Iron", "Resists Fire, Grass, Ice and Iron", "Natural fit for Scorched-field setups"],
+      "cons": ["Weak to Water and Earth", "Fizzles against Water, Earth and other Fire"],
+      "matchups": { "grass": 2.0, "ice": 2.0, "iron": 2.0, "water": 0.5, "fire": 0.5, "earth": 0.5 } },
+
+    { "id": "water", "name": "Water",
+      "description": "Tides, rain and pressure. Quenches flame, erodes stone and shorts out machines.",
+      "pros": ["Strong against Fire, Earth and Virtual", "Resists Fire, Water and Iron", "Sets up Soaked for Conduction and Icebound"],
+      "cons": ["Weak to Grass and Electric", "Absorbed by Grass and other Water"],
+      "matchups": { "fire": 2.0, "earth": 2.0, "virtual": 2.0, "water": 0.5, "grass": 0.5 } },
+
+    { "id": "grass", "name": "Grass",
+      "description": "Roots, vines and growth. Drinks water and splits stone, but burns easily.",
+      "pros": ["Strong against Water and Earth", "Resists Water, Grass, Electric and Earth", "Overgrown fields slow the enemy and fuel Wildfire"],
+      "cons": ["Weak to Fire and Ice", "Can't cut through Fire, Grass or Iron"],
+      "matchups": { "water": 2.0, "earth": 2.0, "fire": 0.5, "grass": 0.5, "iron": 0.5 } },
+
+    { "id": "electric", "name": "Electric",
+      "description": "Lightning and current. Races through water and metal, and overloads machines.",
+      "pros": ["Strong against Water, Iron and Virtual", "Resists Electric, Iron and Virtual", "Triggers Conduction on Soaked fields"],
+      "cons": ["Weak to Earth", "Has no effect at all on Earth", "Dissipates into Grass and other Electric"],
+      "matchups": { "water": 2.0, "iron": 2.0, "virtual": 2.0, "electric": 0.5, "grass": 0.5, "earth": 0.0 } },
+
+    { "id": "ice", "name": "Ice",
+      "description": "Frost and cold. Freezes plants and cracks the ground, but melts under heat.",
+      "pros": ["Strong against Grass and Earth", "Resists Ice", "Frosted fields set up Icebound and Steam"],
+      "cons": ["Weak to Fire and Iron", "Struggles against Fire, Ice and Iron"],
+      "matchups": { "grass": 2.0, "earth": 2.0, "fire": 0.5, "ice": 0.5, "iron": 0.5 } },
+
+    { "id": "earth", "name": "Earth",
+      "description": "Stone, sand and soil. Grounds lightning, smothers fire and crushes metal.",
+      "pros": ["Strong against Fire, Electric and Iron", "Immune to Electric", "Resists Neutral and Fire"],
+      "cons": ["Weak to Water, Grass and Ice", "Can't touch what isn't solid: weak against Ghost and Grass"],
+      "matchups": { "fire": 2.0, "electric": 2.0, "iron": 2.0, "grass": 0.5, "ghost": 0.5 } },
+
+    { "id": "magic", "name": "Magic",
+      "description": "Arcane power, runes and enchantment. Banishes spirits and wards off darkness.",
+      "pros": ["Strong against Ghost and Dark", "Resists Magic, Dark and Virtual"],
+      "cons": ["Weak to Mental and Iron (focus breaks spells; cold iron grounds them)", "Can't overcome Iron, Virtual or other Magic"],
+      "matchups": { "ghost": 2.0, "dark": 2.0, "iron": 0.5, "magic": 0.5, "virtual": 0.5 } },
+
+    { "id": "mental", "name": "Mental",
+      "description": "Psychic force, willpower and illusion. Overwhelms simple minds and disrupts spellcasting.",
+      "pros": ["Strong against Magic and Neutral", "Resists Mental"],
+      "cons": ["Weak to Ghost, Dark and Virtual: fragile defensively", "Little effect on Iron, Dark, Virtual or other Mental"],
+      "matchups": { "magic": 2.0, "neutral": 2.0, "mental": 0.5, "iron": 0.5, "dark": 0.5, "virtual": 0.5 } },
+
+    { "id": "iron", "name": "Iron",
+      "description": "Metal, armour and machinery. A defensive wall that shatters ice and grounds magic.",
+      "pros": ["Resists Neutral, Grass, Ice, Magic, Mental, Dark, Light and Iron", "Strong against Ice and Magic"],
+      "cons": ["Weak to Fire, Electric, Earth and Virtual", "Few offensive targets; struggles against Fire, Water, Electric and Iron"],
+      "matchups": { "ice": 2.0, "magic": 2.0, "fire": 0.5, "water": 0.5, "electric": 0.5, "iron": 0.5 } },
+
+    { "id": "virtual", "name": "Virtual",
+      "description": "Digital constructs and living code. Hacks machines and floods minds with data.",
+      "pros": ["Strong against Iron and Mental", "Resists Magic, Mental and Virtual"],
+      "cons": ["Weak to Water, Electric and Ghost (shorts, surges, and things in the machine)", "Can't parse Magic; weak against Electric, Ghost and other Virtual"],
+      "matchups": { "iron": 2.0, "mental": 2.0, "magic": 0.5, "electric": 0.5, "ghost": 0.5, "virtual": 0.5 } },
+
+    { "id": "ghost", "name": "Ghost",
+      "description": "Spirits and echoes of the departed. Haunts minds and possesses machines; hard to strike physically.",
+      "pros": ["Strong against Mental and Virtual", "Resists Neutral, Earth and Virtual"],
+      "cons": ["Weak to Magic and Light", "Fades against Dark and Light"],
+      "matchups": { "mental": 2.0, "virtual": 2.0, "dark": 0.5, "light": 0.5 } },
+
+    { "id": "dark", "name": "Dark",
+      "description": "Shadow, stealth and fear. Clouds the mind and swallows light.",
+      "pros": ["Strong against Mental and Light", "Resists Mental, Ghost and Dark"],
+      "cons": ["Weak to Magic and Light", "Held back by Magic wards, Iron and other Dark"],
+      "matchups": { "mental": 2.0, "light": 2.0, "magic": 0.5, "iron": 0.5, "dark": 0.5 } },
+
+    { "id": "light", "name": "Light",
+      "description": "Radiance and purity. Dispels shadows and spirits, but glances off polished metal.",
+      "pros": ["Strong against Dark and Ghost", "Resists Ghost and Light", "Only one weakness"],
+      "cons": ["Weak to Dark: Light and Dark are each strong against the other", "Only two offensive targets; Iron and other Light resist it"],
+      "matchups": { "dark": 2.0, "ghost": 2.0, "iron": 0.5, "light": 0.5 } }
   ]
 }

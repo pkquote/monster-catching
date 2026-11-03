@@ -11,24 +11,209 @@
 | [Statuses](#statuses) | 4 |
 | [Field States](#field-states) | 5 |
 | [Reactions](#reactions) | 4 |
-| [Types](#types) | 7 |
+| [Types](#types) | 14 |
 | [Affinities](#affinities) | 4 |
 | [Tamers](#tamers) | 2 |
 | [Encounters](#encounters) | 1 |
 
 ## Types
 
+14 types. Creatures can have up to 2, giving 105 possible single and dual types; 8 are in use so far.
+
+### Type guide
+
+*Pros* and *cons* are written in `data/types.json`. The matchup lines are computed from the chart below.
+
+#### Neutral
+
+*Ordinary creatures relying on plain strength and instinct, with no elemental or otherworldly nature.*
+
+- **Pros:** Hits almost everything for normal damage; Has only one weakness; Pairs with any second type without adding weaknesses
+- **Cons:** Never hits anything for bonus damage; Its blows glance off Earth, Iron and Ghost; Unguarded minds make it weak to Mental
+- **Hits hard:** —
+- **Hits weakly:** Earth, Iron, Ghost
+- **Weak to:** Mental
+- **Resists:** —
+- **Creatures:** —
+
+#### Fire
+
+*Heat, flame and fury. Burns living things and melts metal.*
+
+- **Pros:** Strong against Grass, Ice and Iron; Resists Fire, Grass, Ice and Iron; Natural fit for Scorched-field setups
+- **Cons:** Weak to Water and Earth; Fizzles against Water, Earth and other Fire
+- **Hits hard:** Grass, Ice, Iron
+- **Hits weakly:** Fire, Water, Earth
+- **Weak to:** Water, Earth
+- **Resists:** Fire, Grass, Ice, Iron
+- **Creatures:** Emberkit
+
+#### Water
+
+*Tides, rain and pressure. Quenches flame, erodes stone and shorts out machines.*
+
+- **Pros:** Strong against Fire, Earth and Virtual; Resists Fire, Water and Iron; Sets up Soaked for Conduction and Icebound
+- **Cons:** Weak to Grass and Electric; Absorbed by Grass and other Water
+- **Hits hard:** Fire, Earth, Virtual
+- **Hits weakly:** Water, Grass
+- **Weak to:** Grass, Electric
+- **Resists:** Fire, Water, Iron
+- **Creatures:** Tidepup, Torrentusk, Mistcoil
+
+#### Grass
+
+*Roots, vines and growth. Drinks water and splits stone, but burns easily.*
+
+- **Pros:** Strong against Water and Earth; Resists Water, Grass, Electric and Earth; Overgrown fields slow the enemy and fuel Wildfire
+- **Cons:** Weak to Fire and Ice; Can't cut through Fire, Grass or Iron
+- **Hits hard:** Water, Earth
+- **Hits weakly:** Fire, Grass, Iron
+- **Weak to:** Fire, Ice
+- **Resists:** Water, Grass, Electric, Earth
+- **Creatures:** Sprigling
+
+#### Electric
+
+*Lightning and current. Races through water and metal, and overloads machines.*
+
+- **Pros:** Strong against Water, Iron and Virtual; Resists Electric, Iron and Virtual; Triggers Conduction on Soaked fields
+- **Cons:** Weak to Earth; Has no effect at all on Earth; Dissipates into Grass and other Electric
+- **Hits hard:** Water, Iron, Virtual
+- **Hits weakly:** Grass, Electric
+- **No effect on:** Earth
+- **Weak to:** Earth
+- **Resists:** Electric, Iron, Virtual
+- **Creatures:** Voltmoth
+
+#### Ice
+
+*Frost and cold. Freezes plants and cracks the ground, but melts under heat.*
+
+- **Pros:** Strong against Grass and Earth; Resists Ice; Frosted fields set up Icebound and Steam
+- **Cons:** Weak to Fire and Iron; Struggles against Fire, Ice and Iron
+- **Hits hard:** Grass, Earth
+- **Hits weakly:** Fire, Ice, Iron
+- **Weak to:** Fire, Iron
+- **Resists:** Ice
+- **Creatures:** Frostling, Mistcoil
+
+#### Earth
+
+*Stone, sand and soil. Grounds lightning, smothers fire and crushes metal.*
+
+- **Pros:** Strong against Fire, Electric and Iron; Immune to Electric; Resists Neutral and Fire
+- **Cons:** Weak to Water, Grass and Ice; Can't touch what isn't solid: weak against Ghost and Grass
+- **Hits hard:** Fire, Electric, Iron
+- **Hits weakly:** Grass, Ghost
+- **Weak to:** Water, Grass, Ice
+- **Resists:** Neutral, Fire
+- **Immune to:** Electric
+- **Creatures:** Pebblet, Torrentusk
+
+#### Magic
+
+*Arcane power, runes and enchantment. Banishes spirits and wards off darkness.*
+
+- **Pros:** Strong against Ghost and Dark; Resists Magic, Dark and Virtual
+- **Cons:** Weak to Mental and Iron (focus breaks spells; cold iron grounds them); Can't overcome Iron, Virtual or other Magic
+- **Hits hard:** Ghost, Dark
+- **Hits weakly:** Magic, Iron, Virtual
+- **Weak to:** Mental, Iron
+- **Resists:** Magic, Virtual, Dark
+- **Creatures:** —
+
+#### Mental
+
+*Psychic force, willpower and illusion. Overwhelms simple minds and disrupts spellcasting.*
+
+- **Pros:** Strong against Magic and Neutral; Resists Mental
+- **Cons:** Weak to Ghost, Dark and Virtual: fragile defensively; Little effect on Iron, Dark, Virtual or other Mental
+- **Hits hard:** Neutral, Magic
+- **Hits weakly:** Mental, Iron, Virtual, Dark
+- **Weak to:** Virtual, Ghost, Dark
+- **Resists:** Mental
+- **Creatures:** —
+
+#### Iron
+
+*Metal, armour and machinery. A defensive wall that shatters ice and grounds magic.*
+
+- **Pros:** Resists Neutral, Grass, Ice, Magic, Mental, Dark, Light and Iron; Strong against Ice and Magic
+- **Cons:** Weak to Fire, Electric, Earth and Virtual; Few offensive targets; struggles against Fire, Water, Electric and Iron
+- **Hits hard:** Ice, Magic
+- **Hits weakly:** Fire, Water, Electric, Iron
+- **Weak to:** Fire, Electric, Earth, Virtual
+- **Resists:** Neutral, Grass, Ice, Magic, Mental, Iron, Dark, Light
+- **Creatures:** —
+
+#### Virtual
+
+*Digital constructs and living code. Hacks machines and floods minds with data.*
+
+- **Pros:** Strong against Iron and Mental; Resists Magic, Mental and Virtual
+- **Cons:** Weak to Water, Electric and Ghost (shorts, surges, and things in the machine); Can't parse Magic; weak against Electric, Ghost and other Virtual
+- **Hits hard:** Mental, Iron
+- **Hits weakly:** Electric, Magic, Virtual, Ghost
+- **Weak to:** Water, Electric, Ghost
+- **Resists:** Magic, Mental, Virtual
+- **Creatures:** —
+
+#### Ghost
+
+*Spirits and echoes of the departed. Haunts minds and possesses machines; hard to strike physically.*
+
+- **Pros:** Strong against Mental and Virtual; Resists Neutral, Earth and Virtual
+- **Cons:** Weak to Magic and Light; Fades against Dark and Light
+- **Hits hard:** Mental, Virtual
+- **Hits weakly:** Dark, Light
+- **Weak to:** Magic, Light
+- **Resists:** Neutral, Earth, Virtual
+- **Creatures:** —
+
+#### Dark
+
+*Shadow, stealth and fear. Clouds the mind and swallows light.*
+
+- **Pros:** Strong against Mental and Light; Resists Mental, Ghost and Dark
+- **Cons:** Weak to Magic and Light; Held back by Magic wards, Iron and other Dark
+- **Hits hard:** Mental, Light
+- **Hits weakly:** Magic, Iron, Dark
+- **Weak to:** Magic, Light
+- **Resists:** Mental, Ghost, Dark
+- **Creatures:** —
+
+#### Light
+
+*Radiance and purity. Dispels shadows and spirits, but glances off polished metal.*
+
+- **Pros:** Strong against Dark and Ghost; Resists Ghost and Light; Only one weakness
+- **Cons:** Weak to Dark: Light and Dark are each strong against the other; Only two offensive targets; Iron and other Light resist it
+- **Hits hard:** Ghost, Dark
+- **Hits weakly:** Iron, Light
+- **Weak to:** Dark
+- **Resists:** Ghost, Light
+- **Creatures:** —
+
+### Type chart
+
 Damage multiplier when the **row** type attacks the **column** type. Blank means x1.
 
-| Attacker \ Defender | Earth | Electric | Fire | Grass | Ice | Neutral | Water |
-|---|---|---|---|---|---|---|---|
-| **Earth** |  | x2 | x2 | x0.5 |  |  |  |
-| **Electric** | x0 | x0.5 |  | x0.5 |  |  | x2 |
-| **Fire** | x0.5 |  | x0.5 | x2 | x2 |  | x0.5 |
-| **Grass** | x2 |  | x0.5 | x0.5 |  |  | x2 |
-| **Ice** | x2 |  | x0.5 | x2 | x0.5 |  |  |
-| **Neutral** | x0.75 |  |  |  |  |  |  |
-| **Water** | x2 |  | x2 | x0.5 |  |  | x0.5 |
+| Attacker \ Defender | Neutral | Fire | Water | Grass | Electric | Ice | Earth | Magic | Mental | Iron | Virtual | Ghost | Dark | Light |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| **Neutral** |  |  |  |  |  |  | x0.75 |  |  | x0.75 |  | x0.5 |  |  |
+| **Fire** |  | x0.5 | x0.5 | x2 |  | x2 | x0.5 |  |  | x2 |  |  |  |  |
+| **Water** |  | x2 | x0.5 | x0.5 |  |  | x2 |  |  |  | x2 |  |  |  |
+| **Grass** |  | x0.5 | x2 | x0.5 |  |  | x2 |  |  | x0.5 |  |  |  |  |
+| **Electric** |  |  | x2 | x0.5 | x0.5 |  | x0 |  |  | x2 | x2 |  |  |  |
+| **Ice** |  | x0.5 |  | x2 |  | x0.5 | x2 |  |  | x0.5 |  |  |  |  |
+| **Earth** |  | x2 |  | x0.5 | x2 |  |  |  |  | x2 |  | x0.5 |  |  |
+| **Magic** |  |  |  |  |  |  |  | x0.5 |  | x0.5 | x0.5 | x2 | x2 |  |
+| **Mental** | x2 |  |  |  |  |  |  | x2 | x0.5 | x0.5 | x0.5 |  | x0.5 |  |
+| **Iron** |  | x0.5 | x0.5 |  | x0.5 | x2 |  | x2 |  | x0.5 |  |  |  |  |
+| **Virtual** |  |  |  |  | x0.5 |  |  | x0.5 | x2 | x2 | x0.5 | x0.5 |  |  |
+| **Ghost** |  |  |  |  |  |  |  |  | x2 |  | x2 |  | x0.5 | x0.5 |
+| **Dark** |  |  |  |  |  |  |  | x0.5 | x2 | x0.5 |  |  | x0.5 | x2 |
+| **Light** |  |  |  |  |  |  |  |  |  | x0.5 |  | x2 | x2 | x0.5 |
 
 ## Statuses
 

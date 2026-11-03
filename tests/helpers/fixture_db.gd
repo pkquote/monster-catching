@@ -55,6 +55,7 @@ static func raw() -> RawData:
 		{"id": "electric", "name": "Electric", "matchups": {"earth": 0.0}},
 		{"id": "earth", "name": "Earth"},
 	]:
+		t.merge({"description": "Test type.", "pros": ["Test pro"], "cons": ["Test con"]})
 		r.add_entry("types", t)
 	for a in ["striker", "warden", "catalyst", "trickster"]:
 		r.add_entry("affinities", {"id": a, "name": a.capitalize()})

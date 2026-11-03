@@ -190,6 +190,9 @@ const ENTRY := {
 	"types": {
 		"id": {"t": "id"},
 		"name": {"t": "string"},
+		"description": {"t": "string"},
+		"pros": {"t": "array", "min": 1, "of": {"t": "string"}},
+		"cons": {"t": "array", "min": 1, "of": {"t": "string"}},
 		"matchups": {"t": "map", "opt": true,
 			"key": {"t": "ref", "cat": "types"},
 			"value": {"t": "number", "min": 0.0, "max": 4.0}},

@@ -7,6 +7,8 @@ var description: String
 var type: String
 var category: String  # physical | special | status
 var power: int
+## Energy spent to use the move.
+var cost: int
 var accuracy: int
 var always_hits: bool
 var priority: int
@@ -22,6 +24,7 @@ static func from_dict(d: Dictionary) -> MoveDef:
 	m.type = d.type
 	m.category = d.category
 	m.power = int(d.power)
+	m.cost = int(d.cost)
 	m.accuracy = int(d.accuracy)
 	m.always_hits = d.get("always_hits", false)
 	m.priority = int(d.get("priority", 0))

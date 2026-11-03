@@ -18,7 +18,17 @@ extends RefCounted
 const TARGETS := ["self", "one_ally", "one_enemy", "all_allies", "all_enemies", "all",
 	"own_side", "enemy_side"]
 const SIDES := ["user", "target", "own", "enemy", "both"]
-const STATS := ["atk", "def", "spd", "acc"]
+## Stats that stages and stat_mod effects can change in battle.
+const STATS := ["patk", "pdef", "satk", "sdef", "spd", "acc", "resolve", "luck"]
+## Species base stats (Bond is per creature, not per species).
+const BASE_STATS := ["hp", "patk", "pdef", "satk", "sdef", "spd", "luck", "resolve", "stamina"]
+## Stats the player may put training points into.
+const TRAINABLE_STATS := ["hp", "patk", "pdef", "satk", "sdef", "spd", "resolve", "stamina"]
+## Happenings that change Bond (see balance.bond.changes).
+const BOND_EVENTS := ["battle_won", "knockout", "healed_item", "rested", "fainted", "overworked"]
+## Battle happenings that can award Affinity points (see balance.affinity_awards).
+const AFFINITY_EVENTS := ["hit_dealt", "knockout", "hit_survived", "heal", "field_applied",
+	"reaction_triggered", "field_cashed_in", "status_inflicted", "stat_lowered"]
 
 ## Category -> how it is stored on disk.
 ## "folder": data/<name>/*.json, each file { schema, entries: [...] }
@@ -40,11 +50,10 @@ const CATEGORIES := {
 
 const SCHEMA_VERSION := 1
 
+const _STAT_RULE := {"t": "int", "min": 1, "max": 255}
 const _BASE_STATS := {
-	"hp": {"t": "int", "min": 1, "max": 255},
-	"atk": {"t": "int", "min": 1, "max": 255},
-	"def": {"t": "int", "min": 1, "max": 255},
-	"spd": {"t": "int", "min": 1, "max": 255},
+	"hp": _STAT_RULE, "patk": _STAT_RULE, "pdef": _STAT_RULE, "satk": _STAT_RULE, "sdef": _STAT_RULE,
+	"spd": _STAT_RULE, "luck": _STAT_RULE, "resolve": _STAT_RULE, "stamina": _STAT_RULE,
 }
 
 ## Per-op schemas for entries in any "effects" array. "op" itself is implied.
@@ -96,6 +105,9 @@ const EFFECT_OPS := {
 		"type": {"t": "ref", "cat": "types"},
 		"mult": {"t": "number", "min": 0.0, "max": 5.0},
 	},
+	"restore_energy": {
+		"fraction": {"t": "number", "min": 0.0, "max": 1.0},
+	},
 	"capture": {
 		"mult": {"t": "number", "min": 0.0, "max": 10.0},
 		"field_bonus": {"t": "map", "opt": true,
@@ -131,6 +143,7 @@ const ENTRY := {
 		"type": {"t": "ref", "cat": "types"},
 		"category": {"t": "enum", "values": ["physical", "special", "status"]},
 		"power": {"t": "int", "min": 0, "max": 300},
+		"cost": {"t": "int", "min": 0, "max": 30},
 		"accuracy": {"t": "int", "min": 1, "max": 100},
 		"always_hits": {"t": "bool", "opt": true},
 		"priority": {"t": "int", "opt": true, "min": -3, "max": 3},
@@ -218,6 +231,7 @@ const ENTRY := {
 		"max_field_states": {"t": "int", "min": 1, "max": 5},
 		"growth_affinity_threshold": {"t": "int", "min": 0},
 		"underdog": {"t": "dict", "fields": {
+			"bonus_actions_per_ratio": {"t": "number", "min": 0.0, "max": 2.0},
 			"spread_reduction_per_ratio": {"t": "number", "min": 0.0, "max": 1.0},
 			"spread_reduction_cap": {"t": "number", "min": 0.0, "max": 1.0},
 			"stat_bonus_per_ratio": {"t": "number", "min": 0.0, "max": 2.0},
@@ -226,6 +240,48 @@ const ENTRY := {
 		}},
 		"catch": {"t": "dict", "fields": {
 			"hp_weight": {"t": "number", "min": 0.0, "max": 1.0},
+			"status_mult": {"t": "number", "min": 1.0, "max": 5.0},
 		}},
+		"spread_mult": {"t": "number", "min": 0.0, "max": 1.0},
+		"resolve": {"t": "dict", "fields": {
+			"resist_cap": {"t": "number", "min": 0.0, "max": 1.0},
+			"endure_cap": {"t": "number", "min": 0.0, "max": 1.0},
+		}},
+		"energy": {"t": "dict", "fields": {
+			"base": {"t": "int", "min": 0, "max": 200},
+			"rest_fraction": {"t": "number", "min": 0.0, "max": 1.0},
+			"fallback_move": {"t": "ref", "cat": "moves"},
+		}},
+		"training": {"t": "dict", "fields": {
+			"points_per_level": {"t": "int", "min": 0, "max": 10},
+			"max_per_stat": {"t": "int", "min": 0, "max": 255},
+			"hp_per_point": {"t": "int", "min": 1, "max": 10},
+		}},
+		"bond": {"t": "dict", "fields": {
+			"min": {"t": "int", "min": -1000, "max": 0},
+			"max": {"t": "int", "min": 0, "max": 1000},
+			"starter": {"t": "int", "min": -1000, "max": 1000},
+			"disobey_max_chance": {"t": "number", "min": 0.0, "max": 1.0},
+			"penalty_max": {"t": "number", "min": 0.0, "max": 1.0},
+			"lash_out_threshold": {"t": "int", "min": -1000, "max": 0},
+			"lash_out_chance": {"t": "number", "min": 0.0, "max": 1.0},
+			"xp_bonus_max": {"t": "number", "min": 0.0, "max": 5.0},
+			"overwork_hp": {"t": "number", "min": 0.0, "max": 1.0},
+			"overwork_energy": {"t": "number", "min": 0.0, "max": 1.0},
+			"changes": {"t": "map",
+				"key": {"t": "enum", "values": BOND_EVENTS},
+				"value": {"t": "int", "min": -100, "max": 100}},
+		}},
+		"round_limit": {"t": "int", "min": 1, "max": 1000},
+		"xp": {"t": "dict", "fields": {
+			"divisor": {"t": "number", "min": 1.0, "max": 100.0},
+			"tamer_mult": {"t": "number", "min": 1.0, "max": 5.0},
+		}},
+		"affinity_awards": {"t": "map",
+			"key": {"t": "enum", "values": AFFINITY_EVENTS},
+			"value": {"t": "dict", "fields": {
+				"affinity": {"t": "ref", "cat": "affinities"},
+				"points": {"t": "int", "min": 0, "max": 100},
+			}}},
 	},
 }

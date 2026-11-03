@@ -5,7 +5,8 @@ extends GdUnitTestSuite
 func _base() -> RawData:
 	var raw := RawData.new()
 	raw.add_entry("types", {"id": "water", "name": "Water"})
-	raw.add_entry("affinities", {"id": "striker", "name": "Striker"})
+	for aff in ["striker", "warden", "catalyst", "trickster"]:
+		raw.add_entry("affinities", {"id": aff, "name": aff.capitalize()})
 	raw.add_entry("statuses", {"id": "burn", "name": "Burn", "turns": 3,
 		"effects": [{"op": "damage_fraction", "fraction": 0.1}]})
 	raw.add_entry("field_states", {"id": "soaked", "name": "Soaked", "max_stacks": 3, "default_turns": 3})
@@ -14,27 +15,22 @@ func _base() -> RawData:
 		"inputs": ["charged", "soaked"], "consumes": ["charged"], "scope": "side",
 		"effects": [{"op": "damage", "power": 40, "target": "all_allies"}]})
 	raw.add_entry("moves", _move())
+	raw.add_entry("moves", _move({"id": "scrap", "name": "Scrap", "cost": 0}))  # balance fallback_move
 	raw.add_entry("creatures", _creature())
-	raw.set_single("balance", {
-		"level_cap": 100, "party_size": 6, "max_moves": 4, "stab": 1.25,
-		"max_field_states": 3, "growth_affinity_threshold": 30,
-		"underdog": {"spread_reduction_per_ratio": 0.2, "spread_reduction_cap": 0.5,
-			"stat_bonus_per_ratio": 0.15, "stat_bonus_cap": 0.4, "xp_bonus_per_ratio": 0.5},
-		"catch": {"hp_weight": 0.8},
-	})
+	raw.set_single("balance", FixtureDB.balance())
 	return raw
 
 
 func _move(overrides: Dictionary = {}) -> Dictionary:
 	var m := {"id": "splash", "name": "Splash", "type": "water", "category": "physical",
-		"power": 40, "accuracy": 100, "target": "one_enemy", "effects": [{"op": "damage"}]}
+		"power": 40, "cost": 2, "accuracy": 100, "target": "one_enemy", "effects": [{"op": "damage"}]}
 	m.merge(overrides, true)
 	return m
 
 
 func _creature(overrides: Dictionary = {}) -> Dictionary:
 	var c := {"id": "pup", "name": "Pup", "types": ["water"],
-		"base_stats": {"hp": 50, "atk": 50, "def": 50, "spd": 50},
+		"base_stats": FixtureDB.FLAT.duplicate(),
 		"catch_rate": 0.5, "xp_yield": 50,
 		"learnset": [{"level": 1, "move": "splash"}]}
 	c.merge(overrides, true)

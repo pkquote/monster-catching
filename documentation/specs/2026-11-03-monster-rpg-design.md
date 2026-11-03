@@ -44,11 +44,14 @@ mechanics that feel distinct from the genre's defaults.
 - The player may field **fewer** creatures than allowed.
 - When one side has fewer active creatures, it gains **Underdog**, scaled by the ratio
   `r = enemy_active / ally_active` (only when `r > 1`):
-  - **Extra actions:** each underdog creature gains `floor(r) - 1` bonus actions per round (1v2 → +1, 1v3 → +2, 2v3 → +0).
+  - **Extra actions:** each underdog creature gains `floor((r - 1) * bonus_actions_per_ratio)` bonus actions per round.
+    With the tuned rate of 0.5: 1v2 → +0, 1v3 → +1, 2v3 → +0.
   - **Spread reduction:** damage from multi-target moves reduced by `spread_reduction_per_ratio * (r - 1)`, capped.
-  - **Stat bonus:** `+stat_bonus_per_ratio * (r - 1)` to Attack/Defense, capped.
+  - **Stat bonus:** `+stat_bonus_per_ratio * (r - 1)` to Physical/Special Attack and Defense, capped.
   - **XP bonus:** `xp_bonus_per_ratio * (r - 1)`.
 - Underdog is re-evaluated whenever active counts change (faints, swaps).
+- Tuning target (from the simulator, equal AIs): the outnumbered side wins roughly 38–47%, so
+  Underdog is a risk that pays off in XP rather than a free advantage.
 - All numbers live in `data/balance.json`.
 
 ### 2.2 Field states (per side)
@@ -100,6 +103,76 @@ Targets: `self`, `one_ally`, `one_enemy`, `all_allies`, `all_enemies`, `all`, `o
   - `hp_factor = 1 - (hp / max_hp) * hp_weight` (from balance)
   - `field_mult` = product of the item's `field_bonus` for each matching state on the **target's side**
 - Starter items: **Lure Cage** (plain), **Tide Net** (bonus on Soaked), **Snare Vine** (bonus on Overgrown).
+
+### 2.7 Stats
+
+Every species defines 9 base stats. Bond is per creature, not per species.
+
+| Stat | Key | Source | Used for |
+|---|---|---|---|
+| HP | `hp` | species | Hit points |
+| Physical Attack / Defense | `patk` / `pdef` | species | Damage of `physical` moves (contact: punches, bites, tackles) |
+| Special Attack / Defense | `satk` / `sdef` | species | Damage of `special` moves (beams, blasts, sprays) |
+| Speed | `spd` | species | Turn order |
+| Luck | `luck` | species | Stored and shown; no effect yet. Reserved for crits, proc chances, catch odds, drops |
+| Resolve | `resolve` | species | Status and stat-drop resistance; rare chance to endure a knockout |
+| Stamina | `stamina` | species | Size of the energy pool |
+| Bond | `bond` | per creature | −100…+100; reflects how the creature is treated |
+
+Formulas: HP = `2·base·Lv/100 + Lv + 10`; other battle stats = `2·base·Lv/100 + 5`;
+max energy = `2·base_stamina·Lv/100 + 20`. Training points (2.10) are added on top.
+
+### 2.8 Resolve
+
+- **Resistance:** a status, or a stat drop from a foe, is resisted with chance
+  `resist_cap × R / (R + R_avg)`, where `R` is the target's Resolve and `R_avg` is the Resolve of an
+  average (base 50) creature at the attacker's level. An average creature resists 15% (cap 30%).
+- **Endure:** once per battle, a hit that would knock the creature out leaves it at 1 HP, with chance
+  `endure_cap × R / (R + R_avg)` (cap 10%, about 5% for an average creature).
+
+### 2.9 Stamina and energy
+
+- Each creature has an energy pool (`max energy` above). Current energy persists between battles
+  and is saved, like HP.
+- Every move has a `cost`: weak 0–2, standard 4–6, strong 8–12. A move can't be chosen without
+  enough energy.
+- Energy does not refill during battle, except with **Rest**: the creature spends its action to
+  restore `rest_fraction` (25%) of its pool.
+- **Scrap** (free, power-25 neutral physical move) is always available, so a drained team is never stuck.
+- Recovery outside battle: rest points refill fully, items with the `restore_energy` op, and
+  (M3) a slow trickle while walking in the party.
+
+### 2.10 Training points
+
+- Each level-up grants `points_per_level` (1) training points, which the player assigns to stats.
+- One point adds +1 to a stat (+2 to HP). No stat can hold more than `max_per_stat` (30) points.
+- Assignable: HP, Physical/Special Attack and Defense, Speed, Resolve, Stamina (not Luck, for now).
+- Lets the player cover a weakness or push a strength. Respec comes with the M4 menus.
+
+### 2.11 Bond
+
+- Range −100…+100. Caught creatures start at 0; starters at +20.
+
+**Gains and losses:**
+
+| Happening | Bond |
+|---|---|
+| Wins a battle it took part in | +2 |
+| Lands a knockout | +1 |
+| Healed with an item | +1 |
+| Rests at a rest point (M3) | +2 |
+| Faints | −4 |
+| Sent out or ordered to act below 25% HP or 20% energy (overwork, once per battle) | −2 |
+
+**Negative Bond**, scaling linearly from 0 to −100:
+- **Disobeys commands:** up to a 40% chance per action to ignore the order and use a random other
+  move it can afford, or loaf around.
+- **Weaker performance:** up to −20% to accuracy and damage.
+- **Lashes out:** at −50 or below, a 5% chance to Scrap itself or a random ally instead of acting.
+
+**Positive Bond:** up to +10% XP at +100.
+
+All numbers live in `data/balance.json`.
 
 ## 3. Architecture
 
@@ -155,7 +228,8 @@ data/
 
 ```json
 { "id": "tidepup", "name": "Tidepup", "types": ["water"],
-  "base_stats": { "hp": 45, "atk": 40, "def": 45, "spd": 50 },
+  "base_stats": { "hp": 50, "patk": 45, "pdef": 45, "satk": 50, "sdef": 45, "spd": 50,
+                  "luck": 50, "resolve": 45, "stamina": 55 },
   "catch_rate": 0.45, "xp_yield": 60,
   "learnset": [ { "level": 1, "move": "splash_jab" }, { "level": 7, "move": "riptide" } ],
   "growth": [ { "level": 16, "affinity": "striker", "into": "torrentusk" },
@@ -164,7 +238,7 @@ data/
 
 ```json
 { "id": "riptide", "name": "Riptide", "type": "water", "category": "physical",
-  "power": 50, "accuracy": 95, "priority": 0, "target": "one_enemy",
+  "power": 55, "cost": 6, "accuracy": 95, "priority": 0, "target": "one_enemy",
   "effects": [ { "op": "bonus_if_field", "side": "target", "state": "soaked", "mult": 1.5, "consume": true },
                { "op": "damage" } ] }
 ```

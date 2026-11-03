@@ -5,17 +5,97 @@
     "party_size": 6,
     "max_moves": 4,
     "stab": 1.25,
+    "spread_mult": 0.75,
+    "resolve": {
+      "resist_cap": 0.3,
+      "endure_cap": 0.1
+    },
+    "energy": {
+      "base": 20,
+      "rest_fraction": 0.25,
+      "fallback_move": "scrap"
+    },
+    "training": {
+      "points_per_level": 1,
+      "max_per_stat": 30,
+      "hp_per_point": 2
+    },
+    "bond": {
+      "min": -100,
+      "max": 100,
+      "starter": 20,
+      "disobey_max_chance": 0.4,
+      "penalty_max": 0.2,
+      "lash_out_threshold": -50,
+      "lash_out_chance": 0.05,
+      "xp_bonus_max": 0.1,
+      "overwork_hp": 0.25,
+      "overwork_energy": 0.2,
+      "changes": {
+        "battle_won": 2,
+        "knockout": 1,
+        "healed_item": 1,
+        "rested": 2,
+        "fainted": -4,
+        "overworked": -2
+      }
+    },
+    "round_limit": 200,
     "max_field_states": 3,
     "growth_affinity_threshold": 30,
     "underdog": {
+      "bonus_actions_per_ratio": 0.5,
       "spread_reduction_per_ratio": 0.2,
       "spread_reduction_cap": 0.5,
       "stat_bonus_per_ratio": 0.15,
-      "stat_bonus_cap": 0.4,
+      "stat_bonus_cap": 0.15,
       "xp_bonus_per_ratio": 0.5
     },
     "catch": {
-      "hp_weight": 0.8
+      "hp_weight": 0.8,
+      "status_mult": 1.5
+    },
+    "xp": {
+      "divisor": 5,
+      "tamer_mult": 1.5
+    },
+    "affinity_awards": {
+      "hit_dealt": {
+        "affinity": "striker",
+        "points": 1
+      },
+      "knockout": {
+        "affinity": "striker",
+        "points": 3
+      },
+      "hit_survived": {
+        "affinity": "warden",
+        "points": 1
+      },
+      "heal": {
+        "affinity": "warden",
+        "points": 2
+      },
+      "field_applied": {
+        "affinity": "catalyst",
+        "points": 2
+      },
+      "reaction_triggered": {
+        "affinity": "catalyst",
+        "points": 4
+      },
+      "field_cashed_in": {
+        "affinity": "catalyst",
+        "points": 1
+      },
+      "status_inflicted": {
+        "affinity": "trickster",
+        "points": 2
+      },
+      "stat_lowered": {
+        "affinity": "trickster",
+        "points": 1
+      }
     }
   }
 }

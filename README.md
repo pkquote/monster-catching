@@ -8,16 +8,22 @@ Design spec: [documentation/specs/2026-11-03-monster-rpg-design.md](documentatio
 Content reference (every creature, move, item, status, field state, reaction, tamer and encounter):
 [documentation/compendium.md](documentation/compendium.md). It is generated from `data/`, so don't edit it by hand.
 
+Battle engine reference (API, round order, formulas, events, AI):
+[documentation/battle-engine.md](documentation/battle-engine.md)
+
 ## Layout
 
 | Folder | Contents |
 |---|---|
-| `core/` | Pure game logic. Never touches nodes, scenes, or autoloads. |
+| `core/data/` | JSON loader, schemas, validator, typed definitions. |
+| `core/progress/` | Creature instances, stat/XP formulas, Affinity and growth. |
+| `core/battle/` | Headless battle engine, effect ops, AI. |
+| `core/` | All of `core/` is pure game logic. It never touches nodes, scenes, or autoloads. |
 | `game/` | Scenes and autoloads that present `core/`. |
 | `data/` | All content as JSON (creatures, moves, items, tamers, encounters, ...). |
 | `dialogue/` | Dialogue Manager `.dialogue` files for conversations and cutscenes. |
 | `tests/` | gdUnit4 suites. |
-| `tools/` | Headless scripts (data validator, dialogue checker, compendium generator). |
+| `tools/` | Headless scripts: data validator, dialogue checker, compendium generator, battle simulator. |
 | `addons/` | gdUnit4 6.2.3, Dialogue Manager 4.2.0. |
 
 ## Adding content

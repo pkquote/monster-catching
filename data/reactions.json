@@ -4,13 +4,13 @@
     { "id": "conduction", "name": "Conduction", "description": "Current races through the water, shocking everyone standing in it.",
       "inputs": ["charged", "soaked"], "consumes": ["charged"], "scope": "side",
       "effects": [
-        { "op": "damage", "power": 40, "type": "electric", "scale_with_stacks": true, "target": "all_allies" },
+        { "op": "damage", "power": 60, "type": "electric", "scale_with_stacks": true, "target": "all_allies" },
         { "op": "apply_status", "status": "shock", "chance": 30, "target": "all_allies" }
       ] },
     { "id": "wildfire", "name": "Wildfire", "description": "The undergrowth catches. Everything on this side burns.",
       "inputs": ["scorched", "overgrown"], "consumes": ["overgrown"], "scope": "side",
       "effects": [
-        { "op": "damage", "power": 30, "type": "fire", "scale_with_stacks": true, "target": "all_allies" },
+        { "op": "damage", "power": 45, "type": "fire", "scale_with_stacks": true, "target": "all_allies" },
         { "op": "apply_status", "status": "burn", "target": "all_allies" }
       ] },
     { "id": "icebound", "name": "Icebound", "description": "Standing water freezes solid around their feet.",

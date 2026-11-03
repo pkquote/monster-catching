@@ -23,7 +23,8 @@ const TARGET_LABELS := {
 	"own_side": "Own side",
 	"enemy_side": "Enemy side",
 }
-const STAT_LABELS := {"hp": "HP", "atk": "Atk", "def": "Def", "spd": "Spd", "acc": "Acc"}
+const STAT_LABELS := {"hp": "HP", "patk": "P.Atk", "pdef": "P.Def", "satk": "S.Atk", "sdef": "S.Def",
+	"spd": "Spd", "acc": "Acc", "luck": "Luck", "resolve": "Resolve", "stamina": "Stamina"}
 
 var db: Database
 var _lines := PackedStringArray()
@@ -155,14 +156,22 @@ func _affinities() -> void:
 
 
 func _creatures() -> void:
-	_section("Creatures", "")
-	_w("| Creature | Types | HP | Atk | Def | Spd | Total | Catch | XP |")
-	_w("|---|---|---|---|---|---|---|---|---|")
+	_section("Creatures", "Base stats. *Total* sums the six battle stats (HP to Spd); Luck, Resolve and Stamina are listed separately.")
+	var header := "| Creature | Types |"
+	var rule := "|---|---|"
+	for k in DataSchemas.BASE_STATS:
+		header += " %s |" % STAT_LABELS[k]
+		rule += "---|"
+	_w(header + " Total | Catch | XP |")
+	_w(rule + "---|---|---|")
 	for id in _sorted_ids("creatures"):
 		var c := db.creature(id)
 		var bs := c.base_stats
-		_w("| [%s](#%s) | %s | %d | %d | %d | %d | %d | %d%% | %d |" % [c.name, _anchor(c.name), _types_str(c.types),
-			bs.hp, bs.atk, bs.def, bs.spd, bs.hp + bs.atk + bs.def + bs.spd, roundi(c.catch_rate * 100), c.xp_yield])
+		var row := "| [%s](#%s) | %s |" % [c.name, _anchor(c.name), _types_str(c.types)]
+		for k in DataSchemas.BASE_STATS:
+			row += " %d |" % bs[k]
+		var total: int = bs.hp + bs.patk + bs.pdef + bs.satk + bs.sdef + bs.spd
+		_w(row + " %d | %d%% | %d |" % [total, roundi(c.catch_rate * 100), c.xp_yield])
 	_w("")
 	var grows_from := {}
 	for id in db.ids("creatures"):
@@ -179,7 +188,10 @@ func _creatures() -> void:
 			_w("")
 			_w("*%s*" % c.description)
 		_w("")
-		_w("- **Base stats:** HP %d · Atk %d · Def %d · Spd %d" % [c.base_stats.hp, c.base_stats.atk, c.base_stats.def, c.base_stats.spd])
+		var parts := PackedStringArray()
+		for k in DataSchemas.BASE_STATS:
+			parts.append("%s %d" % [STAT_LABELS[k], c.base_stats[k]])
+		_w("- **Base stats:** %s" % " · ".join(parts))
 		_w("- **Catch rate:** %d%% base · **XP yield:** %d" % [roundi(c.catch_rate * 100), c.xp_yield])
 		if grows_from.has(id):
 			_w("- **Grows from:** %s" % ", ".join(grows_from[id]))
@@ -189,16 +201,19 @@ func _creatures() -> void:
 				branches.append("Lv %d → **%s** (%s)" % [g.level, db.creature(g.into).name, _branch_rule(g)])
 			_w("- **Grows into:** %s" % "; ".join(branches))
 		_w("")
-		_w("| Lv | Move | Type | Power | Acc |")
-		_w("|---|---|---|---|---|")
+		_w("| Lv | Move | Type | Cat. | Power | Cost | Acc |")
+		_w("|---|---|---|---|---|---|---|")
 		for l in c.learnset:
 			var m := db.move(l.move)
-			_w("| %d | %s | %s | %s | %s |" % [l.level, m.name, db.type_def(m.type).name, _power(m), _acc(m)])
+			_w("| %d | %s | %s | %s | %s | %d | %s |" % [l.level, m.name, db.type_def(m.type).name,
+				m.category.capitalize(), _power(m), m.cost, _acc(m)])
 		_w("")
 
 
 func _moves() -> void:
-	_section("Moves", "Grouped by type. Effects run top to bottom; `bonus_if_field` modifiers apply to the damage or heal after them.")
+	_section("Moves", "Grouped by type. Physical moves use P.Atk vs P.Def; special moves use S.Atk vs S.Def. " +
+		"*Cost* is energy spent. Effects run top to bottom; `bonus_if_field` modifiers apply to the damage or heal after them. " +
+		"**%s** is always available, even without energy." % db.move(db.balance.energy_cfg.fallback_move).name)
 	var learned_by := {}
 	for cid in db.ids("creatures"):
 		for l in db.creature(cid).learnset:
@@ -213,8 +228,8 @@ func _moves() -> void:
 			continue
 		_w("### %s moves" % db.type_def(tid).name)
 		_w("")
-		_w("| Move | Id | Cat. | Power | Acc | Pri | Target | Effects | Learned by |")
-		_w("|---|---|---|---|---|---|---|---|---|")
+		_w("| Move | Id | Cat. | Power | Cost | Acc | Pri | Target | Effects | Learned by |")
+		_w("|---|---|---|---|---|---|---|---|---|---|")
 		for mid in move_ids:
 			var m := db.move(mid)
 			var who: PackedStringArray = learned_by.get(mid, PackedStringArray())
@@ -222,8 +237,11 @@ func _moves() -> void:
 			var effects := _effects(m.effects)
 			if not m.description.is_empty():
 				effects = "%s<br>*%s*" % [effects, m.description]
-			_w("| **%s** | `%s` | %s | %s | %s | %s | %s | %s | %s |" % [m.name, m.id, m.category.capitalize(),
-				_power(m), _acc(m), _signed(m.priority), TARGET_LABELS[m.target], effects, _or_dash(", ".join(who))])
+			var learners := ", ".join(who)
+			if mid == db.balance.energy_cfg.fallback_move:
+				learners = "Everyone (fallback)"
+			_w("| **%s** | `%s` | %s | %s | %d | %s | %s | %s | %s | %s |" % [m.name, m.id, m.category.capitalize(),
+				_power(m), m.cost, _acc(m), _signed(m.priority), TARGET_LABELS[m.target], effects, _or_dash(learners)])
 		_w("")
 
 
@@ -288,12 +306,50 @@ func _balance() -> void:
 	_w("| Party size | %d |" % b.party_size)
 	_w("| Max moves per creature | %d |" % b.max_moves)
 	_w("| Same-type attack bonus | x%s |" % _num(b.stab))
+	_w("| Multi-target damage | x%s |" % _num(b.spread_mult))
+	_w("| Round limit (draw) | %d |" % b.round_limit)
+	_w("| XP formula | yield x level / %s, x%s vs tamers |" % [_num(b.xp_cfg.divisor), _num(b.xp_cfg.tamer_mult)])
+	_w("| Catch status bonus | x%s |" % _num(b.catch_cfg.status_mult))
 	_w("| Max field states per side | %d |" % b.max_field_states)
 	_w("| Growth Affinity threshold | %d |" % b.growth_affinity_threshold)
+	_w("| Underdog extra actions | floor(%s per ratio step) per creature |" % _num(b.underdog.bonus_actions_per_ratio))
 	_w("| Underdog spread reduction | %s per ratio step, max %s |" % [_pct(b.underdog.spread_reduction_per_ratio), _pct(b.underdog.spread_reduction_cap)])
 	_w("| Underdog stat bonus | %s per ratio step, max %s |" % [_pct(b.underdog.stat_bonus_per_ratio), _pct(b.underdog.stat_bonus_cap)])
 	_w("| Underdog XP bonus | %s per ratio step |" % _pct(b.underdog.xp_bonus_per_ratio))
 	_w("| Catch HP weight | %s |" % _num(b.catch_cfg.hp_weight))
+	_w("| Resolve resist cap | %s (average creature: half that) |" % _pct(b.resolve_cfg.resist_cap))
+	_w("| Resolve endure cap | %s, once per battle |" % _pct(b.resolve_cfg.endure_cap))
+	_w("| Energy pool | 2 x base Stamina x Lv / 100 + %d |" % b.energy_cfg.base)
+	_w("| Rest restores | %s of max energy |" % _pct(b.energy_cfg.rest_fraction))
+	_w("| Training points | %d per level, max %d per stat, +%d HP per point |" % [
+		b.training_cfg.points_per_level, b.training_cfg.max_per_stat, b.training_cfg.hp_per_point])
+	_w("")
+	var bc := b.bond_cfg
+	_w("### Bond")
+	_w("")
+	_w("Range %d to %d; starters begin at %d." % [bc.min, bc.max, bc.starter])
+	_w("")
+	_w("| Effect | At most |")
+	_w("|---|---|")
+	_w("| Disobey chance (negative Bond) | %s at %d |" % [_pct(bc.disobey_max_chance), bc.min])
+	_w("| Accuracy and damage penalty | %s at %d |" % [_pct(bc.penalty_max), bc.min])
+	_w("| Lash out chance | %s at %d or below |" % [_pct(bc.lash_out_chance), bc.lash_out_threshold])
+	_w("| XP bonus (positive Bond) | %s at %d |" % [_pct(bc.xp_bonus_max), bc.max])
+	_w("")
+	_w("| Happening | Bond |")
+	_w("|---|---|")
+	for key in DataSchemas.BOND_EVENTS:
+		if bc.changes.has(key):
+			_w("| %s | %s |" % [key.replace("_", " ").capitalize(), _signed(bc.changes[key])])
+	_w("")
+	_w("### Affinity awards")
+	_w("")
+	_w("| Happening | Affinity | Points |")
+	_w("|---|---|---|")
+	for key in DataSchemas.AFFINITY_EVENTS:
+		if b.affinity_awards.has(key):
+			var a: Dictionary = b.affinity_awards[key]
+			_w("| %s | %s | %d |" % [key.replace("_", " ").capitalize(), db.affinity(a.affinity).name, a.points])
 	_w("")
 
 
@@ -348,6 +404,8 @@ func _effect(e: Dictionary) -> String:
 			s = "%s x%s" % [STAT_LABELS[e.stat], _num(e.mult)]
 		"incoming_type_mod":
 			s = "%s damage taken x%s" % [db.type_def(e.type).name, _num(e.mult)]
+		"restore_energy":
+			s = "Restores %s max energy" % _pct(e.fraction)
 		"capture":
 			s = "Capture x%s" % _num(e.mult)
 			var bonus: Dictionary = e.get("field_bonus", {})

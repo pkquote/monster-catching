@@ -6,8 +6,8 @@
 | Category | Count |
 |---|---|
 | [Creatures](#creatures) | 8 |
-| [Moves](#moves) | 21 |
-| [Items](#items) | 4 |
+| [Moves](#moves) | 23 |
+| [Items](#items) | 5 |
 | [Statuses](#statuses) | 4 |
 | [Field States](#field-states) | 5 |
 | [Reactions](#reactions) | 4 |
@@ -65,10 +65,10 @@ Fire immediately when an incoming state meets one already on that side. "All all
 
 | Reaction | Inputs | Consumes | Scope | Effects |
 |---|---|---|---|---|
-| **Conduction** | Charged + Soaked | Charged | That side | Damage (power 40 Electric), scales with stacks consumed → all allies; Inflicts Shock (30%) → all allies |
+| **Conduction** | Charged + Soaked | Charged | That side | Damage (power 60 Electric), scales with stacks consumed → all allies; Inflicts Shock (30%) → all allies |
 | **Icebound** | Soaked + Frosted | Soaked | That side | Spd -2 → all allies; Inflicts Chill → all allies |
 | **Steam** | Scorched + Frosted | Scorched, Frosted | Both sides | Acc -1 → everyone |
-| **Wildfire** | Scorched + Overgrown | Overgrown | That side | Damage (power 30 Fire), scales with stacks consumed → all allies; Inflicts Burn → all allies |
+| **Wildfire** | Scorched + Overgrown | Overgrown | That side | Damage (power 45 Fire), scales with stacks consumed → all allies; Inflicts Burn → all allies |
 
 - **Conduction:** Current races through the water, shocking everyone standing in it.
 - **Icebound:** Standing water freezes solid around their feet.
@@ -88,16 +88,18 @@ Growth tracks filled by how a creature is used in battle. Growth branches need a
 
 ## Creatures
 
-| Creature | Types | HP | Atk | Def | Spd | Total | Catch | XP |
-|---|---|---|---|---|---|---|---|---|
-| [Emberkit](#emberkit) | Fire | 45 | 50 | 40 | 60 | 195 | 45% | 55 |
-| [Frostling](#frostling) | Ice | 50 | 45 | 50 | 45 | 190 | 40% | 55 |
-| [Mistcoil](#mistcoil) | Water / Ice | 70 | 55 | 60 | 80 | 265 | 10% | 160 |
-| [Pebblet](#pebblet) | Earth | 60 | 55 | 70 | 25 | 210 | 50% | 50 |
-| [Sprigling](#sprigling) | Grass | 55 | 40 | 55 | 35 | 185 | 50% | 50 |
-| [Tidepup](#tidepup) | Water | 50 | 45 | 45 | 50 | 190 | 40% | 60 |
-| [Torrentusk](#torrentusk) | Water / Earth | 75 | 85 | 70 | 55 | 285 | 10% | 160 |
-| [Voltmoth](#voltmoth) | Electric | 40 | 45 | 35 | 75 | 195 | 40% | 55 |
+Base stats. *Total* sums the six battle stats (HP to Spd); Luck, Resolve and Stamina are listed separately.
+
+| Creature | Types | HP | P.Atk | P.Def | S.Atk | S.Def | Spd | Luck | Resolve | Stamina | Total | Catch | XP |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| [Emberkit](#emberkit) | Fire | 45 | 45 | 40 | 60 | 45 | 60 | 55 | 40 | 50 | 295 | 45% | 55 |
+| [Frostling](#frostling) | Ice | 50 | 50 | 50 | 45 | 55 | 45 | 50 | 55 | 50 | 295 | 40% | 55 |
+| [Mistcoil](#mistcoil) | Water / Ice | 70 | 45 | 55 | 80 | 70 | 80 | 55 | 55 | 60 | 400 | 10% | 160 |
+| [Pebblet](#pebblet) | Earth | 60 | 55 | 75 | 30 | 45 | 25 | 40 | 70 | 60 | 290 | 50% | 50 |
+| [Sprigling](#sprigling) | Grass | 55 | 45 | 55 | 40 | 60 | 35 | 45 | 60 | 55 | 290 | 50% | 50 |
+| [Tidepup](#tidepup) | Water | 50 | 45 | 45 | 50 | 45 | 50 | 50 | 45 | 55 | 285 | 40% | 60 |
+| [Torrentusk](#torrentusk) | Water / Earth | 75 | 85 | 70 | 45 | 55 | 55 | 45 | 65 | 70 | 385 | 10% | 160 |
+| [Voltmoth](#voltmoth) | Electric | 40 | 40 | 35 | 60 | 40 | 75 | 60 | 40 | 45 | 290 | 40% | 55 |
 
 ### Emberkit
 
@@ -105,15 +107,15 @@ Growth tracks filled by how a creature is used in battle. Growth branches need a
 
 *Leaves smouldering pawprints wherever it runs.*
 
-- **Base stats:** HP 45 · Atk 50 · Def 40 · Spd 60
+- **Base stats:** HP 45 · P.Atk 45 · P.Def 40 · S.Atk 60 · S.Def 45 · Spd 60 · Luck 55 · Resolve 40 · Stamina 50
 - **Catch rate:** 45% base · **XP yield:** 55
 
-| Lv | Move | Type | Power | Acc |
-|---|---|---|---|---|
-| 1 | Tackle | Neutral | 40 | 100% |
-| 1 | Ember Flick | Fire | 40 | 100% |
-| 6 | Scorch Field | Fire | — | — |
-| 11 | Flare Burst | Fire | 45 | 90% |
+| Lv | Move | Type | Cat. | Power | Cost | Acc |
+|---|---|---|---|---|---|---|
+| 1 | Tackle | Neutral | Physical | 40 | 1 | 100% |
+| 1 | Ember Flick | Fire | Special | 40 | 2 | 100% |
+| 6 | Scorch Field | Fire | Status | — | 4 | — |
+| 11 | Flare Burst | Fire | Special | 45 | 7 | 90% |
 
 ### Frostling
 
@@ -121,14 +123,14 @@ Growth tracks filled by how a creature is used in battle. Growth branches need a
 
 *A shy spirit that frosts the ground when startled.*
 
-- **Base stats:** HP 50 · Atk 45 · Def 50 · Spd 45
+- **Base stats:** HP 50 · P.Atk 50 · P.Def 50 · S.Atk 45 · S.Def 55 · Spd 45 · Luck 50 · Resolve 55 · Stamina 50
 - **Catch rate:** 40% base · **XP yield:** 55
 
-| Lv | Move | Type | Power | Acc |
-|---|---|---|---|---|
-| 1 | Frost Nip | Ice | 40 | 100% |
-| 6 | Rime Veil | Ice | — | — |
-| 14 | Glacier Crash | Ice | 80 | 85% |
+| Lv | Move | Type | Cat. | Power | Cost | Acc |
+|---|---|---|---|---|---|---|
+| 1 | Frost Nip | Ice | Physical | 40 | 2 | 100% |
+| 6 | Rime Veil | Ice | Status | — | 4 | — |
+| 14 | Glacier Crash | Ice | Physical | 80 | 9 | 85% |
 
 ### Mistcoil
 
@@ -136,15 +138,16 @@ Growth tracks filled by how a creature is used in battle. Growth branches need a
 
 *A serpent of fog that turns battlefields into marshes.*
 
-- **Base stats:** HP 70 · Atk 55 · Def 60 · Spd 80
+- **Base stats:** HP 70 · P.Atk 45 · P.Def 55 · S.Atk 80 · S.Def 70 · Spd 80 · Luck 55 · Resolve 55 · Stamina 60
 - **Catch rate:** 10% base · **XP yield:** 160
 - **Grows from:** Tidepup (Lv 16, Catalyst Affinity)
 
-| Lv | Move | Type | Power | Acc |
-|---|---|---|---|---|
-| 1 | Drench | Water | — | — |
-| 1 | Rime Veil | Ice | — | — |
-| 18 | Glacier Crash | Ice | 80 | 85% |
+| Lv | Move | Type | Cat. | Power | Cost | Acc |
+|---|---|---|---|---|---|---|
+| 1 | Tide Beam | Water | Special | 55 | 6 | 100% |
+| 1 | Drench | Water | Status | — | 4 | — |
+| 1 | Rime Veil | Ice | Status | — | 4 | — |
+| 18 | Glacier Crash | Ice | Physical | 80 | 9 | 85% |
 
 ### Pebblet
 
@@ -152,15 +155,15 @@ Growth tracks filled by how a creature is used in battle. Growth branches need a
 
 *Mistaken for a rock until it headbutts your shin.*
 
-- **Base stats:** HP 60 · Atk 55 · Def 70 · Spd 25
+- **Base stats:** HP 60 · P.Atk 55 · P.Def 75 · S.Atk 30 · S.Def 45 · Spd 25 · Luck 40 · Resolve 70 · Stamina 60
 - **Catch rate:** 50% base · **XP yield:** 50
 
-| Lv | Move | Type | Power | Acc |
-|---|---|---|---|---|
-| 1 | Pebble Toss | Earth | 40 | 100% |
-| 1 | Brace | Neutral | — | — |
-| 7 | Dust Sweep | Earth | — | — |
-| 13 | Quake Stomp | Earth | 70 | 100% |
+| Lv | Move | Type | Cat. | Power | Cost | Acc |
+|---|---|---|---|---|---|---|
+| 1 | Pebble Toss | Earth | Physical | 40 | 2 | 100% |
+| 1 | Brace | Neutral | Status | — | 3 | — |
+| 7 | Dust Sweep | Earth | Status | — | 3 | — |
+| 13 | Quake Stomp | Earth | Physical | 70 | 9 | 100% |
 
 ### Sprigling
 
@@ -168,14 +171,14 @@ Growth tracks filled by how a creature is used in battle. Growth branches need a
 
 *A sprout that plants seeds in every footprint.*
 
-- **Base stats:** HP 55 · Atk 40 · Def 55 · Spd 35
+- **Base stats:** HP 55 · P.Atk 45 · P.Def 55 · S.Atk 40 · S.Def 60 · Spd 35 · Luck 45 · Resolve 60 · Stamina 55
 - **Catch rate:** 50% base · **XP yield:** 50
 
-| Lv | Move | Type | Power | Acc |
-|---|---|---|---|---|
-| 1 | Vine Lash | Grass | 45 | 100% |
-| 4 | Seed Carpet | Grass | — | — |
-| 8 | Regrowth | Grass | — | — |
+| Lv | Move | Type | Cat. | Power | Cost | Acc |
+|---|---|---|---|---|---|---|
+| 1 | Vine Lash | Grass | Physical | 45 | 3 | 100% |
+| 4 | Seed Carpet | Grass | Status | — | 4 | — |
+| 8 | Regrowth | Grass | Status | — | 6 | — |
 
 ### Tidepup
 
@@ -183,17 +186,18 @@ Growth tracks filled by how a creature is used in battle. Growth branches need a
 
 *A pup that splashes puddles into its foes' paths.*
 
-- **Base stats:** HP 50 · Atk 45 · Def 45 · Spd 50
+- **Base stats:** HP 50 · P.Atk 45 · P.Def 45 · S.Atk 50 · S.Def 45 · Spd 50 · Luck 50 · Resolve 45 · Stamina 55
 - **Catch rate:** 40% base · **XP yield:** 60
 - **Grows into:** Lv 16 → **Torrentusk** (Striker Affinity); Lv 16 → **Mistcoil** (Catalyst Affinity); Lv 16 → **Torrentusk** (default)
 
-| Lv | Move | Type | Power | Acc |
-|---|---|---|---|---|
-| 1 | Tackle | Neutral | 40 | 100% |
-| 1 | Splash Jab | Water | 40 | 100% |
-| 5 | Drench | Water | — | — |
-| 9 | Riptide | Water | 55 | 95% |
-| 12 | Taunting Howl | Neutral | — | 100% |
+| Lv | Move | Type | Cat. | Power | Cost | Acc |
+|---|---|---|---|---|---|---|
+| 1 | Tackle | Neutral | Physical | 40 | 1 | 100% |
+| 1 | Splash Jab | Water | Physical | 40 | 2 | 100% |
+| 5 | Drench | Water | Status | — | 4 | — |
+| 9 | Riptide | Water | Physical | 55 | 6 | 95% |
+| 12 | Taunting Howl | Neutral | Status | — | 3 | 100% |
+| 14 | Tide Beam | Water | Special | 55 | 6 | 100% |
 
 ### Torrentusk
 
@@ -201,15 +205,15 @@ Growth tracks filled by how a creature is used in battle. Growth branches need a
 
 *Grew up charging through floods, tusks first.*
 
-- **Base stats:** HP 75 · Atk 85 · Def 70 · Spd 55
+- **Base stats:** HP 75 · P.Atk 85 · P.Def 70 · S.Atk 45 · S.Def 55 · Spd 55 · Luck 45 · Resolve 65 · Stamina 70
 - **Catch rate:** 10% base · **XP yield:** 160
 - **Grows from:** Tidepup (Lv 16, Striker Affinity), Tidepup (Lv 16, default)
 
-| Lv | Move | Type | Power | Acc |
-|---|---|---|---|---|
-| 1 | Splash Jab | Water | 40 | 100% |
-| 1 | Riptide | Water | 55 | 95% |
-| 18 | Quake Stomp | Earth | 70 | 100% |
+| Lv | Move | Type | Cat. | Power | Cost | Acc |
+|---|---|---|---|---|---|---|
+| 1 | Splash Jab | Water | Physical | 40 | 2 | 100% |
+| 1 | Riptide | Water | Physical | 55 | 6 | 95% |
+| 18 | Quake Stomp | Earth | Physical | 70 | 9 | 100% |
 
 ### Voltmoth
 
@@ -217,74 +221,76 @@ Growth tracks filled by how a creature is used in battle. Growth branches need a
 
 *Its wingbeats leave the air prickling with static.*
 
-- **Base stats:** HP 40 · Atk 45 · Def 35 · Spd 75
+- **Base stats:** HP 40 · P.Atk 40 · P.Def 35 · S.Atk 60 · S.Def 40 · Spd 75 · Luck 60 · Resolve 40 · Stamina 45
 - **Catch rate:** 40% base · **XP yield:** 55
 
-| Lv | Move | Type | Power | Acc |
-|---|---|---|---|---|
-| 1 | Spark Bite | Electric | 45 | 100% |
-| 5 | Static Field | Electric | — | — |
-| 12 | Thunder Cascade | Electric | 50 | 90% |
+| Lv | Move | Type | Cat. | Power | Cost | Acc |
+|---|---|---|---|---|---|---|
+| 1 | Spark Bite | Electric | Physical | 45 | 3 | 100% |
+| 5 | Static Field | Electric | Status | — | 4 | — |
+| 12 | Thunder Cascade | Electric | Special | 50 | 7 | 90% |
 
 ## Moves
 
-Grouped by type. Effects run top to bottom; `bonus_if_field` modifiers apply to the damage or heal after them.
+Grouped by type. Physical moves use P.Atk vs P.Def; special moves use S.Atk vs S.Def. *Cost* is energy spent. Effects run top to bottom; `bonus_if_field` modifiers apply to the damage or heal after them. **Scrap** is always available, even without energy.
 
 ### Earth moves
 
-| Move | Id | Cat. | Power | Acc | Pri | Target | Effects | Learned by |
-|---|---|---|---|---|---|---|---|---|
-| **Dust Sweep** | `dust_sweep` | Status | — | — | 0 | Own side | Clears all states from own side<br>*Clears every state from your own side.* | Pebblet |
-| **Pebble Toss** | `pebble_toss` | Physical | 40 | 100% | 0 | One enemy | Damage | Pebblet |
-| **Quake Stomp** | `quake_stomp` | Physical | 70 | 100% | 0 | Everyone | Damage<br>*Shakes the whole field, allies included.* | Pebblet, Torrentusk |
+| Move | Id | Cat. | Power | Cost | Acc | Pri | Target | Effects | Learned by |
+|---|---|---|---|---|---|---|---|---|---|
+| **Dust Sweep** | `dust_sweep` | Status | — | 3 | — | 0 | Own side | Clears all states from own side<br>*Clears every state from your own side.* | Pebblet |
+| **Pebble Toss** | `pebble_toss` | Physical | 40 | 2 | 100% | 0 | One enemy | Damage | Pebblet |
+| **Quake Stomp** | `quake_stomp` | Physical | 70 | 9 | 100% | 0 | Everyone | Damage<br>*Shakes the whole field, allies included.* | Pebblet, Torrentusk |
 
 ### Electric moves
 
-| Move | Id | Cat. | Power | Acc | Pri | Target | Effects | Learned by |
-|---|---|---|---|---|---|---|---|---|
-| **Spark Bite** | `spark_bite` | Physical | 45 | 100% | 0 | One enemy | Damage; Inflicts Shock (15%) | Voltmoth |
-| **Static Field** | `static_field` | Status | — | — | 0 | Enemy side | Applies Charged to the enemy side<br>*Charges the air over the enemy side.* | Voltmoth |
-| **Thunder Cascade** | `thunder_cascade` | Special | 50 | 90% | 0 | All enemies | x1.4 if the target's side is Charged; Damage | Voltmoth |
+| Move | Id | Cat. | Power | Cost | Acc | Pri | Target | Effects | Learned by |
+|---|---|---|---|---|---|---|---|---|---|
+| **Spark Bite** | `spark_bite` | Physical | 45 | 3 | 100% | 0 | One enemy | Damage; Inflicts Shock (15%) | Voltmoth |
+| **Static Field** | `static_field` | Status | — | 4 | — | 0 | Enemy side | Applies Charged to the enemy side<br>*Charges the air over the enemy side.* | Voltmoth |
+| **Thunder Cascade** | `thunder_cascade` | Special | 50 | 7 | 90% | 0 | All enemies | x1.4 if the target's side is Charged; Damage | Voltmoth |
 
 ### Fire moves
 
-| Move | Id | Cat. | Power | Acc | Pri | Target | Effects | Learned by |
-|---|---|---|---|---|---|---|---|---|
-| **Ember Flick** | `ember_flick` | Special | 40 | 100% | 0 | One enemy | Damage; Inflicts Burn (10%) | Emberkit |
-| **Flare Burst** | `flare_burst` | Special | 45 | 90% | 0 | All enemies | x1.6 if the target's side is Scorched (consumes it); Damage<br>*Hits every foe; far stronger on a Scorched side.* | Emberkit |
-| **Scorch Field** | `scorch_field` | Status | — | — | 0 | Enemy side | Applies Scorched to the enemy side<br>*Sets the enemy side smouldering.* | Emberkit |
+| Move | Id | Cat. | Power | Cost | Acc | Pri | Target | Effects | Learned by |
+|---|---|---|---|---|---|---|---|---|---|
+| **Ember Flick** | `ember_flick` | Special | 40 | 2 | 100% | 0 | One enemy | Damage; Inflicts Burn (10%) | Emberkit |
+| **Flare Burst** | `flare_burst` | Special | 45 | 7 | 90% | 0 | All enemies | x1.6 if the target's side is Scorched (consumes it); Damage<br>*Hits every foe; far stronger on a Scorched side.* | Emberkit |
+| **Scorch Field** | `scorch_field` | Status | — | 4 | — | 0 | Enemy side | Applies Scorched to the enemy side<br>*Sets the enemy side smouldering.* | Emberkit |
 
 ### Grass moves
 
-| Move | Id | Cat. | Power | Acc | Pri | Target | Effects | Learned by |
-|---|---|---|---|---|---|---|---|---|
-| **Regrowth** | `regrowth` | Status | — | — | 0 | Self | x1.5 if own side is Overgrown; Heals 33% max HP<br>*Heals; heals more on your own Overgrown side.* | Sprigling |
-| **Seed Carpet** | `seed_carpet` | Status | — | — | 0 | Enemy side | Applies Overgrown to the enemy side<br>*Grows a thicket on the enemy side.* | Sprigling |
-| **Vine Lash** | `vine_lash` | Physical | 45 | 100% | 0 | One enemy | Damage | Sprigling |
+| Move | Id | Cat. | Power | Cost | Acc | Pri | Target | Effects | Learned by |
+|---|---|---|---|---|---|---|---|---|---|
+| **Regrowth** | `regrowth` | Status | — | 6 | — | 0 | Self | x1.5 if own side is Overgrown; Heals 20% max HP<br>*Heals; heals more on your own Overgrown side.* | Sprigling |
+| **Seed Carpet** | `seed_carpet` | Status | — | 4 | — | 0 | Enemy side | Applies Overgrown to the enemy side<br>*Grows a thicket on the enemy side.* | Sprigling |
+| **Vine Lash** | `vine_lash` | Physical | 45 | 3 | 100% | 0 | One enemy | Damage | Sprigling |
 
 ### Ice moves
 
-| Move | Id | Cat. | Power | Acc | Pri | Target | Effects | Learned by |
-|---|---|---|---|---|---|---|---|---|
-| **Frost Nip** | `frost_nip` | Physical | 40 | 100% | 0 | One enemy | Damage; Inflicts Chill (20%) | Frostling |
-| **Glacier Crash** | `glacier_crash` | Physical | 80 | 85% | 0 | One enemy | Damage | Frostling, Mistcoil |
-| **Rime Veil** | `rime_veil` | Status | — | — | 0 | Enemy side | Applies Frosted to the enemy side<br>*Coats the enemy side in frost.* | Frostling, Mistcoil |
+| Move | Id | Cat. | Power | Cost | Acc | Pri | Target | Effects | Learned by |
+|---|---|---|---|---|---|---|---|---|---|
+| **Frost Nip** | `frost_nip` | Physical | 40 | 2 | 100% | 0 | One enemy | Damage; Inflicts Chill (20%) | Frostling |
+| **Glacier Crash** | `glacier_crash` | Physical | 80 | 9 | 85% | 0 | One enemy | Damage | Frostling, Mistcoil |
+| **Rime Veil** | `rime_veil` | Status | — | 4 | — | 0 | Enemy side | Applies Frosted to the enemy side<br>*Coats the enemy side in frost.* | Frostling, Mistcoil |
 
 ### Neutral moves
 
-| Move | Id | Cat. | Power | Acc | Pri | Target | Effects | Learned by |
-|---|---|---|---|---|---|---|---|---|
-| **Brace** | `brace` | Status | — | — | 0 | Self | Def +1<br>*Raises Defense.* | Pebblet |
-| **Tackle** | `tackle` | Physical | 40 | 100% | 0 | One enemy | Damage | Emberkit, Tidepup |
-| **Taunting Howl** | `taunting_howl` | Status | — | 100% | 0 | All enemies | Atk -1<br>*Lowers every foe's Attack.* | Tidepup |
+| Move | Id | Cat. | Power | Cost | Acc | Pri | Target | Effects | Learned by |
+|---|---|---|---|---|---|---|---|---|---|
+| **Brace** | `brace` | Status | — | 3 | — | 0 | Self | P.Def +1; S.Def +1<br>*Raises Physical and Special Defense.* | Pebblet |
+| **Scrap** | `scrap` | Physical | 25 | 0 | 100% | 0 | One enemy | Damage<br>*A desperate, free flail. Always available, even with no energy.* | Everyone (fallback) |
+| **Tackle** | `tackle` | Physical | 40 | 1 | 100% | 0 | One enemy | Damage | Emberkit, Tidepup |
+| **Taunting Howl** | `taunting_howl` | Status | — | 3 | 100% | 0 | All enemies | P.Atk -1<br>*Lowers every foe's Physical Attack.* | Tidepup |
 
 ### Water moves
 
-| Move | Id | Cat. | Power | Acc | Pri | Target | Effects | Learned by |
-|---|---|---|---|---|---|---|---|---|
-| **Drench** | `drench` | Status | — | — | 0 | Enemy side | Applies Soaked to the enemy side<br>*Floods the enemy side.* | Mistcoil, Tidepup |
-| **Riptide** | `riptide` | Physical | 55 | 95% | 0 | One enemy | x1.5 if the target's side is Soaked (consumes it); Damage<br>*Stronger on a Soaked side, draining the water.* | Tidepup, Torrentusk |
-| **Splash Jab** | `splash_jab` | Physical | 40 | 100% | 0 | One enemy | Damage | Tidepup, Torrentusk |
+| Move | Id | Cat. | Power | Cost | Acc | Pri | Target | Effects | Learned by |
+|---|---|---|---|---|---|---|---|---|---|
+| **Drench** | `drench` | Status | — | 4 | — | 0 | Enemy side | Applies Soaked to the enemy side<br>*Floods the enemy side.* | Mistcoil, Tidepup |
+| **Riptide** | `riptide` | Physical | 55 | 6 | 95% | 0 | One enemy | x1.5 if the target's side is Soaked (consumes it); Damage<br>*Stronger on a Soaked side, draining the water.* | Tidepup, Torrentusk |
+| **Splash Jab** | `splash_jab` | Physical | 40 | 2 | 100% | 0 | One enemy | Damage | Tidepup, Torrentusk |
+| **Tide Beam** | `tide_beam` | Special | 55 | 6 | 100% | 0 | One enemy | Damage<br>*A focused jet of water.* | Mistcoil, Tidepup |
 
 ## Items
 
@@ -294,6 +300,7 @@ Grouped by type. Effects run top to bottom; `bonus_if_field` modifiers apply to 
 | **Salve** | `salve` | Heal | 150 | One ally | Heals 33% max HP | Restores a third of a creature's HP. |
 | **Snare Vine** | `snare_vine` | Capture | 250 | One enemy | Capture x0.8, x2.5 on Overgrown | Far more effective on an Overgrown side. |
 | **Tide Net** | `tide_net` | Capture | 250 | One enemy | Capture x0.8, x2.5 on Soaked | Far more effective on a Soaked side. |
+| **Tonic** | `tonic` | Heal | 150 | One ally | Restores 50% max energy | Restores half of a creature's energy. |
 
 ## Tamers
 
@@ -345,10 +352,54 @@ Global tuning values from `data/balance.json`.
 | Party size | 6 |
 | Max moves per creature | 4 |
 | Same-type attack bonus | x1.25 |
+| Multi-target damage | x0.75 |
+| Round limit (draw) | 200 |
+| XP formula | yield x level / 5, x1.5 vs tamers |
+| Catch status bonus | x1.5 |
 | Max field states per side | 3 |
 | Growth Affinity threshold | 30 |
+| Underdog extra actions | floor(0.5 per ratio step) per creature |
 | Underdog spread reduction | 20% per ratio step, max 50% |
-| Underdog stat bonus | 15% per ratio step, max 40% |
+| Underdog stat bonus | 15% per ratio step, max 15% |
 | Underdog XP bonus | 50% per ratio step |
 | Catch HP weight | 0.8 |
+| Resolve resist cap | 30% (average creature: half that) |
+| Resolve endure cap | 10%, once per battle |
+| Energy pool | 2 x base Stamina x Lv / 100 + 20 |
+| Rest restores | 25% of max energy |
+| Training points | 1 per level, max 30 per stat, +2 HP per point |
+
+### Bond
+
+Range -100 to 100; starters begin at 20.
+
+| Effect | At most |
+|---|---|
+| Disobey chance (negative Bond) | 40% at -100 |
+| Accuracy and damage penalty | 20% at -100 |
+| Lash out chance | 5% at -50 or below |
+| XP bonus (positive Bond) | 10% at 100 |
+
+| Happening | Bond |
+|---|---|
+| Battle Won | +2 |
+| Knockout | +1 |
+| Healed Item | +1 |
+| Rested | +2 |
+| Fainted | -4 |
+| Overworked | -2 |
+
+### Affinity awards
+
+| Happening | Affinity | Points |
+|---|---|---|
+| Hit Dealt | Striker | 1 |
+| Knockout | Striker | 3 |
+| Hit Survived | Warden | 1 |
+| Heal | Warden | 2 |
+| Field Applied | Catalyst | 2 |
+| Reaction Triggered | Catalyst | 4 |
+| Field Cashed In | Catalyst | 1 |
+| Status Inflicted | Trickster | 2 |
+| Stat Lowered | Trickster | 1 |
 

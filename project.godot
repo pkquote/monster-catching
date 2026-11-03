@@ -15,13 +15,16 @@ compatibility/default_parent_skeleton_in_mesh_instance_3d=true
 [application]
 
 config/name="Monster Catching Game"
-run/main_scene="res://game/main.tscn"
+run/main_scene="res://game/boot/splash.tscn"
 config/features=PackedStringArray("4.7", "GL Compatibility")
 
 [autoload]
 
 DialogueManager="*res://addons/dialogue_manager/dialogue_manager.gd"
 DataRegistry="*res://game/autoload/data_registry.gd"
+Settings="*res://game/autoload/settings.gd"
+GameState="*res://game/autoload/game_state.gd"
+SceneRouter="*res://game/autoload/scene_router.gd"
 
 [display]
 

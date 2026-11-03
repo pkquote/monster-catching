@@ -19,12 +19,22 @@ Battle engine reference (API, round order, formulas, events, AI):
 | `core/progress/` | Creature instances, stat/XP formulas, Affinity and growth. |
 | `core/battle/` | Headless battle engine, effect ops, AI. |
 | `core/` | All of `core/` is pure game logic. It never touches nodes, scenes, or autoloads. |
-| `game/` | Scenes and autoloads that present `core/`. |
+| `core/save/`, `core/settings/` | Save format and file store; settings model and input bindings. |
+| `game/` | Scenes and autoloads that present `core/`: splash, menus, placeholder world, `SceneRouter`, `GameState`, `Settings`. |
 | `data/` | All content as JSON (creatures, moves, items, tamers, encounters, ...). |
 | `dialogue/` | Dialogue Manager `.dialogue` files for conversations and cutscenes. |
 | `tests/` | gdUnit4 suites. |
 | `tools/` | Headless scripts: data validator, dialogue checker, compendium generator, battle simulator. |
 | `addons/` | gdUnit4 6.2.3, Dialogue Manager 4.2.0. |
+
+## Running
+
+Press F5 in the editor (or run the project). The game boots to a splash screen, then the title
+menu: Resume, New Game, Load Game, Settings, Quit. Player data lives in Godot's user folder
+(`%APPDATA%/Godot/app_userdata/Monster Catching Game/` on Windows):
+
+- `saves/<playthrough>/autosave.json` and `save_<timestamp>.json`, plus `saves/last.json` (the Resume target)
+- `settings.json`
 
 ## Adding content
 

@@ -266,9 +266,56 @@ It also scans `dialogue/*.dialogue` for `start_battle("<id>")` and checks the ta
 - Triggers: interact, area enter, map enter, battle result.
 - The battle engine has no knowledge of dialogue.
 
-## 6. Saves
+## 6. Start flow, saves and settings
 
-JSON save files containing party/storage `CreatureInstance` data (species id, level, xp, hp, moves, affinity, nickname), inventory, story flags, and player position. Save files carry `schema` for migration.
+### 6.1 Screen flow
+
+```
+Splash ──► Title menu ──► Resume      (most recently loaded/written save; hidden if none)
+ (any key   │             New Game ──► Name entry ──► new playthrough + first save ──► World
+  skips)    │             Load Game ─► Save browser (grouped by playthrough) ──► World
+            │             Settings ──► Audio · Display · Gameplay · Controls
+            └             Quit
+```
+
+- Splash: studio/engine credit, then the title, then the menu. Any key skips. If game content
+  fails validation, the splash shows the errors instead of continuing (debug aid).
+- All scene changes go through the `SceneRouter` autoload (fade out, swap, fade in).
+- Until M3, "World" is a placeholder screen: player name, playtime, location, party, and
+  Save / Settings / Quit to Title. It autosaves on entry.
+
+### 6.2 Saves
+
+- Unlimited manual saves plus one autosave **per playthrough**:
+  `user://saves/<playthrough_id>/autosave.json` and `save_<timestamp>.json`.
+- `user://saves/last.json` records the most recently loaded or written save (the Resume target).
+- A save holds: `schema`, `playthrough_id`, `kind` (manual/auto), player name, created and saved
+  times, playtime, location label, party and storage (`CreatureInstance` dicts), inventory,
+  money, story flags.
+- Writes are atomic: write `<file>.tmp`, then replace the real file. A leftover `.tmp` is used if
+  the real file is missing.
+- Unreadable or invalid saves are listed as damaged (with the reason) instead of crashing.
+- Older schemas are migrated on load through a migration table.
+- The save browser groups saves by playthrough (most recent playthrough first, newest save first)
+  and offers Load and Delete (with confirmation).
+- `core/save/` holds the format and file logic as plain classes that take a directory path, so
+  tests use a temp folder; menus only call it.
+
+### 6.3 Settings
+
+Stored in `user://settings.json`, separate from saves; applied immediately and saved on leaving
+the settings screen.
+
+| Group | Settings |
+|---|---|
+| Audio | Master, Music, SFX volume (audio buses created at startup) |
+| Display | Fullscreen, window scale 2×/3×/4×, VSync |
+| Gameplay | Text speed (slow/normal/fast/instant), battle animation speed (1×/2×/4×), confirm before ending a turn |
+| Controls | Keyboard and gamepad bindings for move up/down/left/right, accept, cancel, menu; reset to defaults |
+
+Defaults, ranges and binding serialization live in `core/settings/`; the `Settings` autoload applies
+them to the engine (audio buses, window, input map). Game actions are mirrored into Godot's built-in
+`ui_*` actions so menus follow rebinds.
 
 ## 7. Milestones
 
@@ -276,9 +323,10 @@ JSON save files containing party/storage `CreatureInstance` data (species id, le
 |---|---|
 | **M0 Foundation** | Project settings (32x32 pixel, stretch), folder layout, gdUnit4 + Dialogue Manager installed, JSON loader, typed defs, Database, validator + headless tool, starter data, export filter |
 | **M1 Battle engine** | Headless N-vs-M engine: speed order, types, damage, statuses, field states + reactions, Underdog, basic AI, catching, XP + Affinity awards; full tests; CLI battle simulator |
+| **M1.5 Front end** | Splash, title menu, new game (name entry), save browser, settings (audio, display, gameplay, controls), placeholder world; save store with unlimited saves, per-playthrough autosave and Resume |
 | **M2 Battle scene** | Diagonal stage, placeholder sprites, action menus, event playback, catch animation |
 | **M3 Overworld + story** | One town + one route, movement, NPCs, Dialogue Manager conversations, one cutscene, rival battle, wild encounters |
-| **M4 Progression + saves** | Level-ups, one species with growth branches, party + storage menus, JSON save/load |
+| **M4 Progression + menus** | Level-ups, one species with growth branches, party + storage menus, training-point and respec UI |
 
 Starter content: ~8 creatures, ~20 moves, 5 field states, 4 reactions, 3 capture items, 2 tamers, 1 encounter table (placeholders).
 

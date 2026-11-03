@@ -1,0 +1,21 @@
+{
+  "schema": 1,
+  "data": {
+    "level_cap": 100,
+    "party_size": 6,
+    "max_moves": 4,
+    "stab": 1.25,
+    "max_field_states": 3,
+    "growth_affinity_threshold": 30,
+    "underdog": {
+      "spread_reduction_per_ratio": 0.2,
+      "spread_reduction_cap": 0.5,
+      "stat_bonus_per_ratio": 0.15,
+      "stat_bonus_cap": 0.4,
+      "xp_bonus_per_ratio": 0.5
+    },
+    "catch": {
+      "hp_weight": 0.8
+    }
+  }
+}

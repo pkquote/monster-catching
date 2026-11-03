@@ -1,0 +1,9 @@
+{
+  "schema": 1,
+  "entries": [
+    { "id": "striker", "name": "Striker", "description": "Grows from dealing damage and landing finishing blows." },
+    { "id": "warden", "name": "Warden", "description": "Grows from absorbing hits, healing, and protecting allies." },
+    { "id": "catalyst", "name": "Catalyst", "description": "Grows from shaping the field and triggering reactions." },
+    { "id": "trickster", "name": "Trickster", "description": "Grows from statuses, debuffs, and making foes miss." }
+  ]
+}

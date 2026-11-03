@@ -1,0 +1,12 @@
+{
+  "schema": 1,
+  "entries": [
+    { "id": "neutral", "name": "Neutral", "matchups": { "earth": 0.75 } },
+    { "id": "fire", "name": "Fire", "matchups": { "grass": 2.0, "ice": 2.0, "water": 0.5, "fire": 0.5, "earth": 0.5 } },
+    { "id": "water", "name": "Water", "matchups": { "fire": 2.0, "earth": 2.0, "water": 0.5, "grass": 0.5 } },
+    { "id": "grass", "name": "Grass", "matchups": { "water": 2.0, "earth": 2.0, "fire": 0.5, "grass": 0.5 } },
+    { "id": "electric", "name": "Electric", "matchups": { "water": 2.0, "earth": 0.0, "electric": 0.5, "grass": 0.5 } },
+    { "id": "ice", "name": "Ice", "matchups": { "grass": 2.0, "earth": 2.0, "fire": 0.5, "ice": 0.5 } },
+    { "id": "earth", "name": "Earth", "matchups": { "fire": 2.0, "electric": 2.0, "grass": 0.5 } }
+  ]
+}

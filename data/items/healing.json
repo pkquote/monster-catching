@@ -1,0 +1,8 @@
+{
+  "schema": 1,
+  "entries": [
+    { "id": "salve", "name": "Salve", "description": "Restores a third of a creature's HP.",
+      "category": "heal", "price": 150, "target": "one_ally",
+      "effects": [ { "op": "heal", "fraction": 0.33 } ] }
+  ]
+}

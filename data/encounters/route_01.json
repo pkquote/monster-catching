@@ -1,0 +1,13 @@
+{
+  "schema": 1,
+  "entries": [
+    { "id": "route_01_grass", "name": "Route 1 tall grass", "pack_min": 1, "pack_max": 2,
+      "table": [
+        { "species": "sprigling", "weight": 35, "min_level": 2, "max_level": 5 },
+        { "species": "emberkit", "weight": 25, "min_level": 3, "max_level": 5 },
+        { "species": "voltmoth", "weight": 20, "min_level": 3, "max_level": 6 },
+        { "species": "pebblet", "weight": 15, "min_level": 3, "max_level": 6 },
+        { "species": "frostling", "weight": 5, "min_level": 5, "max_level": 7 }
+      ] }
+  ]
+}

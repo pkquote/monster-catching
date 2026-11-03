@@ -1,0 +1,29 @@
+{
+  "schema": 1,
+  "entries": [
+    { "id": "ember_flick", "name": "Ember Flick", "type": "fire", "category": "special",
+      "power": 40, "accuracy": 100, "target": "one_enemy",
+      "effects": [ { "op": "damage" }, { "op": "apply_status", "status": "burn", "chance": 10 } ] },
+    { "id": "scorch_field", "name": "Scorch Field", "description": "Sets the enemy side smouldering.", "type": "fire", "category": "status",
+      "power": 0, "accuracy": 100, "always_hits": true, "target": "enemy_side",
+      "effects": [ { "op": "apply_field_state", "side": "enemy", "state": "scorched" } ] },
+    { "id": "flare_burst", "name": "Flare Burst", "description": "Hits every foe; far stronger on a Scorched side.", "type": "fire", "category": "special",
+      "power": 45, "accuracy": 90, "target": "all_enemies",
+      "effects": [
+        { "op": "bonus_if_field", "side": "target", "state": "scorched", "mult": 1.6, "consume": true },
+        { "op": "damage" }
+      ] },
+    { "id": "vine_lash", "name": "Vine Lash", "type": "grass", "category": "physical",
+      "power": 45, "accuracy": 100, "target": "one_enemy",
+      "effects": [ { "op": "damage" } ] },
+    { "id": "seed_carpet", "name": "Seed Carpet", "description": "Grows a thicket on the enemy side.", "type": "grass", "category": "status",
+      "power": 0, "accuracy": 100, "always_hits": true, "target": "enemy_side",
+      "effects": [ { "op": "apply_field_state", "side": "enemy", "state": "overgrown" } ] },
+    { "id": "regrowth", "name": "Regrowth", "description": "Heals; heals more on your own Overgrown side.", "type": "grass", "category": "status",
+      "power": 0, "accuracy": 100, "always_hits": true, "target": "self",
+      "effects": [
+        { "op": "bonus_if_field", "side": "own", "state": "overgrown", "mult": 1.5 },
+        { "op": "heal", "fraction": 0.33 }
+      ] }
+  ]
+}

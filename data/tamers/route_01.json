@@ -1,0 +1,13 @@
+{
+  "schema": 1,
+  "entries": [
+    { "id": "scout_ana", "name": "Scout Ana", "max_active": 1, "ai": "basic", "reward_money": 200,
+      "party": [ { "species": "sprigling", "level": 5 }, { "species": "emberkit", "level": 6 } ] },
+    { "id": "rival_01", "name": "Rival", "max_active": 2, "ai": "tactician", "reward_money": 500,
+      "party": [
+        { "species": "voltmoth", "level": 7, "moves": ["spark_bite", "static_field"] },
+        { "species": "frostling", "level": 7 }
+      ],
+      "items": [ { "item": "salve", "count": 1 } ] }
+  ]
+}

@@ -1,0 +1,14 @@
+[remap]
+
+importer="dialogue_manager_compiler_14"
+type="Resource"
+uid="uid://cp6amndb01n8a"
+valid=false
+
+[deps]
+
+source_file="res://dialogue/route_01/rival_intro.dialogue"
+
+[params]
+
+defaults=true

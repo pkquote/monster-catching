@@ -1,0 +1,14 @@
+{
+  "schema": 1,
+  "entries": [
+    { "id": "lure_cage", "name": "Lure Cage", "description": "A plain woven cage. Works anywhere.",
+      "category": "capture", "price": 100, "target": "one_enemy",
+      "effects": [ { "op": "capture", "mult": 1.0 } ] },
+    { "id": "tide_net", "name": "Tide Net", "description": "Far more effective on a Soaked side.",
+      "category": "capture", "price": 250, "target": "one_enemy",
+      "effects": [ { "op": "capture", "mult": 0.8, "field_bonus": { "soaked": 2.5 } } ] },
+    { "id": "snare_vine", "name": "Snare Vine", "description": "Far more effective on an Overgrown side.",
+      "category": "capture", "price": 250, "target": "one_enemy",
+      "effects": [ { "op": "capture", "mult": 0.8, "field_bonus": { "overgrown": 2.5 } } ] }
+  ]
+}

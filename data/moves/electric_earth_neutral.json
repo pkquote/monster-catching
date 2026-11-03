@@ -1,0 +1,35 @@
+{
+  "schema": 1,
+  "entries": [
+    { "id": "spark_bite", "name": "Spark Bite", "type": "electric", "category": "physical",
+      "power": 45, "accuracy": 100, "target": "one_enemy",
+      "effects": [ { "op": "damage" }, { "op": "apply_status", "status": "shock", "chance": 15 } ] },
+    { "id": "static_field", "name": "Static Field", "description": "Charges the air over the enemy side.", "type": "electric", "category": "status",
+      "power": 0, "accuracy": 100, "always_hits": true, "target": "enemy_side",
+      "effects": [ { "op": "apply_field_state", "side": "enemy", "state": "charged" } ] },
+    { "id": "thunder_cascade", "name": "Thunder Cascade", "type": "electric", "category": "special",
+      "power": 50, "accuracy": 90, "target": "all_enemies",
+      "effects": [
+        { "op": "bonus_if_field", "side": "target", "state": "charged", "mult": 1.4 },
+        { "op": "damage" }
+      ] },
+    { "id": "pebble_toss", "name": "Pebble Toss", "type": "earth", "category": "physical",
+      "power": 40, "accuracy": 100, "target": "one_enemy",
+      "effects": [ { "op": "damage" } ] },
+    { "id": "quake_stomp", "name": "Quake Stomp", "description": "Shakes the whole field, allies included.", "type": "earth", "category": "physical",
+      "power": 70, "accuracy": 100, "target": "all",
+      "effects": [ { "op": "damage" } ] },
+    { "id": "dust_sweep", "name": "Dust Sweep", "description": "Clears every state from your own side.", "type": "earth", "category": "status",
+      "power": 0, "accuracy": 100, "always_hits": true, "target": "own_side",
+      "effects": [ { "op": "remove_field_state", "side": "own" } ] },
+    { "id": "tackle", "name": "Tackle", "type": "neutral", "category": "physical",
+      "power": 40, "accuracy": 100, "target": "one_enemy",
+      "effects": [ { "op": "damage" } ] },
+    { "id": "brace", "name": "Brace", "description": "Raises Defense.", "type": "neutral", "category": "status",
+      "power": 0, "accuracy": 100, "always_hits": true, "target": "self",
+      "effects": [ { "op": "stat_stage", "stat": "def", "stages": 1 } ] },
+    { "id": "taunting_howl", "name": "Taunting Howl", "description": "Lowers every foe's Attack.", "type": "neutral", "category": "status",
+      "power": 0, "accuracy": 100, "target": "all_enemies",
+      "effects": [ { "op": "stat_stage", "stat": "atk", "stages": -1 } ] }
+  ]
+}

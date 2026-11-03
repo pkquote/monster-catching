@@ -18,7 +18,7 @@ mechanics that feel distinct from the genre's defaults.
 
 | Topic | Decision |
 |---|---|
-| Engine | Godot 4.3, typed GDScript |
+| Engine | Godot 4.7, typed GDScript |
 | Overworld | Top-down, 32x32 tiles, pixel-perfect scaling |
 | Battle view | Separate scene, side-on diagonal stage (player lower-left, enemy upper-right), large sprites (96–128px) |
 | Battle formats | 1v1, 2v2, 3v3 and uneven (e.g. 1v3); outnumbered side gets **Underdog** compensation |

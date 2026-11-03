@@ -19,6 +19,7 @@ const STATUS_HORIZON := 4
 const NEW_STATE := 0.15  # x ref, a hostile state's passive value on its own
 const RESTACK := 0.05  # x ref
 const FOLLOW_CASH_IN := 0.3  # x ref, the team knows a move that cashes the state in
+const OWN_BUFF := 0.35  # x ref, a helpful state placed on its own side
 ## A setup that enables a reaction next turn is worth this share of that reaction's value.
 const FOLLOW_DISCOUNT := 0.6
 ## Below this share of max energy, Rest becomes an option worth REST_VALUE.
@@ -200,7 +201,15 @@ static func _setup_value(engine: BattleEngine, b: Battler, m: MoveDef, targets: 
 						value += reaction_value(engine, b, r, s, used, ref)
 						fired = true
 						break
-				if fired or s == b.side:
+				if fired:
+					continue
+				var benefit := state_benefit(engine, e.state)
+				if s == b.side:
+					if benefit > 0.0:
+						value += OWN_BUFF * ref
+					continue
+				if benefit > 0.0:
+					value -= OWN_BUFF * ref  # never buff the enemy
 					continue
 				value += NEW_STATE * ref
 				var follow := _best_follow_up(engine, b, e.state, s, stacks, ref)
@@ -218,6 +227,18 @@ static func _setup_value(engine: BattleEngine, b: Battler, m: MoveDef, targets: 
 						if t.side != b.side:
 							value += float(DEBUFF_VALUE.get(e.stat, 0.1)) * ref * -int(e.stages)
 	return value
+
+
+## Rough sign of a field state for whoever holds it: > 0 helps, < 0 hurts.
+static func state_benefit(engine: BattleEngine, state: String) -> float:
+	var total := 0.0
+	for p in engine.db.field_state(state).passive:
+		match p.op:
+			"stat_mod":
+				total += float(p.mult) - 1.0
+			"incoming_type_mod":
+				total += 1.0 - float(p.mult)
+	return total
 
 
 ## Value of the best reaction b's team could trigger next by adding a state to

@@ -78,6 +78,13 @@ func test_damaging_reaction_outvalues_debuff_reaction() -> void:
 	assert_float(conduction).is_greater(steam)
 
 
+func test_state_benefit_sign() -> void:
+	var e := FixtureDB.engine(db, [FixtureDB.make(db, "blob")], [FixtureDB.make(db, "tank")])
+	assert_float(BattleAI.state_benefit(e, "soaked")).is_less(0.0)  # electric weakness
+	assert_float(BattleAI.state_benefit(e, "overgrown")).is_less(0.0)  # slowed
+	assert_float(BattleAI.state_benefit(e, "charged")).is_equal(0.0)
+
+
 func test_basic_returns_a_known_move() -> void:
 	var e := FixtureDB.engine(db, [FixtureDB.make(db, "blob", 8)], [FixtureDB.make(db, "tank")])
 	var me: Battler = e.sides[0].active()[0]

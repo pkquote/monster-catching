@@ -6,11 +6,11 @@
 | Category | Count |
 |---|---|
 | [Creatures](#creatures) | 8 |
-| [Moves](#moves) | 23 |
+| [Moves](#moves) | 44 |
 | [Items](#items) | 5 |
 | [Statuses](#statuses) | 4 |
-| [Field States](#field-states) | 5 |
-| [Reactions](#reactions) | 4 |
+| [Field States](#field-states) | 12 |
+| [Reactions](#reactions) | 8 |
 | [Types](#types) | 14 |
 | [Affinities](#affinities) | 4 |
 | [Tamers](#tamers) | 2 |
@@ -26,13 +26,13 @@
 
 #### Neutral
 
-*Ordinary creatures relying on plain strength and instinct, with no elemental or otherworldly nature.*
+*A blank slate. Ordinary creatures relying on plain strength and instinct, neither strong nor weak against anything.*
 
-- **Pros:** Hits almost everything for normal damage; Has only one weakness; Pairs with any second type without adding weaknesses
-- **Cons:** Never hits anything for bonus damage; Its blows glance off Earth, Iron and Ghost; Unguarded minds make it weak to Mental
+- **Pros:** Never resisted: hits every type for normal damage; No weaknesses at all; Pairs with any second type without adding weaknesses or changing matchups
+- **Cons:** Never hits anything for bonus damage; Resists nothing
 - **Hits hard:** —
-- **Hits weakly:** Earth, Iron, Ghost
-- **Weak to:** Mental
+- **Hits weakly:** —
+- **Weak to:** —
 - **Resists:** —
 - **Creatures:** —
 
@@ -101,12 +101,12 @@
 
 *Stone, sand and soil. Grounds lightning, smothers fire and crushes metal.*
 
-- **Pros:** Strong against Fire, Electric and Iron; Immune to Electric; Resists Neutral and Fire
+- **Pros:** Strong against Fire, Electric and Iron; Immune to Electric; Resists Fire
 - **Cons:** Weak to Water, Grass and Ice; Can't touch what isn't solid: weak against Ghost and Grass
 - **Hits hard:** Fire, Electric, Iron
 - **Hits weakly:** Grass, Ghost
 - **Weak to:** Water, Grass, Ice
-- **Resists:** Neutral, Fire
+- **Resists:** Fire
 - **Immune to:** Electric
 - **Creatures:** Pebblet, Torrentusk
 
@@ -126,9 +126,9 @@
 
 *Psychic force, willpower and illusion. Overwhelms simple minds and disrupts spellcasting.*
 
-- **Pros:** Strong against Magic and Neutral; Resists Mental
-- **Cons:** Weak to Ghost, Dark and Virtual: fragile defensively; Little effect on Iron, Dark, Virtual or other Mental
-- **Hits hard:** Neutral, Magic
+- **Pros:** Strong against Magic and Ghost; Resists Mental
+- **Cons:** Weak to Ghost, Dark and Virtual: fragile defensively; Mental and Ghost are each strong against the other; Little effect on Iron, Dark, Virtual or other Mental
+- **Hits hard:** Magic, Ghost
 - **Hits weakly:** Mental, Iron, Virtual, Dark
 - **Weak to:** Virtual, Ghost, Dark
 - **Resists:** Mental
@@ -138,12 +138,12 @@
 
 *Metal, armour and machinery. A defensive wall that shatters ice and grounds magic.*
 
-- **Pros:** Resists Neutral, Grass, Ice, Magic, Mental, Dark, Light and Iron; Strong against Ice and Magic
+- **Pros:** Resists Grass, Ice, Magic, Mental, Dark, Light and Iron; Strong against Ice and Magic
 - **Cons:** Weak to Fire, Electric, Earth and Virtual; Few offensive targets; struggles against Fire, Water, Electric and Iron
 - **Hits hard:** Ice, Magic
 - **Hits weakly:** Fire, Water, Electric, Iron
 - **Weak to:** Fire, Electric, Earth, Virtual
-- **Resists:** Neutral, Grass, Ice, Magic, Mental, Iron, Dark, Light
+- **Resists:** Grass, Ice, Magic, Mental, Iron, Dark, Light
 - **Creatures:** —
 
 #### Virtual
@@ -160,14 +160,14 @@
 
 #### Ghost
 
-*Spirits and echoes of the departed. Haunts minds and possesses machines; hard to strike physically.*
+*Spirits and echoes of the departed. Haunts minds and possesses machines; hard to pin down.*
 
-- **Pros:** Strong against Mental and Virtual; Resists Neutral, Earth and Virtual
-- **Cons:** Weak to Magic and Light; Fades against Dark and Light
+- **Pros:** Strong against Mental and Virtual; Resists Earth and Virtual
+- **Cons:** Weak to Magic, Light and Mental: Mental and Ghost are each strong against the other; Fades against Dark and Light
 - **Hits hard:** Mental, Virtual
 - **Hits weakly:** Dark, Light
-- **Weak to:** Magic, Light
-- **Resists:** Neutral, Earth, Virtual
+- **Weak to:** Magic, Mental, Light
+- **Resists:** Earth, Virtual
 - **Creatures:** —
 
 #### Dark
@@ -200,7 +200,7 @@ Damage multiplier when the **row** type attacks the **column** type. Blank means
 
 | Attacker \ Defender | Neutral | Fire | Water | Grass | Electric | Ice | Earth | Magic | Mental | Iron | Virtual | Ghost | Dark | Light |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
-| **Neutral** |  |  |  |  |  |  | x0.75 |  |  | x0.75 |  | x0.5 |  |  |
+| **Neutral** |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
 | **Fire** |  | x0.5 | x0.5 | x2 |  | x2 | x0.5 |  |  | x2 |  |  |  |  |
 | **Water** |  | x2 | x0.5 | x0.5 |  |  | x2 |  |  |  | x2 |  |  |  |
 | **Grass** |  | x0.5 | x2 | x0.5 |  |  | x2 |  |  | x0.5 |  |  |  |  |
@@ -208,7 +208,7 @@ Damage multiplier when the **row** type attacks the **column** type. Blank means
 | **Ice** |  | x0.5 |  | x2 |  | x0.5 | x2 |  |  | x0.5 |  |  |  |  |
 | **Earth** |  | x2 |  | x0.5 | x2 |  |  |  |  | x2 |  | x0.5 |  |  |
 | **Magic** |  |  |  |  |  |  |  | x0.5 |  | x0.5 | x0.5 | x2 | x2 |  |
-| **Mental** | x2 |  |  |  |  |  |  | x2 | x0.5 | x0.5 | x0.5 |  | x0.5 |  |
+| **Mental** |  |  |  |  |  |  |  | x2 | x0.5 | x0.5 | x0.5 | x2 | x0.5 |  |
 | **Iron** |  | x0.5 | x0.5 |  | x0.5 | x2 |  | x2 |  | x0.5 |  |  |  |  |
 | **Virtual** |  |  |  |  | x0.5 |  |  | x0.5 | x2 | x2 | x0.5 | x0.5 |  |  |
 | **Ghost** |  |  |  |  |  |  |  |  | x2 |  | x2 |  | x0.5 | x0.5 |
@@ -232,16 +232,30 @@ Held per side (max 3 at once). Passive effects apply to every creature on that s
 
 | State | Id | Max stacks | Default rounds | Passive | Reacts with |
 |---|---|---|---|---|---|
-| **Charged** | `charged` | 3 | 3 | Electric damage taken x1.15 | Soaked → Conduction |
+| **Charged** | `charged` | 3 | 3 | Electric damage taken x1.15 | Soaked → Conduction, Glitched → Overload, Magnetized → Railstorm |
+| **Enchanted** | `enchanted` | 3 | 4 | S.Def x1.15 | — |
 | **Frosted** | `frosted` | 3 | 4 | Acc x0.95 | Soaked → Icebound, Scorched → Steam |
+| **Glitched** | `glitched` | 3 | 3 | Virtual damage taken x1.2; Resolve x0.9 | Charged → Overload |
+| **Haunted** | `haunted` | 3 | 4 | Resolve x0.8; Ghost damage taken x1.15 | Hazed → Nightmare |
+| **Hazed** | `hazed` | 3 | 3 | S.Def x0.9; Mental damage taken x1.2 | Haunted → Nightmare |
+| **Magnetized** | `magnetized` | 3 | 4 | Spd x0.9; Electric damage taken x1.15 | Charged → Railstorm |
 | **Overgrown** | `overgrown` | 3 | 5 | Spd x0.9 | Scorched → Wildfire |
+| **Radiant** | `radiant` | 3 | 4 | Dark damage taken x0.75; Ghost damage taken x0.75; Acc x1.1 | Shrouded → Eclipse |
 | **Scorched** | `scorched` | 3 | 3 | Grass damage taken x1.2; Ice damage taken x1.2 | Frosted → Steam, Overgrown → Wildfire |
+| **Shrouded** | `shrouded` | 3 | 3 | Acc x0.85 | Radiant → Eclipse |
 | **Soaked** | `soaked` | 3 | 4 | Electric damage taken x1.25; Fire damage taken x0.75 | Charged → Conduction, Frosted → Icebound |
 
 - **Charged:** Static crackles in the air.
+- **Enchanted:** Glowing runes ward this side against spells and beams. Cast it on your own side.
 - **Frosted:** Rime coats the ground. Footing is poor.
+- **Glitched:** Corrupted data flickers across this side. Code finds its way in.
+- **Haunted:** Restless spirits whisper here, wearing down the will to resist.
+- **Hazed:** A psychic fog dulls every mind on this side.
+- **Magnetized:** Iron filings cling to everything, weighing creatures down and drawing in current.
 - **Overgrown:** Tangled growth slows everyone on this side.
+- **Radiant:** Warm light bathes this side, sharpening aim and burning away shadow. Cast it on your own side.
 - **Scorched:** Embers smoulder underfoot. Grass and ice suffer.
+- **Shrouded:** Thick shadow makes it hard to see what you're aiming at.
 - **Soaked:** Ground is flooded. Electric hits harder here, fire fizzles.
 
 ## Reactions
@@ -251,12 +265,20 @@ Fire immediately when an incoming state meets one already on that side. "All all
 | Reaction | Inputs | Consumes | Scope | Effects |
 |---|---|---|---|---|
 | **Conduction** | Charged + Soaked | Charged | That side | Damage (power 60 Electric), scales with stacks consumed → all allies; Inflicts Shock (30%) → all allies |
+| **Eclipse** | Shrouded + Radiant | Shrouded, Radiant | Both sides | Inflicts Daze (50%) → everyone |
 | **Icebound** | Soaked + Frosted | Soaked | That side | Spd -2 → all allies; Inflicts Chill → all allies |
+| **Nightmare** | Haunted + Hazed | Hazed | That side | Damage (power 45 Mental), scales with stacks consumed → all allies; Resolve -2 → all allies |
+| **Overload** | Glitched + Charged | Glitched, Charged | That side | Damage (power 45 Virtual), scales with stacks consumed → all allies; Inflicts Shock (40%) → all allies |
+| **Railstorm** | Magnetized + Charged | Magnetized | That side | Damage (power 55 Electric), scales with stacks consumed → all allies |
 | **Steam** | Scorched + Frosted | Scorched, Frosted | Both sides | Acc -1 → everyone |
 | **Wildfire** | Scorched + Overgrown | Overgrown | That side | Damage (power 45 Fire), scales with stacks consumed → all allies; Inflicts Burn → all allies |
 
 - **Conduction:** Current races through the water, shocking everyone standing in it.
+- **Eclipse:** Light and shadow collide, and the whole field goes dark and dazzling at once.
 - **Icebound:** Standing water freezes solid around their feet.
+- **Nightmare:** The spirits slip into fogged minds and the haze turns into terror.
+- **Overload:** A surge hits corrupted data and everything shorts out at once.
+- **Railstorm:** Current arcs through the magnetized filings, flinging them like shrapnel.
 - **Steam:** A scalding cloud blankets the whole battlefield.
 - **Wildfire:** The undergrowth catches. Everything on this side burns.
 
@@ -419,6 +441,14 @@ Base stats. *Total* sums the six battle stats (HP to Spd); Luck, Resolve and Sta
 
 Grouped by type. Physical moves use P.Atk vs P.Def; special moves use S.Atk vs S.Def. *Cost* is energy spent. Effects run top to bottom; `bonus_if_field` modifiers apply to the damage or heal after them. **Scrap** is always available, even without energy.
 
+### Dark moves
+
+| Move | Id | Cat. | Power | Cost | Acc | Pri | Target | Effects | Learned by |
+|---|---|---|---|---|---|---|---|---|---|
+| **Dusk Pulse** | `dusk_pulse` | Special | 40 | 2 | 100% | 0 | One enemy | Damage<br>*A ripple of cold shadow.* | — |
+| **Shadow Claw** | `shadow_claw` | Physical | 50 | 4 | 100% | 0 | One enemy | Damage<br>*A slash from the darkness.* | — |
+| **Shroud** | `shroud` | Status | — | 4 | — | 0 | Enemy side | Applies Shrouded to the enemy side<br>*Smothers the enemy side in shadow.* | — |
+
 ### Earth moves
 
 | Move | Id | Cat. | Power | Cost | Acc | Pri | Target | Effects | Learned by |
@@ -443,6 +473,14 @@ Grouped by type. Physical moves use P.Atk vs P.Def; special moves use S.Atk vs S
 | **Flare Burst** | `flare_burst` | Special | 45 | 7 | 90% | 0 | All enemies | x1.6 if the target's side is Scorched (consumes it); Damage<br>*Hits every foe; far stronger on a Scorched side.* | Emberkit |
 | **Scorch Field** | `scorch_field` | Status | — | 4 | — | 0 | Enemy side | Applies Scorched to the enemy side<br>*Sets the enemy side smouldering.* | Emberkit |
 
+### Ghost moves
+
+| Move | Id | Cat. | Power | Cost | Acc | Pri | Target | Effects | Learned by |
+|---|---|---|---|---|---|---|---|---|---|
+| **Haunt** | `haunt` | Status | — | 4 | — | 0 | Enemy side | Applies Haunted to the enemy side<br>*Calls restless spirits onto the enemy side.* | — |
+| **Spirit Touch** | `spirit_touch` | Physical | 40 | 2 | 100% | 0 | One enemy | Damage<br>*A chilling touch from beyond.* | — |
+| **Wail** | `wail` | Special | 50 | 4 | 100% | 0 | One enemy | Damage<br>*A mournful cry that rattles the soul.* | — |
+
 ### Grass moves
 
 | Move | Id | Cat. | Power | Cost | Acc | Pri | Target | Effects | Learned by |
@@ -459,6 +497,38 @@ Grouped by type. Physical moves use P.Atk vs P.Def; special moves use S.Atk vs S
 | **Glacier Crash** | `glacier_crash` | Physical | 80 | 9 | 85% | 0 | One enemy | Damage | Frostling, Mistcoil |
 | **Rime Veil** | `rime_veil` | Status | — | 4 | — | 0 | Enemy side | Applies Frosted to the enemy side<br>*Coats the enemy side in frost.* | Frostling, Mistcoil |
 
+### Iron moves
+
+| Move | Id | Cat. | Power | Cost | Acc | Pri | Target | Effects | Learned by |
+|---|---|---|---|---|---|---|---|---|---|
+| **Iron Bash** | `iron_bash` | Physical | 50 | 4 | 95% | 0 | One enemy | Damage<br>*A heavy, armoured slam.* | — |
+| **Magnet Pulse** | `magnet_pulse` | Special | 40 | 2 | 100% | 0 | One enemy | Damage<br>*A wave of magnetic force.* | — |
+| **Magnetize** | `magnetize` | Status | — | 4 | — | 0 | Enemy side | Applies Magnetized to the enemy side<br>*Scatters iron filings across the enemy side.* | — |
+
+### Light moves
+
+| Move | Id | Cat. | Power | Cost | Acc | Pri | Target | Effects | Learned by |
+|---|---|---|---|---|---|---|---|---|---|
+| **Flash Strike** | `flash_strike` | Physical | 40 | 2 | 100% | +1 | One enemy | Damage<br>*A strike quick as a flash of light.* | — |
+| **Light Beam** | `light_beam` | Special | 50 | 4 | 100% | 0 | One enemy | Damage<br>*A focused beam of radiance.* | — |
+| **Radiance** | `radiance` | Status | — | 4 | — | 0 | Own side | Applies Radiant to own side<br>*Bathes your own side in warm light.* | — |
+
+### Magic moves
+
+| Move | Id | Cat. | Power | Cost | Acc | Pri | Target | Effects | Learned by |
+|---|---|---|---|---|---|---|---|---|---|
+| **Enchant** | `enchant` | Status | — | 4 | — | 0 | Own side | Applies Enchanted to own side<br>*Draws protective runes around your own side.* | — |
+| **Hex Bolt** | `hex_bolt` | Special | 50 | 4 | 100% | 0 | One enemy | Damage<br>*A crackling bolt of raw arcana.* | — |
+| **Rune Strike** | `rune_strike` | Physical | 40 | 2 | 100% | 0 | One enemy | Damage<br>*A blow carried by a glowing rune.* | — |
+
+### Mental moves
+
+| Move | Id | Cat. | Power | Cost | Acc | Pri | Target | Effects | Learned by |
+|---|---|---|---|---|---|---|---|---|---|
+| **Focus Palm** | `focus_palm` | Physical | 40 | 2 | 100% | 0 | One enemy | Damage<br>*A strike guided by total concentration.* | — |
+| **Mind Spike** | `mind_spike` | Special | 50 | 4 | 100% | 0 | One enemy | Damage<br>*A piercing psychic jolt.* | — |
+| **Psychic Haze** | `psychic_haze` | Status | — | 4 | — | 0 | Enemy side | Applies Hazed to the enemy side<br>*Fills the enemy side with a dulling psychic fog.* | — |
+
 ### Neutral moves
 
 | Move | Id | Cat. | Power | Cost | Acc | Pri | Target | Effects | Learned by |
@@ -467,6 +537,14 @@ Grouped by type. Physical moves use P.Atk vs P.Def; special moves use S.Atk vs S
 | **Scrap** | `scrap` | Physical | 25 | 0 | 100% | 0 | One enemy | Damage<br>*A desperate, free flail. Always available, even with no energy.* | Everyone (fallback) |
 | **Tackle** | `tackle` | Physical | 40 | 1 | 100% | 0 | One enemy | Damage | Emberkit, Tidepup |
 | **Taunting Howl** | `taunting_howl` | Status | — | 3 | 100% | 0 | All enemies | P.Atk -1<br>*Lowers every foe's Physical Attack.* | Tidepup |
+
+### Virtual moves
+
+| Move | Id | Cat. | Power | Cost | Acc | Pri | Target | Effects | Learned by |
+|---|---|---|---|---|---|---|---|---|---|
+| **Byte** | `byte` | Physical | 40 | 2 | 100% | 0 | One enemy | Damage<br>*A quick, glitching snap.* | — |
+| **Corrupt** | `corrupt` | Status | — | 4 | — | 0 | Enemy side | Applies Glitched to the enemy side<br>*Seeds the enemy side with corrupted data.* | — |
+| **Data Burst** | `data_burst` | Special | 50 | 4 | 100% | 0 | One enemy | Damage<br>*Floods the target with a blast of raw data.* | — |
 
 ### Water moves
 

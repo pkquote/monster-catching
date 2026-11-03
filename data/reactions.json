@@ -23,6 +23,28 @@
       "inputs": ["scorched", "frosted"], "consumes": ["scorched", "frosted"], "scope": "both_sides",
       "effects": [
         { "op": "stat_stage", "stat": "acc", "stages": -1, "target": "all" }
+      ] },
+    { "id": "railstorm", "name": "Railstorm", "description": "Current arcs through the magnetized filings, flinging them like shrapnel.",
+      "inputs": ["magnetized", "charged"], "consumes": ["magnetized"], "scope": "side",
+      "effects": [
+        {"op": "damage", "power": 55, "type": "electric", "scale_with_stacks": true, "target": "all_allies"}
+      ] },
+    { "id": "overload", "name": "Overload", "description": "A surge hits corrupted data and everything shorts out at once.",
+      "inputs": ["glitched", "charged"], "consumes": ["glitched", "charged"], "scope": "side",
+      "effects": [
+        {"op": "damage", "power": 45, "type": "virtual", "scale_with_stacks": true, "target": "all_allies"},
+        {"op": "apply_status", "status": "shock", "chance": 40, "target": "all_allies"}
+      ] },
+    { "id": "nightmare", "name": "Nightmare", "description": "The spirits slip into fogged minds and the haze turns into terror.",
+      "inputs": ["haunted", "hazed"], "consumes": ["hazed"], "scope": "side",
+      "effects": [
+        {"op": "damage", "power": 45, "type": "mental", "scale_with_stacks": true, "target": "all_allies"},
+        {"op": "stat_stage", "stat": "resolve", "stages": -2, "target": "all_allies"}
+      ] },
+    { "id": "eclipse", "name": "Eclipse", "description": "Light and shadow collide, and the whole field goes dark and dazzling at once.",
+      "inputs": ["shrouded", "radiant"], "consumes": ["shrouded", "radiant"], "scope": "both_sides",
+      "effects": [
+        {"op": "apply_status", "status": "daze", "chance": 50, "target": "all"}
       ] }
   ]
 }

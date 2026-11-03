@@ -1,0 +1,17 @@
+{
+  "schema": 1,
+  "entries": [
+    {"id": "byte", "name": "Byte", "description": "A quick, glitching snap.", "type": "virtual", "category": "physical", "power": 40, "cost": 2, "accuracy": 100, "target": "one_enemy", "effects": [{"op": "damage"}]},
+    {"id": "data_burst", "name": "Data Burst", "description": "Floods the target with a blast of raw data.", "type": "virtual", "category": "special", "power": 50, "cost": 4, "accuracy": 100, "target": "one_enemy", "effects": [{"op": "damage"}]},
+    {"id": "corrupt", "name": "Corrupt", "description": "Seeds the enemy side with corrupted data.", "type": "virtual", "category": "status", "power": 0, "cost": 4, "accuracy": 100, "always_hits": true, "target": "enemy_side", "effects": [{"op": "apply_field_state", "side": "enemy", "state": "glitched"}]},
+    {"id": "spirit_touch", "name": "Spirit Touch", "description": "A chilling touch from beyond.", "type": "ghost", "category": "physical", "power": 40, "cost": 2, "accuracy": 100, "target": "one_enemy", "effects": [{"op": "damage"}]},
+    {"id": "wail", "name": "Wail", "description": "A mournful cry that rattles the soul.", "type": "ghost", "category": "special", "power": 50, "cost": 4, "accuracy": 100, "target": "one_enemy", "effects": [{"op": "damage"}]},
+    {"id": "haunt", "name": "Haunt", "description": "Calls restless spirits onto the enemy side.", "type": "ghost", "category": "status", "power": 0, "cost": 4, "accuracy": 100, "always_hits": true, "target": "enemy_side", "effects": [{"op": "apply_field_state", "side": "enemy", "state": "haunted"}]},
+    {"id": "shadow_claw", "name": "Shadow Claw", "description": "A slash from the darkness.", "type": "dark", "category": "physical", "power": 50, "cost": 4, "accuracy": 100, "target": "one_enemy", "effects": [{"op": "damage"}]},
+    {"id": "dusk_pulse", "name": "Dusk Pulse", "description": "A ripple of cold shadow.", "type": "dark", "category": "special", "power": 40, "cost": 2, "accuracy": 100, "target": "one_enemy", "effects": [{"op": "damage"}]},
+    {"id": "shroud", "name": "Shroud", "description": "Smothers the enemy side in shadow.", "type": "dark", "category": "status", "power": 0, "cost": 4, "accuracy": 100, "always_hits": true, "target": "enemy_side", "effects": [{"op": "apply_field_state", "side": "enemy", "state": "shrouded"}]},
+    {"id": "flash_strike", "name": "Flash Strike", "description": "A strike quick as a flash of light.", "type": "light", "category": "physical", "power": 40, "cost": 2, "accuracy": 100, "priority": 1, "target": "one_enemy", "effects": [{"op": "damage"}]},
+    {"id": "light_beam", "name": "Light Beam", "description": "A focused beam of radiance.", "type": "light", "category": "special", "power": 50, "cost": 4, "accuracy": 100, "target": "one_enemy", "effects": [{"op": "damage"}]},
+    {"id": "radiance", "name": "Radiance", "description": "Bathes your own side in warm light.", "type": "light", "category": "status", "power": 0, "cost": 4, "accuracy": 100, "always_hits": true, "target": "own_side", "effects": [{"op": "apply_field_state", "side": "own", "state": "radiant"}]}
+  ]
+}

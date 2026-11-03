@@ -21,6 +21,27 @@
       "passive": [ { "op": "incoming_type_mod", "type": "electric", "mult": 1.15 } ] },
     { "id": "frosted", "name": "Frosted", "description": "Rime coats the ground. Footing is poor.",
       "max_stacks": 3, "default_turns": 4,
-      "passive": [ { "op": "stat_mod", "stat": "acc", "mult": 0.95 } ] }
+      "passive": [ { "op": "stat_mod", "stat": "acc", "mult": 0.95 } ] },
+    { "id": "enchanted", "name": "Enchanted", "description": "Glowing runes ward this side against spells and beams. Cast it on your own side.",
+      "max_stacks": 3, "default_turns": 4,
+      "passive": [{"op": "stat_mod", "stat": "sdef", "mult": 1.15}] },
+    { "id": "hazed", "name": "Hazed", "description": "A psychic fog dulls every mind on this side.",
+      "max_stacks": 3, "default_turns": 3,
+      "passive": [{"op": "stat_mod", "stat": "sdef", "mult": 0.9}, {"op": "incoming_type_mod", "type": "mental", "mult": 1.2}] },
+    { "id": "magnetized", "name": "Magnetized", "description": "Iron filings cling to everything, weighing creatures down and drawing in current.",
+      "max_stacks": 3, "default_turns": 4,
+      "passive": [{"op": "stat_mod", "stat": "spd", "mult": 0.9}, {"op": "incoming_type_mod", "type": "electric", "mult": 1.15}] },
+    { "id": "glitched", "name": "Glitched", "description": "Corrupted data flickers across this side. Code finds its way in.",
+      "max_stacks": 3, "default_turns": 3,
+      "passive": [{"op": "incoming_type_mod", "type": "virtual", "mult": 1.2}, {"op": "stat_mod", "stat": "resolve", "mult": 0.9}] },
+    { "id": "haunted", "name": "Haunted", "description": "Restless spirits whisper here, wearing down the will to resist.",
+      "max_stacks": 3, "default_turns": 4,
+      "passive": [{"op": "stat_mod", "stat": "resolve", "mult": 0.8}, {"op": "incoming_type_mod", "type": "ghost", "mult": 1.15}] },
+    { "id": "shrouded", "name": "Shrouded", "description": "Thick shadow makes it hard to see what you're aiming at.",
+      "max_stacks": 3, "default_turns": 3,
+      "passive": [{"op": "stat_mod", "stat": "acc", "mult": 0.85}] },
+    { "id": "radiant", "name": "Radiant", "description": "Warm light bathes this side, sharpening aim and burning away shadow. Cast it on your own side.",
+      "max_stacks": 3, "default_turns": 4,
+      "passive": [{"op": "incoming_type_mod", "type": "dark", "mult": 0.75}, {"op": "incoming_type_mod", "type": "ghost", "mult": 0.75}, {"op": "stat_mod", "stat": "acc", "mult": 1.1}] }
   ]
 }

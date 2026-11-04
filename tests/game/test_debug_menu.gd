@@ -280,3 +280,25 @@ func test_logs_page_keyboard_never_gets_stuck_in_the_log_text() -> void:
 		await get_tree().process_frame
 	assert_object(get_viewport().gui_get_focus_owner()).is_not_same(view)
 	DebugMenu.close()
+
+
+func test_battle_starts_after_the_count_even_if_the_menu_was_closed() -> void:
+	assert_str(GameState.start_new_game("Ana")).is_empty()
+	BattleLauncher.grant_test_party(DataRegistry.db, GameState.current)
+	var world := await WorldTest.open(self, "test_b", "middle", WorldTest.KEEP_GAME)
+	DebugMenu.open()
+	_labels()["Rival (2v2)"].pressed.emit()
+	await get_tree().process_frame
+	DebugMenu.close()  # F1 while the "how many?" prompt is up
+	await get_tree().process_frame
+	var prompt: FieldCountPrompt = null
+	for n in DebugMenu.get_children():
+		if n is FieldCountPrompt:
+			prompt = n
+	assert_object(prompt).is_not_null()
+	var menu: CommandMenu = prompt.find_children("*", "CommandMenu", true, false)[0]
+	assert_bool(menu.pick_label("2 creatures")).is_true()
+	for i in 10:
+		await get_tree().process_frame
+	assert_bool(world.battles.in_battle()).is_true()
+	WorldTest.close(world)

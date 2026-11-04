@@ -15,7 +15,7 @@ const UNDERDOG_STATS := ["patk", "pdef", "satk", "sdef"]
 static func effective_stat(engine: BattleEngine, b: Battler, stat: String) -> float:
 	var v: float
 	if stat == "acc":
-		v = Progression.bond_performance(engine.db, b.creature)
+		v = Bond.performance(engine.db, b.creature)
 	else:
 		v = float(b.creature.stat(engine.db, stat))
 	v *= Stats.stage_mult(stat, b.stages[stat])
@@ -53,7 +53,7 @@ static func damage(engine: BattleEngine, ctx: EffectContext, e: Dictionary, targ
 	if not ctx.is_reaction() and user != null:
 		if user.creature.species_def(db).types.has(type):
 			mult *= db.balance.stab
-		mult *= Progression.bond_performance(db, user.creature)
+		mult *= Bond.performance(db, user.creature)
 	for p in engine.side_passives(target.side) + engine.status_passives(target):
 		if p.op == "incoming_type_mod" and p.type == type:
 			mult *= float(p.mult)

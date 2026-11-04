@@ -10,9 +10,9 @@ static func points(n: int) -> String:
 
 ## Asks before the seed is spent, through `say` (shows a line of text) and `menu`.
 ## False = nothing to return, or the player said No.
-static func confirm(menu: CommandMenu, say: Callable, c: CreatureInstance) -> bool:
-	var spent := Progression.training_points_spent(c)
-	var cname := c.display_name(DataRegistry.db)
+static func confirm(menu: CommandMenu, say: Callable, c: CreatureInstance, db: Database = null) -> bool:
+	var spent := Training.spent(c)
+	var cname := c.display_name(db if db != null else DataRegistry.db)
 	if spent <= 0:
 		say.call("It has no points to return.")
 		await menu.choose("", [{"label": "OK", "value": null}], true, 1)

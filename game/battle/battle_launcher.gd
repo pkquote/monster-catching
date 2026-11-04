@@ -18,7 +18,7 @@ static func grant_test_party(db: Database, save: SaveGame) -> bool:
 	for entry in TEST_PARTY:
 		var c := CreatureInstance.create(db, entry[0], entry[1])
 		if save.party.is_empty():
-			Progression.make_starter(db, c)
+			Bond.make_starter(db, c)
 		add_to_party(db, save, c)
 	for item in TEST_BAG:
 		save.inventory[item] = int(save.inventory.get(item, 0)) + TEST_BAG[item]

@@ -183,3 +183,20 @@ func test_swap_from_party_can_page_the_box() -> void:
 	await _pick(s, "Next page")
 	await _pick(s, "Box: Emberkit")
 	assert_object(save.party[0]).is_same(far)
+
+
+func test_screens_work_on_the_save_they_are_given() -> void:
+	var db := DataRegistry.db
+	var other := SaveGame.new_game("Bo", 0, RandomNumberGenerator.new())
+	other.party.append(CreatureInstance.create(db, "tidepup", 5))
+	other.party.append(CreatureInstance.create(db, "emberkit", 5))
+	var global_before := GameState.current.storage.size()
+	StorageScreen.run(world, other, db)
+	await get_tree().process_frame
+	var s := _screen()
+	await _pick(s, "Party: Emberkit")
+	await _pick(s, "Deposit")
+	assert_int(other.storage.size()).is_equal(1)
+	assert_int(other.party.size()).is_equal(1)
+	assert_int(GameState.current.storage.size()).is_equal(global_before)
+	s.close()

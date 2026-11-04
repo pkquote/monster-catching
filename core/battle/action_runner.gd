@@ -134,7 +134,7 @@ func _rest(b: Battler) -> void:
 ## usable move, or loafing around). Returns true if the ordered move must not run.
 func _bond_misbehaves(b: Battler, a: BattleAction) -> bool:
 	var e := engine
-	if e.rng.randf() < Progression.lash_out_chance(e.db, b.creature):
+	if e.rng.randf() < Bond.lash_out_chance(e.db, b.creature):
 		var pool: Array[Battler] = e.sides[b.side].active()
 		var victim: Battler = pool[e.rng.randi_range(0, pool.size() - 1)]
 		e.emit({"type": BattleEvents.LASHED_OUT, "bid": b.bid, "target": victim.bid})
@@ -146,7 +146,7 @@ func _bond_misbehaves(b: Battler, a: BattleAction) -> bool:
 		ctx.targets.append(victim)
 		e.run_effects(ctx, ctx.move.effects)
 		return true
-	if e.rng.randf() < Progression.disobey_chance(e.db, b.creature):
+	if e.rng.randf() < Bond.disobey_chance(e.db, b.creature):
 		var options := Array(e.usable_moves(b.bid)).filter(func(mid): return mid != a.move)
 		var pick := e.rng.randi_range(0, options.size())  # == size -> loaf
 		if pick >= options.size():

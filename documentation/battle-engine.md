@@ -105,7 +105,7 @@ Bond (−100…+100) is stored on the `CreatureInstance`. Changes come from `bal
 | `fainted` | The creature that fainted |
 | `healed_item` | A creature healed by an item |
 | `overworked` | Sent out or ordered to act below `overwork_hp` HP or `overwork_energy` energy (once per battle) |
-| `rested` | `Progression.rest()` at a rest point (overworld) |
+| `rested` | `Bond.rest()` at a rest point (overworld) |
 
 Negative Bond, scaling linearly to `bond.min`: a `disobey_max_chance` chance to use a random
 other usable move or loaf around (`disobeyed`), a `penalty_max` cut to accuracy and damage, and

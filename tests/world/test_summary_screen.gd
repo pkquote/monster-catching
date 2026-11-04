@@ -72,7 +72,7 @@ func test_train_refused_at_cap_shows_reason() -> void:
 
 func test_reset_seed_from_summary() -> void:
 	var c := Story.give_creature("tidepup", 10)
-	Progression.train(DataRegistry.db, c, "patk", 3)
+	Training.train(DataRegistry.db, c, "patk", 3)
 	GameState.current.inventory["reset_seed"] = 1
 	var s := await _open()
 	s.show_tab("training")
@@ -92,7 +92,7 @@ func test_reset_seed_from_summary() -> void:
 
 func test_reset_seed_from_summary_no_keeps_points() -> void:
 	var c := Story.give_creature("tidepup", 10)
-	Progression.train(DataRegistry.db, c, "patk", 3)
+	Training.train(DataRegistry.db, c, "patk", 3)
 	GameState.current.inventory["reset_seed"] = 1
 	var s := await _open()
 	s.show_tab("training")
@@ -105,7 +105,7 @@ func test_reset_seed_from_summary_no_keeps_points() -> void:
 
 func test_reset_seed_refund_of_one_point_is_singular() -> void:
 	var c := Story.give_creature("tidepup", 10)
-	Progression.train(DataRegistry.db, c, "patk", 1)
+	Training.train(DataRegistry.db, c, "patk", 1)
 	GameState.current.inventory["reset_seed"] = 1
 	var s := await _open()
 	s.show_tab("training")
@@ -356,3 +356,17 @@ func test_equipping_a_pool_move_is_not_worded_as_learning() -> void:
 	assert_bool(lm.menu.labels().has("Cancel")).is_true()
 	assert_bool(lm.menu.labels().has("Keep it for later")).is_false()
 	await _pick(lm, "Cancel")
+
+
+func test_summary_reads_the_bag_of_the_save_it_is_given() -> void:
+	var other := SaveGame.new_game("Bo", 0, RandomNumberGenerator.new())
+	var c := CreatureInstance.create(DataRegistry.db, "tidepup", 10)
+	other.party.append(c)
+	other.inventory["reset_seed"] = 4
+	SummaryScreen.run(world, other.party, 0, other)
+	await get_tree().process_frame
+	var s := _screen(SummaryScreen) as SummaryScreen
+	s.show_tab("training")
+	await get_tree().process_frame
+	assert_bool(s.menu.labels().has("Use a Reset Seed (you have 4)")).is_true()
+	s.close()

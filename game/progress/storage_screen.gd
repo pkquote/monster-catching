@@ -14,8 +14,9 @@ var _message := ""
 
 
 ## Runs until the player closes the screen.
-static func run(world: Node) -> void:
+static func run(world: Node, save: SaveGame = null, db: Database = null) -> void:
 	var screen := StorageScreen.new()
+	screen.use_game(save, db)
 	world.add_child(screen)
 	await screen._loop()
 	screen.close()
@@ -37,12 +38,12 @@ static func refusal_text(reason: String) -> String:
 
 ## One compact list row for a creature, `prefix` says which side it is on.
 func _row(prefix: String, c: CreatureInstance, value: Variant) -> Dictionary:
-	var db := DataRegistry.db
+	var db := _db
 	var label := "%s%s  Lv %d  HP %d/%d" % [prefix, c.display_name(db), c.level, c.hp, c.max_hp(db)]
 	return {"label": label, "value": value, "decorate": func(b: Button) -> void:
 		b.custom_minimum_size.y = ROW_HEIGHT
 		var img := Image.create(10, 10, false, Image.FORMAT_RGBA8)
-		img.fill(species_color(c.species))
+		img.fill(species_color(c.species, _db))
 		b.icon = ImageTexture.create_from_image(img)}
 
 
@@ -57,7 +58,7 @@ func _plain(label: String, value: Variant) -> Dictionary:
 
 
 func _show_header() -> void:
-	var save := GameState.current
+	var save := _save
 	page = clampi(page, 0, page_count(save.storage.size()) - 1)
 	_title.text = "Box — page %d of %d" % [page + 1, page_count(save.storage.size())]
 	if _message != "":
@@ -70,7 +71,7 @@ func _show_header() -> void:
 
 ## Indices into the box for the current page.
 func _page_range() -> Vector2i:
-	var n := GameState.current.storage.size()
+	var n := _save.storage.size()
 	var from := page * PAGE_SIZE
 	return Vector2i(from, mini(from + PAGE_SIZE, n))
 
@@ -78,7 +79,7 @@ func _page_range() -> Vector2i:
 ## Party rows on the left (then `extras`, so Back and paging take no extra rows),
 ## box rows on the right, side by side in a two-column grid.
 func _grid_options(party: bool, box: bool, extras: Array) -> Array:
-	var save := GameState.current
+	var save := _save
 	var r := _page_range()
 	var left: Array = []
 	if party:
@@ -100,7 +101,7 @@ func _nav_extras() -> Array:
 	var extras: Array = []
 	if page > 0:
 		extras.append(_plain("Previous page", ["prev", 0]))
-	if _page_range().y < GameState.current.storage.size():
+	if _page_range().y < _save.storage.size():
 		extras.append(_plain("Next page", ["next", 0]))
 	extras.append(_plain("Back", ["back", 0]))
 	return extras
@@ -127,9 +128,9 @@ func _loop() -> void:
 
 
 func _party_creature(party_i: int) -> void:
-	var save := GameState.current
+	var save := _save
 	var c: CreatureInstance = save.party[party_i]
-	_title.text = c.display_name(DataRegistry.db)
+	_title.text = c.display_name(_db)
 	_body.text = ""
 	var choice = await _step([
 		{"label": "Deposit", "value": "deposit"},
@@ -138,7 +139,7 @@ func _party_creature(party_i: int) -> void:
 		{"label": "Cancel", "value": null}])
 	match choice:
 		"deposit":
-			_finish(Team.deposit(DataRegistry.db, save, party_i))
+			_finish(Team.deposit(_db, save, party_i))
 		"swap":
 			_message = ""
 			while true:  # the box creature may be on another page
@@ -153,16 +154,16 @@ func _party_creature(party_i: int) -> void:
 				elif pick[0] == "next":
 					page += 1
 				else:
-					_finish(Team.swap(DataRegistry.db, save, party_i, pick[1]))
+					_finish(Team.swap(_db, save, party_i, pick[1]))
 					return
 		_:
 			_message = ""
 
 
 func _box_creature(box_i: int) -> void:
-	var save := GameState.current
+	var save := _save
 	var c: CreatureInstance = save.storage[box_i]
-	_title.text = c.display_name(DataRegistry.db)
+	_title.text = c.display_name(_db)
 	_body.text = ""
 	var choice = await _step([
 		{"label": "Withdraw", "value": "withdraw"},
@@ -170,13 +171,13 @@ func _box_creature(box_i: int) -> void:
 		{"label": "Cancel", "value": null}])
 	match choice:
 		"withdraw":
-			_finish(Team.withdraw(DataRegistry.db, save, box_i))
+			_finish(Team.withdraw(_db, save, box_i))
 		"swap":
 			_body.text = "Swap with which party creature?"
 			var pick = await menu.choose("", _grid_options(true, false,
 					[_plain("Cancel", ["back", 0])]), true, 2)
 			if pick != null and pick[0] == "party":
-				_finish(Team.swap(DataRegistry.db, save, pick[1], box_i))
+				_finish(Team.swap(_db, save, pick[1], box_i))
 			else:
 				_message = ""
 		_:

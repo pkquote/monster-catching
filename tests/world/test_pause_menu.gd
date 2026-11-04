@@ -108,7 +108,7 @@ func _open_seed_target() -> void:
 
 func test_bag_reset_seed_confirms_and_refunds() -> void:
 	var c := Story.give_creature("tidepup", 20)
-	Progression.train(DataRegistry.db, c, "patk", 10)
+	Training.train(DataRegistry.db, c, "patk", 10)
 	GameState.current.inventory["reset_seed"] = 1
 	await _open_seed_target()
 	assert_str(world.pause_menu.menu.labels()[0]).contains("10 points spent")
@@ -118,19 +118,19 @@ func test_bag_reset_seed_confirms_and_refunds() -> void:
 	assert_int(c.trained("patk")).is_equal(10)
 	await _pick("Yes")
 	assert_str(world.pause_menu.page_text()).is_equal("Tidepup's 10 points came back.")
-	assert_int(Progression.training_points_spent(c)).is_equal(0)
+	assert_int(Training.spent(c)).is_equal(0)
 	assert_bool(GameState.current.inventory.has("reset_seed")).is_false()
 
 
 func test_bag_reset_seed_no_keeps_points() -> void:
 	var c := Story.give_creature("tidepup", 10)
-	Progression.train(DataRegistry.db, c, "patk", 4)
+	Training.train(DataRegistry.db, c, "patk", 4)
 	GameState.current.inventory["reset_seed"] = 1
 	await _open_seed_target()
 	world.pause_menu.menu.pick_label("Tidepup")
 	await get_tree().process_frame
 	await _pick("No")
-	assert_int(Progression.training_points_spent(c)).is_equal(4)
+	assert_int(Training.spent(c)).is_equal(4)
 	assert_int(GameState.current.inventory.reset_seed).is_equal(1)
 
 
@@ -146,7 +146,7 @@ func test_bag_reset_seed_nothing_to_refund() -> void:
 
 func test_bag_reset_seed_one_point_is_singular() -> void:
 	var c := Story.give_creature("tidepup", 10)
-	Progression.train(DataRegistry.db, c, "patk", 1)
+	Training.train(DataRegistry.db, c, "patk", 1)
 	GameState.current.inventory["reset_seed"] = 1
 	await _open_seed_target()
 	world.pause_menu.menu.pick_label("Tidepup")

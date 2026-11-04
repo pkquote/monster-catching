@@ -24,10 +24,11 @@ var _extra: VBoxContainer
 
 
 ## Runs until the player closes the screen.
-static func run(parent: Node, party: Array, index: int) -> void:
+static func run(parent: Node, party: Array, index: int, save: SaveGame = null, db: Database = null) -> void:
 	if party.is_empty():
 		return
 	var screen := SummaryScreen.new()
+	screen.use_game(save, db)
 	screen._party = party
 	screen._index = clampi(index, 0, party.size() - 1)
 	parent.add_child(screen)
@@ -90,7 +91,7 @@ func _input(event: InputEvent) -> void:
 
 
 func _loop(parent: Node) -> void:
-	var db := DataRegistry.db
+	var db := _db
 	while true:
 		var c := creature()
 		_title.text = "%s  Lv %d  -  %s" % [c.display_name(db), c.level, TAB_NAMES[tab]]
@@ -187,7 +188,7 @@ func _render_moves(db: Database, c: CreatureInstance) -> Array:
 
 
 func _render_training(db: Database, c: CreatureInstance) -> Array:
-	var lines: PackedStringArray = ["Points to spend: %d" % Progression.training_points_available(db, c)]
+	var lines: PackedStringArray = ["Points to spend: %d" % Training.available(db, c)]
 	if _notice != "":
 		lines.append(_notice)
 	_body.text = "\n".join(lines)
@@ -197,7 +198,7 @@ func _render_training(db: Database, c: CreatureInstance) -> Array:
 		if c.trained(stat) > 0:
 			label += "  (+%d)" % c.trained(stat)
 		options.append({"label": label, "value": {"train": stat}})
-	var seeds := int(GameState.current.inventory.get("reset_seed", 0))
+	var seeds := int(_save.inventory.get("reset_seed", 0))
 	options.append({"label": "Use a Reset Seed (you have %d)" % seeds, "value": "seed", "disabled": seeds <= 0})
 	return options
 
@@ -207,19 +208,19 @@ func _act(parent: Node, db: Database, c: CreatureInstance, choice: Variant) -> v
 	if choice is Dictionary and choice.has("train"):
 		_train(db, c, choice.train)
 	elif choice is Dictionary and choice.has("move"):
-		await LearnMoveScreen.run(parent, c, choice.move, true)
+		await LearnMoveScreen.run(parent, c, choice.move, true, _db)
 	elif choice == "seed":
-		if not await ResetSeedPrompt.confirm(menu, func(t: String) -> void: _body.text = t, c):
+		if not await ResetSeedPrompt.confirm(menu, func(t: String) -> void: _body.text = t, c, _db):
 			return
-		var result := FieldItems.use(db, GameState.current, "reset_seed", c)
+		var result := FieldItems.use(db, _save, "reset_seed", c)
 		if result.ok:
 			_notice = "%d training %s came back." % [result.refunded, "point" if result.refunded == 1 else "points"]
 	elif choice == "grow":
-		await GrowScreen.run(parent, c)
+		await GrowScreen.run(parent, c, _db)
 
 
 func _train(db: Database, c: CreatureInstance, stat: String) -> void:
-	match Progression.train(db, c, stat, 1):
+	match Training.train(db, c, stat, 1):
 		"stat_capped":
 			_notice = "%s is at the %d-point limit." % [STAT_NAMES[stat], int(db.balance.training_cfg.max_per_stat)]
 		"not_enough_points":

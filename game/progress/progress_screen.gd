@@ -18,6 +18,18 @@ const HALF_WIDTH := 296
 
 var menu: CommandMenu
 
+## The playthrough and content this screen works on: whatever use_game() was given,
+## else the current game and content, looked up when used (never stale).
+## run() takes them as arguments so screens can be opened on any save (tests).
+var _save: SaveGame:
+	get:
+		return _save_override if _save_override != null else GameState.current
+var _db: Database:
+	get:
+		return _db_override if _db_override != null else DataRegistry.db
+var _save_override: SaveGame
+var _db_override: Database
+
 var _root: Control
 var _title: Label
 var _body: Label
@@ -69,6 +81,14 @@ func _ready() -> void:
 	_bottom.add_child(menu)
 
 
+## Points the screen at `save` / `db` (null keeps the current game's / the content).
+func use_game(save: SaveGame, db: Database) -> void:
+	if save != null:
+		_save_override = save
+	if db != null:
+		_db_override = db
+
+
 ## The panel with the title and body text.
 func info_panel() -> Control:
 	return _top
@@ -101,6 +121,6 @@ func close() -> void:
 
 
 ## The placeholder sprite colour for a species: its first type's colour.
-static func species_color(species: String) -> Color:
-	var types: PackedStringArray = DataRegistry.db.creature(species).types
+static func species_color(species: String, db: Database = null) -> Color:
+	var types: PackedStringArray = (db if db != null else DataRegistry.db).creature(species).types
 	return TypeColors.type_color(types[0] if types.size() > 0 else "")

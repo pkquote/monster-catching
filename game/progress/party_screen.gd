@@ -9,9 +9,10 @@ var _world: Overworld
 
 
 ## Runs until the player closes the list.
-static func run(world: Overworld) -> void:
+static func run(world: Overworld, save: SaveGame = null, db: Database = null) -> void:
 	var screen := PartyScreen.new()
 	screen._world = world
+	screen.use_game(save, db)
 	world.add_child(screen)
 	await screen._loop()
 	screen.close()
@@ -31,7 +32,7 @@ static func row_text(db: Database, c: CreatureInstance) -> String:
 static func _row_option(db: Database, c: CreatureInstance, value: int) -> Dictionary:
 	return {"label": row_text(db, c), "value": value, "decorate": func(b: Button) -> void:
 		var img := Image.create(14, 14, false, Image.FORMAT_RGBA8)
-		img.fill(species_color(c.species))
+		img.fill(species_color(c.species, db))
 		b.icon = ImageTexture.create_from_image(img)
 		_add_bar(b, 3, c.hp, c.max_hp(db), Color(0.35, 0.8, 0.4))
 		_add_bar(b, 12, c.energy, c.max_energy(db), Color(0.35, 0.6, 0.95))}
@@ -56,8 +57,8 @@ static func _add_bar(parent: Control, y: float, value: float, max_value: float, 
 
 
 func _loop() -> void:
-	var db := DataRegistry.db
-	var save := GameState.current
+	var db := _db
+	var save := _save
 	while true:
 		_title.text = "Party"
 		_body.text = "" if not save.party.is_empty() else "Nobody in your party yet."
@@ -72,8 +73,8 @@ func _loop() -> void:
 
 
 func _row(index: int) -> void:
-	var db := DataRegistry.db
-	var save := GameState.current
+	var db := _db
+	var save := _save
 	var c: CreatureInstance = save.party[index]
 	var safe := _world.is_safe_here()
 	_title.text = c.display_name(db)
@@ -89,16 +90,16 @@ func _row(index: int) -> void:
 		"move":
 			await _move(index)
 		"storage":
-			await StorageScreen.run(_world)
+			await StorageScreen.run(_world, _save, _db)
 
 
 func _open_summary(index: int) -> void:
-	await SummaryScreen.run(_world, GameState.current.party, index)
+	await SummaryScreen.run(_world, _save.party, index, _save, _db)
 
 
 func _move(from: int) -> void:
-	var db := DataRegistry.db
-	var save := GameState.current
+	var db := _db
+	var save := _save
 	_body.text = "Move %s to which slot?" % save.party[from].display_name(db)
 	var options: Array = []
 	for i in save.party.size():

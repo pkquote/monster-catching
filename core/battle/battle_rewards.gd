@@ -23,7 +23,7 @@ func award(b: Battler, happening: String, times := 1) -> void:
 
 func bond(b: Battler, happening: String) -> void:
 	var e := engine
-	var change := Progression.change_bond(e.db, b.creature, happening)
+	var change := Bond.change(e.db, b.creature, happening)
 	if change != 0:
 		e.emit({"type": BattleEvents.BOND, "bid": b.bid, "change": change, "bond": b.creature.bond,
 			"reason": happening})
@@ -70,6 +70,6 @@ func _award_xp_for(defeated: Battler) -> void:
 		defeated.creature.level, not e.setup.is_wild, bonus)
 	for p in e.sides[0].battlers:
 		if p.participated and p.alive():
-			var share := maxi(1, int(amount * Progression.bond_xp_mult(e.db, p.creature)))
+			var share := maxi(1, int(amount * Bond.xp_mult(e.db, p.creature)))
 			for ev in Progression.award_xp(e.db, p.creature, share, p.bid):
 				e.emit(ev)

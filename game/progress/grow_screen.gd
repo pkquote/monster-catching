@@ -10,12 +10,12 @@ var _flash: ColorRect
 
 
 ## True if the creature grew. Returns false at once if it isn't ready.
-static func run(parent: Node, c: CreatureInstance) -> bool:
-	var db := DataRegistry.db
-	var into := Progression.growth_target(db, c)
+static func run(parent: Node, c: CreatureInstance, db: Database = null) -> bool:
+	var into := Progression.growth_target(db if db != null else DataRegistry.db, c)
 	if into == "":
 		return false
 	var screen := GrowScreen.new()
+	screen.use_game(null, db)
 	parent.add_child(screen)
 	var grew := await screen._ask(parent, c, into)
 	screen.close()
@@ -36,7 +36,7 @@ func _ready() -> void:
 
 
 func _ask(parent: Node, c: CreatureInstance, into: String) -> bool:
-	var db := DataRegistry.db
+	var db := _db
 	var old_name := c.display_name(db)  # before growing: no nickname means the species name
 	var new_name := db.creature(into).name
 	_show_species(c.species)
@@ -57,12 +57,12 @@ func _ask(parent: Node, c: CreatureInstance, into: String) -> bool:
 	_body.text = "%s grew into %s!" % [old_name, new_name]
 	await menu.choose("", [{"label": "OK", "value": null}], true, 1)
 	for move in result.offered:
-		await LearnMoveScreen.run(parent, c, move)
+		await LearnMoveScreen.run(parent, c, move, false, _db)
 	return true
 
 
 func _show_species(species: String) -> void:
-	_swatch.color = species_color(species)
+	_swatch.color = species_color(species, _db)
 
 
 func _play_flash() -> void:

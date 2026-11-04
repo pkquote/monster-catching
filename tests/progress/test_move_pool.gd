@@ -83,19 +83,19 @@ func test_set_moves_refusals() -> void:
 
 func test_reset_training_refunds_and_clamps() -> void:
 	var c := CreatureInstance.create(db, "tidepup", 14)
-	assert_str(Progression.train(db, c, "hp", 10)).is_equal("")
-	var refunded := Progression.reset_training(db, c)
+	assert_str(Training.train(db, c, "hp", 10)).is_equal("")
+	var refunded := Training.reset(db, c)
 	assert_int(refunded).is_equal(10)
-	assert_int(Progression.training_points_spent(c)).is_equal(0)
+	assert_int(Training.spent(c)).is_equal(0)
 	assert_int(c.hp).is_less_equal(c.max_hp(db))
 	assert_int(c.hp).is_greater_equal(1)
 	assert_int(c.energy).is_less_equal(c.max_energy(db))
 	var f := CreatureInstance.create(db, "tidepup", 14)
-	Progression.train(db, f, "hp", 10)
+	Training.train(db, f, "hp", 10)
 	f.hp = 0
-	Progression.reset_training(db, f)
+	Training.reset(db, f)
 	assert_int(f.hp).is_equal(0)
-	assert_int(Progression.reset_training(db, f)).is_equal(0)
+	assert_int(Training.reset(db, f)).is_equal(0)
 
 
 func test_growth_learns_moves_at_current_level() -> void:

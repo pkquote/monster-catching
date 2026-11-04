@@ -93,7 +93,7 @@ func give_creature(species: String, level: int, starter := false) -> CreatureIns
 	var db := DataRegistry.db
 	var c := CreatureInstance.create(db, species, level)
 	if starter:
-		Progression.make_starter(db, c)
+		Bond.make_starter(db, c)
 	var to_party := BattleLauncher.add_to_party(db, _save(), c)
 	Log.info(Log.STORY, "Creature given", {"species": species, "level": level, "starter": starter,
 		"to": "party" if to_party else "storage"})
@@ -108,7 +108,7 @@ func party_size() -> int:
 func heal_party() -> void:
 	Log.info(Log.STORY, "Party healed", {"party": _save().party.size()})
 	for c: CreatureInstance in _save().party:
-		Progression.rest(DataRegistry.db, c)
+		Bond.rest(DataRegistry.db, c)
 
 
 ## Where the player wakes after losing a battle.

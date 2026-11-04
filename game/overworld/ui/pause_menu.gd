@@ -63,7 +63,7 @@ func _bag() -> void:
 		for c: CreatureInstance in GameState.current.party:
 			if is_seed:
 				who.append({"label": "%s  Lv %d  %d points spent" % [c.display_name(db), c.level,
-					Progression.training_points_spent(c)], "value": c})
+					Training.spent(c)], "value": c})
 			else:
 				who.append({"label": "%s  HP %d/%d  EN %d/%d" % [c.display_name(db), c.hp, c.max_hp(db),
 					c.energy, c.max_energy(db)], "value": c})

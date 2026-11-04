@@ -118,5 +118,7 @@ Errors fail the check; warnings don't. Then press F5, start a game, and use F1 â
 
 `tools/build_maps.gd` builds the starter maps from ASCII layouts (legend in `tools/map_builder.gd`):
 `godot --headless --path . res://tools/build_maps.tscn`. It only writes maps that don't exist yet.
-**`-- --force` rebuilds them all and throws away edits made in the editor**, so once you start
-editing a map by hand, remove its entry from `build_maps.gd`.
+Rebuilding throws away edits made in the editor, so it has to be asked for explicitly:
+`-- --only=town_02,route_02` rebuilds just those maps, and `-- --force-all` rebuilds every map
+(a plain `--force` is refused). Once you start editing a map by hand, remove its entry from
+`build_maps.gd` so nothing can rebuild it.

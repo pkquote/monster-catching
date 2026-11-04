@@ -30,10 +30,10 @@ static func use(db: Database, save: SaveGame, item_id: String, c: CreatureInstan
 		out.error = "none_left"
 		return out
 	if db.item(item_id).category == "training":
-		if Progression.training_points_spent(c) <= 0:
+		if Training.spent(c) <= 0:
 			out.error = "nothing_to_refund"
 			return out
-		out.refunded = Progression.reset_training(db, c)
+		out.refunded = Training.reset(db, c)
 		_spend(save, item_id)
 		out.ok = true
 		return out

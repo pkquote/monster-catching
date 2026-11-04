@@ -1,10 +1,15 @@
 extends Node
 ## Roughs out the starter maps from ASCII layouts (see MapBuilder for the legend)
 ## and writes the blank map template. Existing maps are left alone, so edits made
-## in the Godot editor are safe; pass `-- --force` to rebuild everything, or `-- --only=id,id` to force-rebuild
-## just those maps.
+## in the Godot editor are safe.
 ##
-##   godot --headless --path . res://tools/build_maps.tscn [-- --force | --only=a,b]
+##   godot --headless --path . res://tools/build_maps.tscn                    # new maps only
+##   godot --headless --path . res://tools/build_maps.tscn -- --only=a,b      # rebuild these maps
+##   godot --headless --path . res://tools/build_maps.tscn -- --force-all     # rebuild every map
+##
+## Rebuilding throws away edits made in the editor, so it always has to be asked for
+## by name (--only) or spelled out (--force-all). A plain --force is refused. Once you
+## edit a map by hand, remove its entry from maps() below so nothing can rebuild it.
 ##
 ## It runs as a scene (not --script) so the game's autoloads exist: piece scripts
 ## use Story, and a script that fails to compile would drop the piece's settings.
@@ -21,7 +26,13 @@ const ROUTE_NPCS := "res://dialogue/route_01/npcs.dialogue"
 
 func _ready() -> void:
 	var args := OS.get_cmdline_user_args()
-	var force := "--force" in args
+	if "--force" in args:
+		printerr("build_maps: --force is no longer accepted: it would throw away editor edits on every map.
+"
+			+ "  Rebuild specific maps with -- --only=id,id, or all of them with -- --force-all.")
+		get_tree().quit(1)
+		return
+	var force := "--force-all" in args
 	var only := PackedStringArray()
 	for a in args:
 		if a.begins_with("--only="):

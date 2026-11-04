@@ -9,8 +9,9 @@ const CANCEL := "Cancel"
 
 
 ## True if `move` was slotted. Cancel means keep.
-static func run(parent: Node, c: CreatureInstance, move: String, equip := false) -> bool:
+static func run(parent: Node, c: CreatureInstance, move: String, equip := false, db: Database = null) -> bool:
 	var screen := LearnMoveScreen.new()
+	screen.use_game(null, db)
 	parent.add_child(screen)
 	var slotted := await screen._ask(c, move, equip)
 	screen.close()
@@ -26,7 +27,7 @@ static func move_line(db: Database, id: String) -> String:
 
 
 func _ask(c: CreatureInstance, move: String, equip: bool) -> bool:
-	var db := DataRegistry.db
+	var db := _db
 	var m := db.move(move)
 	if equip:
 		_title.text = "Equip %s on %s?" % [m.name, c.display_name(db)]

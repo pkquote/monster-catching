@@ -94,7 +94,10 @@ timeout 60 "$GODOT" --path . --script res://.claude/skills/run-godot-monster-cat
 | `--mode=scene` | open `--scene` (default: main scene), wait `--frames` (default 60), screenshot |
 | `--out=<dir>` | screenshot folder; `user://` paths allowed (default `user://run_shots`) |
 
-To drive a new flow, add a mode to `driver.gd` and reuse its helpers: `wait_scene(name, max_frames)`,
+Each tour is its own file in `tours/` (`frontend.gd`, `battle.gd`, `overworld.gd`, `progress.gd`):
+a `RefCounted` with `var d` (the driver) and `func run()`. To drive a new flow, add
+`tours/<name>.gd`, add `<name>` to the `match` in `driver.gd`'s `_initialize`, and call the
+driver's helpers through `d.`: `wait_scene(name, max_frames)`,
 `key(KEY_X)`, `type_text("abc")`, `press("Button text")`, `shot("name")`, `expect(ok, "what")`,
 for battles `wait_battle(["command"])`, `fight_to_end()` and `pick_menu("Fight")` (`""` picks the
 first enabled option), and for the overworld `hold(KEY_W, frames)` (real movement),

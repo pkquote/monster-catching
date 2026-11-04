@@ -120,9 +120,9 @@ func test_level_up_moves_and_growth_logged() -> void:
 func test_training_respec_and_storage_refusal_logged() -> void:
 	var db := DataRegistry.db
 	var c := Story.give_creature("tidepup", 10)
-	Progression.train(db, c, "spd", 2)
+	Training.train(db, c, "spd", 2)
 	assert_int(_find(Log.PROGRESS, "Trained").size()).is_equal(1)
-	Progression.reset_training(db, c)
+	Training.reset(db, c)
 	assert_int(_find(Log.PROGRESS, "Training reset").size()).is_equal(1)
 	assert_str(Team.deposit(db, GameState.current, 0)).is_equal("last_healthy")
 	var refused := _find(Log.PROGRESS, "Storage refused")

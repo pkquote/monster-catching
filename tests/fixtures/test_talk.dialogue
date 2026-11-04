@@ -19,6 +19,11 @@ $> Story.start_battle("scout_ana")
 Watcher: Good fight.
 => END
 
+~ forgets_unlock
+$> Cutscene.lock_player()
+Guide: I never give control back.
+=> END
+
 ~ bye
 Watcher: You beat me fair.
 => END

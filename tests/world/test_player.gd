@@ -84,3 +84,36 @@ func test_locked_player_ignores_input_steps() -> void:
 	var start := player.position
 	player.physics_step_from_input(DT * 30)
 	assert_object(player.position).is_equal(start)
+
+
+# --- Corner slipping ----------------------------------------------------------------
+# test_a's bottom wall (row 5) has a doorway at column 4 (x 128..160). The body is 20px wide.
+
+func test_slips_through_a_doorway_when_nearly_lined_up() -> void:
+	player.place(Vector2(4 * 32 + 16 + 7, 4 * 32 + 16), Vector2i.DOWN)  # body pokes 1px past the gap
+	await get_tree().physics_frame
+	_walk(Vector2.DOWN, 0.6)
+	assert_int(player.feet_tile().y).is_equal(5)
+
+
+func test_slips_from_the_other_side_too() -> void:
+	player.place(Vector2(4 * 32 + 16 - 13, 4 * 32 + 16), Vector2i.DOWN)  # 7px past the left edge
+	await get_tree().physics_frame
+	_walk(Vector2.DOWN, 0.6)
+	assert_int(player.feet_tile().y).is_equal(5)
+
+
+func test_no_slip_when_far_off_the_gap() -> void:
+	var x := 4 * 32 + 16 + 22.0  # would need a 16px nudge
+	player.place(Vector2(x, 4 * 32 + 16), Vector2i.DOWN)
+	await get_tree().physics_frame
+	_walk(Vector2.DOWN, 0.6)
+	assert_int(player.feet_tile().y).is_equal(4)
+	assert_float(player.position.x).is_equal_approx(x, 0.01)
+
+
+func test_no_slip_along_a_solid_wall() -> void:
+	player.place(GameMap.centre_of(Vector2i(2, 4)), Vector2i.DOWN)
+	await get_tree().physics_frame
+	_walk(Vector2.DOWN, 0.6)
+	assert_float(player.position.x).is_equal_approx(GameMap.centre_of(Vector2i(2, 4)).x, 0.01)

@@ -76,6 +76,22 @@ func test_tamer_spots_player_in_line() -> void:
 	assert_bool(watcher.beaten()).is_true()
 
 
+func test_beaten_tamer_is_in_the_battle_autosave() -> void:
+	# The battle's autosave carries the prize money, so it must also carry "beaten":
+	# closing the game straight after a win must not allow a second prize.
+	Story.give_creature("tidepup", 5)
+	var key := _tamer("Watcher").save_key()
+	var saved: Array = []
+	Story.battle_override = func(id: String) -> bool:
+		await world.after_battle({"outcome": "won", "tamer_id": id}, true)
+		var r := GameState.store.read(GameState.current_path)
+		saved.append((r.save as SaveGame).story.is_done(key))
+		return true
+	_enter(Vector2i(7, 4))
+	await _finish_talk()
+	assert_array(saved).is_equal([true])
+
+
 func test_wall_blocks_sight() -> void:
 	Story.give_creature("tidepup", 5)
 	_enter(Vector2i(5, 2))  # behind the sign

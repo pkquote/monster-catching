@@ -155,6 +155,22 @@ func test_wander_stays_in_range() -> void:
 		assert_bool(t == world.player.feet_tile()).is_false()
 
 
+func test_wander_avoids_every_tile_the_player_overlaps() -> void:
+	await world.change_map("test_b", "middle")
+	var npc := world.map.entities().get_node("Walker") as Npc  # home (10, 6)
+	# Feet on (8, 6), but the body pokes 2px into (9, 6).
+	world.player.place(Vector2(8 * 32 + 24, 6 * 32 + 16), Vector2i.RIGHT)
+	assert_object(world.player.feet_tile()).is_equal(Vector2i(8, 6))
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 4
+	var visited := {}
+	for i in 300:
+		npc.wander_tick(world, rng)
+		visited[npc.tile()] = true
+	assert_bool(visited.has(Vector2i(9, 6))).is_false()
+	assert_bool(visited.has(Vector2i(8, 6))).is_false()
+
+
 func test_interact_after_walking_down_into_an_npc() -> void:
 	await world.change_map("test_b", "middle")
 	world.player.place(GameMap.centre_of(Vector2i(10, 5)), Vector2i.DOWN)  # the Walker stands at (10, 6)

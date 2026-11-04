@@ -93,3 +93,18 @@ func test_losing_inside_a_conversation_still_explains() -> void:
 			break
 		await get_tree().process_frame
 	assert_str(shown).contains("You dropped 100 money")
+
+
+func test_loss_wakes_at_start_when_heal_map_is_gone() -> void:
+	Settings.data.text_speed = "instant"
+	GameState.current.story.last_heal = {"map": "no_such_map", "spawn": "heal"}
+	var result: Array = []
+	var run := func(): result.append(await world.after_battle({"outcome": "lost"}, true))
+	run.call()
+	for i in 100:
+		if not result.is_empty():
+			break
+		world.dialogue_box.press_accept()
+		await get_tree().process_frame
+	assert_str(world.map.map_id()).is_equal(Overworld.new_game_map())
+	assert_object(world.player.feet_tile()).is_equal(world.map.spawn(SaveGame.NEW_GAME_SPAWN).tile())

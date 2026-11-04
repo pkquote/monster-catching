@@ -92,7 +92,7 @@ func wander_tick(w: Node, rng: RandomNumberGenerator) -> void:
 	var target := tile() + d
 	if maxi(absi(target.x - _home.x), absi(target.y - _home.y)) > wander_tiles:
 		return
-	if w.map.is_solid(target, self) or target == w.player.feet_tile():
+	if w.map.is_solid(target, self) or target in w.player.occupied_tiles():
 		return
 	await _step_to(target)
 

@@ -61,6 +61,32 @@ func test_lock_round_trip() -> void:
 	assert_bool(world.is_locked()).is_false()
 
 
+func test_script_that_forgets_unlock_gives_control_back() -> void:
+	var old_speed: String = Settings.data.text_speed
+	Settings.data.text_speed = "instant"
+	world.say("res://tests/fixtures/test_talk.dialogue", "forgets_unlock")
+	for i in 100:
+		if not world.is_talking():
+			break
+		world.dialogue_box.press_accept()
+		await get_tree().process_frame
+	Settings.data.text_speed = old_speed
+	assert_bool(world.is_talking()).is_false()
+	assert_bool(world.is_locked()).is_false()
+
+
+func test_fading_to_where_the_screen_already_is_does_not_wait() -> void:
+	Overworld.instant = false
+	await Cutscene.fade_out()
+	var start := Engine.get_process_frames()
+	await Cutscene.fade_out()
+	await world.fade(1.0)
+	var waited := Engine.get_process_frames() - start
+	await Cutscene.fade_in()
+	Overworld.instant = true
+	assert_int(waited).is_equal(0)
+
+
 func test_camera_pan_and_back() -> void:
 	await Cutscene.pan_camera("start")
 	assert_bool(world.camera_focus != null).is_true()

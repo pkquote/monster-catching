@@ -7,9 +7,7 @@ $> Cutscene.face("player", "prof")
 Prof. Alder: So you're the new tamer everyone's been talking about.
 Prof. Alder: Nobody walks into the tall grass without a partner. Come with me to the lab.
 $> Story.set_flag("met_prof")
-$> Cutscene.fade_out()
 $> Cutscene.change_map("town_01_lab", "entry")
-$> Cutscene.fade_in()
 $> Cutscene.unlock_player()
 => choose
 

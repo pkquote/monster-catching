@@ -41,6 +41,9 @@ var _locks: Dictionary = {}
 var _last_location := ""
 var _talking := false
 var _battle_layer: CanvasLayer
+## The tamer whose challenge is running: { tamer_id, key }. A win against them is
+## marked before the battle's autosave.
+var _challenger: Dictionary = {}
 var _fade: ColorRect
 
 
@@ -245,6 +248,7 @@ func tamer_challenge(t: Tamer, approach: bool) -> void:
 	var dialogue := t.dialogue
 	var title := t.before_title
 	lock("tamer")
+	_challenger = {"tamer_id": t.tamer_id, "key": key}
 	if approach:
 		await Emote.show_over(t, "!")
 		var next_to: Vector2i = player.feet_tile() - t.facing
@@ -256,6 +260,7 @@ func tamer_challenge(t: Tamer, approach: bool) -> void:
 	await say(dialogue, title)
 	if Story.last_battle_won():
 		Story.mark_done(key)
+	_challenger = {}
 	unlock("tamer")
 
 
@@ -291,6 +296,7 @@ func run_battle(setup: BattleSetup, defeat_rules := true) -> bool:
 	scene.params = {"setup": setup, "overlay": true, "defeat_rules": defeat_rules}
 	layer.add_child(scene)
 	var summary: Dictionary = await scene.finished
+	summary["tamer_id"] = setup.tamer_id
 	layer.queue_free()
 	_battle_layer = null
 	var won := await after_battle(summary, defeat_rules)
@@ -306,10 +312,15 @@ func in_battle() -> bool:
 func after_battle(summary: Dictionary, defeat_rules: bool) -> bool:
 	roller.start_grace()
 	var won: bool = summary.get("outcome", "") in ["won", "captured"]
+	if won and _challenger.get("tamer_id", "") != "" and _challenger.tamer_id == summary.get("tamer_id", ""):
+		Story.mark_done(_challenger.key)  # before the autosave that carries the prize
 	if summary.get("outcome", "") == "lost" and GameState.has_game():
 		if defeat_rules:
 			var r := Defeat.apply(DataRegistry.db, GameState.current)
-			await change_map(r.map if GameMap.exists(r.map) else new_game_map(), r.spawn)
+			if not GameMap.exists(r.map):  # the heal spot's map was removed
+				r.map = new_game_map()
+				r.spawn = SaveGame.NEW_GAME_SPAWN
+			await change_map(r.map, r.spawn)
 			player.place(player.position, Vector2i.DOWN)
 			var lines := [{"speaker": "", "text": "You hurried back to safety..." +
 				(" You dropped %d money." % r.lost_money if r.lost_money > 0 else "")}]
@@ -338,8 +349,13 @@ func say(dialogue_path: String, title: String, extra: Array = []) -> void:
 		push_error("say: no dialogue file '%s'" % dialogue_path)
 		return
 	_talking = true
+	var had_cutscene := _locks.has("cutscene")
 	lock("dialogue")
 	await dialogue_box.run(res, title, [self] + extra)
+	if not had_cutscene and _locks.has("cutscene"):
+		# A script that locks the player must unlock them; don't freeze the game if it forgot.
+		push_warning("%s ~ %s ended without Cutscene.unlock_player()" % [dialogue_path, title])
+		unlock("cutscene")
 	unlock("dialogue")
 	_talking = false
 
@@ -405,7 +421,7 @@ func fade(alpha: float) -> void:
 
 
 func _fade_to(alpha: float) -> void:
-	if instant:
+	if instant or is_equal_approx(_fade.color.a, alpha):
 		_fade.color.a = alpha
 		return
 	var t := create_tween()

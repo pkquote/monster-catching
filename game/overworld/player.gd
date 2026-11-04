@@ -9,6 +9,8 @@ signal tile_entered(tile: Vector2i)
 const FACING_NAMES := {Vector2i.UP: "up", Vector2i.DOWN: "down", Vector2i.LEFT: "left", Vector2i.RIGHT: "right"}
 const DIRS := {"move_up": Vector2i.UP, "move_down": Vector2i.DOWN,
 	"move_left": Vector2i.LEFT, "move_right": Vector2i.RIGHT}
+## How far off a gap (in pixels) the player can be and still slip into it.
+const SLIP_PX := 8
 
 var facing := Vector2i.DOWN
 ## Set by the overworld while any lock is held (conversations, menus, fades).
@@ -64,11 +66,32 @@ func step(dir: Vector2, run: bool, delta: float) -> void:
 	var motion := dir.normalized() * speed * delta
 	var hit := move_and_collide(motion)
 	if hit != null:
-		move_and_collide(hit.get_remainder().slide(hit.get_normal()))
+		if not _slip_round_corner(motion, hit):
+			move_and_collide(hit.get_remainder().slide(hit.get_normal()))
 	if _held.is_empty():
 		# Gamepad sticks and tests move without press events: face the dominant axis.
 		_set_facing(Vector2i(signi(roundi(dir.x)), 0) if absf(dir.x) >= absf(dir.y) else Vector2i(0, signi(roundi(dir.y))))
 	_check_tile()
+
+
+## Walking straight into a corner that's only a few pixels off a gap (a doorway,
+## a path between trees) nudges the player sideways toward the gap instead of
+## stopping them dead. Returns true when it nudged.
+func _slip_round_corner(motion: Vector2, hit: KinematicCollision2D) -> bool:
+	if motion.x != 0.0 and motion.y != 0.0:
+		return false  # diagonal: the normal slide already handles corners
+	var ahead := motion.normalized()
+	if hit.get_normal().dot(ahead) > -0.9:
+		return false  # not head-on
+	var side := Vector2(absf(ahead.y), absf(ahead.x))
+	for off in range(1, SLIP_PX + 1):
+		for s in [-1.0, 1.0]:
+			var shift: Vector2 = side * s * off
+			if not test_move(global_transform, shift) \
+					and not test_move(global_transform.translated(shift), ahead * 2.0):
+				move_and_collide(side * s * minf(motion.length(), float(off)))
+				return true
+	return false
 
 
 static func facing_name(f: Vector2i) -> String:
@@ -84,6 +107,20 @@ static func facing_from_name(n: String) -> Vector2i:
 
 func feet_tile() -> Vector2i:
 	return GameMap.tile_of(position)
+
+
+## Every tile the body's collision shape overlaps (one to four tiles).
+func occupied_tiles() -> Array[Vector2i]:
+	var feet := $Feet as CollisionShape2D
+	var half: Vector2 = (feet.shape as RectangleShape2D).size / 2.0
+	var c := position + feet.position
+	var a := GameMap.tile_of(c - half)
+	var b := GameMap.tile_of(c + half - Vector2(0.01, 0.01))
+	var out: Array[Vector2i] = []
+	for y in range(a.y, b.y + 1):
+		for x in range(a.x, b.x + 1):
+			out.append(Vector2i(x, y))
+	return out
 
 
 ## The tile Accept looks at: the one in front of the body's centre. (Walking down

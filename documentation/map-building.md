@@ -86,7 +86,10 @@ else
 
 Scripts can call `Story` (flags, items, money, creatures, battles, minigames, healing) and `Cutscene`
 (`lock_player`, `move`, `face`, `emote`, `pan_camera`, `fade_out`, `change_map`...). Jumps (`=> title`)
-must stay inside one file. `bash scripts/check.sh` checks that every called function exists and every
+must stay inside one file. A script that calls `Cutscene.lock_player()` should end with
+`Cutscene.unlock_player()`; if it forgets, the player gets control back when the conversation ends
+(with a warning in the output). `Cutscene.change_map` fades by itself, so don't wrap it in
+`fade_out`/`fade_in`. `bash scripts/check.sh` checks that every called function exists and every
 item, tamer and creature id is real.
 
 ## 6. Check

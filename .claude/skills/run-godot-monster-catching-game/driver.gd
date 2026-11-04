@@ -266,7 +266,7 @@ func _run_overworld() -> void:
 	var ow = current_scene
 	await shot("o01_home")
 	expect(ow.map.map_id() == "town_01_home", "a new game starts at home")
-	await hold(KEY_D, 32)
+	await hold(KEY_D, 32)  # ends ~2px off the door column: corner-slipping carries you through
 	await hold(KEY_S, 70)
 	await wait_unlocked(ow)
 	await _frames(10)

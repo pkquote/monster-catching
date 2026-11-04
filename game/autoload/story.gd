@@ -21,6 +21,7 @@ func flag(id: String) -> bool:
 
 
 func set_flag(id: String, on := true) -> void:
+	Log.info(Log.STORY, "Flag set", {"flag": id, "on": on})
 	_story().set_flag(id, on)
 
 
@@ -30,6 +31,7 @@ func count(id: String) -> int:
 
 func add_count(id: String, n := 1) -> void:
 	_story().add_count(id, n)
+	Log.debug(Log.STORY, "Counter changed", {"counter": id, "by": n, "now": _story().count(id)})
 
 
 func is_done(key: String) -> bool:
@@ -37,6 +39,7 @@ func is_done(key: String) -> bool:
 
 
 func mark_done(key: String) -> void:
+	Log.debug(Log.STORY, "Marked done", {"key": key})
 	_story().mark_done(key)
 
 
@@ -45,6 +48,7 @@ func mark_done(key: String) -> void:
 func give_item(id: String, n := 1) -> void:
 	var inv := _save().inventory
 	inv[id] = int(inv.get(id, 0)) + n
+	Log.debug(Log.STORY, "Item given", {"item": id, "count": n, "now": inv[id]})
 
 
 ## Removes `n` of an item. Returns false (and removes nothing) when there aren't enough.
@@ -53,6 +57,7 @@ func take_item(id: String, n := 1) -> bool:
 		return false
 	var inv := _save().inventory
 	inv[id] = int(inv[id]) - n
+	Log.debug(Log.STORY, "Item taken", {"item": id, "count": n, "left": inv[id]})
 	if inv[id] <= 0:
 		inv.erase(id)
 	return true
@@ -68,6 +73,7 @@ func money() -> int:
 
 func give_money(n: int) -> void:
 	_save().money += n
+	Log.debug(Log.STORY, "Money given", {"amount": n, "now": _save().money})
 
 
 ## Spends `n` money. Returns false (and spends nothing) when there isn't enough.
@@ -75,6 +81,7 @@ func take_money(n: int) -> bool:
 	if money() < n:
 		return false
 	_save().money -= n
+	Log.debug(Log.STORY, "Money taken", {"amount": n, "now": _save().money})
 	return true
 
 
@@ -87,7 +94,9 @@ func give_creature(species: String, level: int, starter := false) -> CreatureIns
 	var c := CreatureInstance.create(db, species, level)
 	if starter:
 		Progression.make_starter(db, c)
-	BattleLauncher.add_to_party(db, _save(), c)
+	var to_party := BattleLauncher.add_to_party(db, _save(), c)
+	Log.info(Log.STORY, "Creature given", {"species": species, "level": level, "starter": starter,
+		"to": "party" if to_party else "storage"})
 	return c
 
 
@@ -97,6 +106,7 @@ func party_size() -> int:
 
 ## Rests the whole party: full HP and energy, status cleared, "rested" Bond change.
 func heal_party() -> void:
+	Log.info(Log.STORY, "Party healed", {"party": _save().party.size()})
 	for c: CreatureInstance in _save().party:
 		Progression.rest(DataRegistry.db, c)
 
@@ -104,6 +114,7 @@ func heal_party() -> void:
 ## Where the player wakes after losing a battle.
 func set_last_heal(map_id: String, spawn_id: String) -> void:
 	_story().last_heal = {"map": map_id, "spawn": spawn_id}
+	Log.debug(Log.STORY, "Wake-up point set", {"map": map_id, "spawn": spawn_id})
 
 
 # --- Minigames ---------------------------------------------------------------------
@@ -114,9 +125,10 @@ var _last_minigame: Dictionary = {}
 ## Plays a minigame from data/minigames.json over the paused map (await it in
 ## scripts). Returns its result { won, score, ... }; an unknown id counts as a loss.
 func start_minigame(id: String, params := {}) -> Dictionary:
+	Log.info(Log.MINIGAME, "Minigame started", {"id": id})
 	var def := DataRegistry.db.minigame(id)
 	if def == null:
-		push_error("Story.start_minigame: no minigame '%s'" % id)
+		Log.error(Log.STORY, "start_minigame: no such minigame", {"id": id})
 		_last_minigame = {"won": false, "score": 0}
 		return _last_minigame
 	return await start_minigame_scene(def.scene, params)
@@ -143,6 +155,8 @@ func start_minigame_scene(scene_path: String, params := {}) -> Dictionary:
 		world.unlock("minigame")
 	_last_minigame = {"won": bool(result.get("won", false)), "score": int(result.get("score", 0))}
 	_last_minigame.merge(result)
+	Log.info(Log.MINIGAME, "Minigame finished", {"scene": scene_path, "won": _last_minigame.won,
+		"score": _last_minigame.score})
 	return _last_minigame
 
 
@@ -168,12 +182,14 @@ var _last_won := false
 ## `defeat_rules` false: a loss just heals the team (story battles you can lose).
 func start_battle(tamer_id: String, defeat_rules := true) -> bool:
 	last_battle_request = {"tamer_id": tamer_id, "defeat_rules": defeat_rules}
+	Log.info(Log.STORY, "Story battle", {"tamer": tamer_id, "defeat_rules": defeat_rules,
+		"override": battle_override.is_valid()})
 	if battle_override.is_valid():
 		_last_won = await battle_override.call(tamer_id)
 		return _last_won
 	var world := Overworld.active
 	if world == null or not GameState.has_game():
-		push_error("Story.start_battle: no overworld open")
+		Log.error(Log.STORY, "start_battle: no overworld open", {"tamer": tamer_id})
 		return false
 	var t := DataRegistry.db.tamer(tamer_id)
 	var n = await FieldCountPrompt.ask(world, t.max_active, "%s fields %d at a time." % [t.name, t.max_active], false)

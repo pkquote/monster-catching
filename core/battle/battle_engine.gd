@@ -72,6 +72,10 @@ func _init(p_db: Database, p_rng: RandomNumberGenerator, p_setup: BattleSetup) -
 
 func start() -> Array:
 	_events = []
+	Log.info(Log.BATTLE, "Battle started", {"wild": setup.is_wild, "tamer": setup.tamer_id,
+		"format": "%dv%d" % [sides[0].slots.size(), sides[1].slots.size()],
+		"party": sides[0].battlers.map(func(b: Battler): return "%s L%d" % [b.creature.species, b.creature.level]),
+		"foes": sides[1].battlers.map(func(b: Battler): return "%s L%d" % [b.creature.species, b.creature.level])})
 	emit({"type": BattleEvents.BATTLE_START, "wild": setup.is_wild, "tamer": setup.tamer_id,
 		"slots": [sides[0].slots.size(), sides[1].slots.size()]})
 	for side in sides:
@@ -155,6 +159,8 @@ func resolve_round(chosen: Array) -> Array:
 		allowed[a.actor] -= 1
 		valid.append(a)
 
+	if Log.enabled(Log.BATTLE, Log.Level.DEBUG):
+		Log.debug(Log.BATTLE, "Round %d" % round_number, {"actions": valid.map(_describe_action)})
 	for a in actions.order(valid):
 		if _over:
 			break
@@ -269,8 +275,25 @@ func resolve_targets(user: Battler, key: String, chosen: int, allow_random := tr
 
 func emit(event: Dictionary) -> void:
 	if OS.is_debug_build() and not BattleEvents.ALL.has(event.get("type")):
-		push_error("Unknown battle event type '%s'; add it to BattleEvents" % event.get("type"))
+		Log.error(Log.BATTLE, "Unknown battle event type; add it to BattleEvents", {"type": event.get("type")})
+	if Log.enabled(Log.BATTLE, Log.Level.TRACE):
+		Log.trace(Log.BATTLE, "Event " + str(event.get("type")), event)
 	_events.append(event)
+
+
+## "Tidepup#0 move riptide -> 3" for the round log.
+func _describe_action(a: BattleAction) -> String:
+	var who := battler(a.actor)
+	var text := "%s#%d %s" % [who.creature.species if who != null else "?", a.actor, a.kind]
+	if a.move != "":
+		text += " " + a.move
+	if a.item != "":
+		text += " " + a.item
+	if a.target >= 0:
+		text += " -> %d" % a.target
+	if a.swap_in >= 0:
+		text += " swap_in %d" % a.swap_in
+	return text
 
 
 func run_effects(ctx: EffectContext, effects: Array) -> void:
@@ -419,6 +442,8 @@ func finish(winner: int, reason: String) -> void:
 	_over = true
 	_winner = winner
 	_end_reason = reason
+	Log.info(Log.BATTLE, "Battle over", {"winner": winner, "reason": reason, "rounds": round_number,
+		"captured": _captured.map(func(c): return c.species)})
 	if winner != -1:
 		rewards.on_win(winner)
 	emit({"type": BattleEvents.BATTLE_END, "winner": winner, "reason": reason,

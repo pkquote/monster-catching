@@ -1,15 +1,18 @@
 class_name LearnMoveScreen
 extends ProgressScreen
 ## Offers a pool move: replace one of the equipped moves, or keep it for later.
+## With `equip` (opened from the Summary for a move it already knows) it is worded
+## as equipping, and the way out is Cancel.
 
 const KEEP := "Keep it for later"
+const CANCEL := "Cancel"
 
 
 ## True if `move` was slotted. Cancel means keep.
-static func run(parent: Node, c: CreatureInstance, move: String) -> bool:
+static func run(parent: Node, c: CreatureInstance, move: String, equip := false) -> bool:
 	var screen := LearnMoveScreen.new()
 	parent.add_child(screen)
-	var slotted := await screen._ask(c, move)
+	var slotted := await screen._ask(c, move, equip)
 	screen.close()
 	return slotted
 
@@ -22,11 +25,14 @@ static func move_line(db: Database, id: String) -> String:
 		m.category.capitalize(), power, m.cost]
 
 
-func _ask(c: CreatureInstance, move: String) -> bool:
+func _ask(c: CreatureInstance, move: String, equip: bool) -> bool:
 	var db := DataRegistry.db
 	var m := db.move(move)
-	_title.text = "%s wants to learn %s" % [c.display_name(db), m.name]
-	var lines: PackedStringArray = ["New: " + move_line(db, move)]
+	if equip:
+		_title.text = "Equip %s on %s?" % [m.name, c.display_name(db)]
+	else:
+		_title.text = "%s wants to learn %s" % [c.display_name(db), m.name]
+	var lines: PackedStringArray = [("Move: " if equip else "New: ") + move_line(db, move)]
 	if m.description != "":
 		lines.append(m.description)
 	lines.append("Current moves:")
@@ -34,7 +40,7 @@ func _ask(c: CreatureInstance, move: String) -> bool:
 	for slot in c.moves:
 		lines.append(move_line(db, slot))
 		options.append({"label": "Replace " + db.move(slot).name, "value": slot})
-	options.append({"label": KEEP, "value": null})
+	options.append({"label": CANCEL if equip else KEEP, "value": null})
 	_body.text = "\n".join(lines)
 	menu.button_width = 296  # two columns: the info panel above needs the height
 	await get_tree().process_frame  # wrapped text needs a layout pass before it has a height

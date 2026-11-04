@@ -146,13 +146,21 @@ func _party_creature(party_i: int) -> void:
 		"deposit":
 			_finish(Team.deposit(DataRegistry.db, save, party_i))
 		"swap":
-			_body.text = "Swap with which box creature?"
-			var pick = await menu.choose("", _grid_options(false, true,
-					[_plain("Cancel", ["back", 0])]), true, 2)
-			if pick != null and pick[0] == "box":
-				_finish(Team.swap(DataRegistry.db, save, party_i, pick[1]))
-			else:
-				_message = ""
+			_message = ""
+			while true:  # the box creature may be on another page
+				_body.text = "Swap with which box creature? (page %d of %d)" % [page + 1, page_count(save.storage.size())]
+				var extras := _nav_extras()
+				extras[-1] = _plain("Cancel", ["back", 0])
+				var pick = await menu.choose("", _grid_options(false, true, extras), true, 2)
+				if pick == null or pick[0] == "back":
+					return
+				if pick[0] == "prev":
+					page -= 1
+				elif pick[0] == "next":
+					page += 1
+				else:
+					_finish(Team.swap(DataRegistry.db, save, party_i, pick[1]))
+					return
 		_:
 			_message = ""
 

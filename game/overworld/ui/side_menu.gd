@@ -50,6 +50,7 @@ func page_text() -> String:
 
 
 func _open(title: String) -> void:
+	Log.debug(Log.UI, "Screen opened", {"screen": get_script().get_global_name(), "title": title})
 	_title.text = title
 	_root.visible = true
 	_refresh_money()
@@ -57,6 +58,7 @@ func _open(title: String) -> void:
 
 
 func _close() -> void:
+	Log.debug(Log.UI, "Screen closed", {"screen": get_script().get_global_name()})
 	menu.show_idle()
 	_root.visible = false
 

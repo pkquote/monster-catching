@@ -14,9 +14,9 @@ func _ready() -> void:
 	db = result.db
 	errors = result.errors
 	for e in errors:
-		push_error(e)
+		Log.error(Log.DATA, e)
 	if not errors.is_empty():
-		push_error("DataRegistry: %d content error(s). Run tools/validate_data.gd for details." % errors.size())
+		Log.error(Log.DATA, "Content errors; run tools/validate_data.gd for details", {"count": errors.size()})
 		if OS.is_debug_build():
 			assert(false, "Content failed validation; see errors above.")
 

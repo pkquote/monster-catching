@@ -215,15 +215,13 @@ func _act(parent: Node, db: Database, c: CreatureInstance, choice: Variant) -> v
 	if choice is Dictionary and choice.has("train"):
 		_train(db, c, choice.train)
 	elif choice is Dictionary and choice.has("move"):
-		await LearnMoveScreen.run(parent, c, choice.move)
+		await LearnMoveScreen.run(parent, c, choice.move, true)
 	elif choice == "seed":
 		if not await ResetSeedPrompt.confirm(menu, func(t: String) -> void: _body.text = t, c):
 			return
 		var result := FieldItems.use(db, GameState.current, "reset_seed", c)
 		if result.ok:
 			_notice = "%d training %s came back." % [result.refunded, "point" if result.refunded == 1 else "points"]
-		elif result.error == "nothing_to_refund":
-			_notice = "%s has no training to reset." % c.display_name(db)
 	elif choice == "grow":
 		await GrowScreen.run(parent, c)
 

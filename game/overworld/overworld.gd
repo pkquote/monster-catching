@@ -133,13 +133,14 @@ func _process(_delta: float) -> void:
 ## Fade out, swap to `map_id`, put the player on `spawn_id`, fade in.
 func change_map(map_id: String, spawn_id: String) -> void:
 	if not GameMap.exists(map_id):
-		push_error("change_map: no map '%s'" % map_id)
+		Log.error(Log.WORLD, "change_map: no such map", {"map": map_id})
 		return
 	lock("map_change")
 	await _fade_to(1.0)
 	var facing := player.facing
 	_swap_map(map_id)
 	_place_at_spawn(spawn_id, facing)
+	Log.info(Log.WORLD, "Map changed", {"map": map_id, "spawn": spawn_id, "tile": player.feet_tile()})
 	map_changed.emit(map)
 	await _fade_to(0.0)
 	unlock("map_change")
@@ -149,6 +150,7 @@ func change_map(map_id: String, spawn_id: String) -> void:
 func load_map_at(map_id: String, pos: Vector2, facing: Vector2i) -> void:
 	_swap_map(map_id)
 	player.place(pos, facing)
+	Log.info(Log.WORLD, "Map loaded", {"map": map_id, "tile": player.feet_tile()})
 	_update_camera()
 
 
@@ -167,7 +169,7 @@ func _swap_map(map_id: String) -> void:
 func _place_at_spawn(spawn_id: String, facing: Vector2i) -> void:
 	var s := map.spawn(spawn_id)
 	if s == null:
-		push_error("map '%s' has no spawn '%s'" % [map.map_id(), spawn_id])
+		Log.error(Log.WORLD, "Map has no such spawn; placing at its centre", {"map": map.map_id(), "spawn": spawn_id})
 		player.place(Vector2(map.bounds().get_center()) * GameMap.TILE, facing)
 	else:
 		player.place(s.position, facing)
@@ -225,12 +227,14 @@ func interact() -> void:
 		return
 	var p := map.piece_at(player.front_tile())
 	if p != null:
+		Log.debug(Log.WORLD, "Interact", {"piece": p.save_key(), "tile": player.front_tile()})
 		p.on_interact(self)
 
 
 func _on_tile_entered(tile: Vector2i) -> void:
 	var p := map.piece_at(tile)
 	if p != null:
+		Log.debug(Log.WORLD, "Stepped on piece", {"piece": p.save_key(), "tile": tile})
 		p.on_enter(self)
 		if is_locked():
 			return  # a door or trigger took over
@@ -241,11 +245,13 @@ func _on_tile_entered(tile: Vector2i) -> void:
 	if BattleLauncher.healthy_count(save) > 0:
 		for t in map.pieces():
 			if t is Tamer and (t as Tamer).sees(tile, map):
+				Log.info(Log.WORLD, "Tamer spotted the player", {"tamer": (t as Tamer).tamer_id, "tile": tile})
 				(t as Tamer).challenge(self)
 				return
 	if not map.indoor and map.is_encounter_tile(tile):
 		var table := map.encounter_at(tile)
 		if roller.on_grass_tile(table, BattleLauncher.healthy_count(save) > 0):
+			Log.info(Log.WORLD, "Wild encounter", {"table": table, "tile": tile})
 			start_wild(table)
 
 
@@ -367,15 +373,17 @@ func say(dialogue_path: String, title: String, extra: Array = []) -> void:
 		return
 	var res: DialogueResource = load(dialogue_path) if ResourceLoader.exists(dialogue_path) else null
 	if res == null:
-		push_error("say: no dialogue file '%s'" % dialogue_path)
+		Log.error(Log.STORY, "say: no such dialogue file", {"file": dialogue_path})
 		return
 	_talking = true
 	var had_cutscene := _locks.has("cutscene")
 	lock("dialogue")
+	Log.info(Log.STORY, "Dialogue started", {"file": dialogue_path, "title": title})
 	await dialogue_box.run(res, title, [self] + extra)
+	Log.info(Log.STORY, "Dialogue ended", {"file": dialogue_path, "title": title})
 	if not had_cutscene and _locks.has("cutscene"):
 		# A script that locks the player must unlock them; don't freeze the game if it forgot.
-		push_warning("%s ~ %s ended without Cutscene.unlock_player()" % [dialogue_path, title])
+		Log.warn(Log.STORY, "Script ended without Cutscene.unlock_player(); control given back", {"file": dialogue_path, "title": title})
 		unlock("cutscene")
 	unlock("dialogue")
 	_talking = false
@@ -409,12 +417,15 @@ func refresh_hud() -> void:
 # --- Locks -----------------------------------------------------------------------
 
 func lock(reason: String) -> void:
+	if not _locks.has(reason):
+		Log.debug(Log.WORLD, "Lock taken", {"reason": reason, "held": _locks.keys() + [reason]})
 	_locks[reason] = true
 	player.locked = true
 
 
 func unlock(reason: String) -> void:
-	_locks.erase(reason)
+	if _locks.erase(reason):
+		Log.debug(Log.WORLD, "Lock released", {"reason": reason, "held": _locks.keys()})
 	player.locked = not _locks.is_empty()
 
 

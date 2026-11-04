@@ -12,17 +12,19 @@ extends Node
 
 func _world() -> Overworld:
 	if Overworld.active == null:
-		push_error("Cutscene: no overworld open")
+		Log.error(Log.STORY, "Cutscene: no overworld open")
 	return Overworld.active
 
 
 func lock_player() -> void:
+	Log.debug(Log.STORY, "Cutscene lock_player")
 	var w := _world()
 	if w != null:
 		w.lock("cutscene")
 
 
 func unlock_player() -> void:
+	Log.debug(Log.STORY, "Cutscene unlock_player")
 	var w := _world()
 	if w != null:
 		w.unlock("cutscene")
@@ -30,6 +32,7 @@ func unlock_player() -> void:
 
 ## Walks an actor to a spot in straight lines (x first, then y).
 func move(actor: String, where: String) -> void:
+	Log.debug(Log.STORY, "Cutscene move", {"actor": actor, "to": where})
 	var w := _world()
 	if w == null:
 		return
@@ -42,6 +45,7 @@ func move(actor: String, where: String) -> void:
 
 ## Turns an actor to "up"/"down"/"left"/"right", or toward another actor.
 func face(actor: String, toward: String) -> void:
+	Log.debug(Log.STORY, "Cutscene face", {"actor": actor, "toward": toward})
 	var w := _world()
 	if w == null:
 		return
@@ -63,6 +67,7 @@ func face(actor: String, toward: String) -> void:
 
 
 func emote(actor: String, kind: String) -> void:
+	Log.debug(Log.STORY, "Cutscene emote", {"actor": actor, "kind": kind})
 	var w := _world()
 	if w == null:
 		return
@@ -72,6 +77,7 @@ func emote(actor: String, kind: String) -> void:
 
 
 func pan_camera(where: String) -> void:
+	Log.debug(Log.STORY, "Cutscene pan_camera", {"to": where})
 	var w := _world()
 	if w == null:
 		return
@@ -81,29 +87,34 @@ func pan_camera(where: String) -> void:
 
 
 func camera_back() -> void:
+	Log.debug(Log.STORY, "Cutscene camera_back")
 	var w := _world()
 	if w != null:
 		w.camera_focus = null
 
 
 func fade_out() -> void:
+	Log.debug(Log.STORY, "Cutscene fade_out")
 	var w := _world()
 	if w != null:
 		await w.fade(1.0)
 
 
 func fade_in() -> void:
+	Log.debug(Log.STORY, "Cutscene fade_in")
 	var w := _world()
 	if w != null:
 		await w.fade(0.0)
 
 
 func wait(seconds: float) -> void:
+	Log.debug(Log.STORY, "Cutscene wait", {"seconds": seconds})
 	if not Overworld.instant:
 		await get_tree().create_timer(seconds).timeout
 
 
 func change_map(map_id: String, spawn_id: String) -> void:
+	Log.debug(Log.STORY, "Cutscene change_map", {"map": map_id, "spawn": spawn_id})
 	var w := _world()
 	if w != null:
 		await w.change_map(map_id, spawn_id)
@@ -117,7 +128,7 @@ func _actor(w: Overworld, id: String) -> Node2D:
 	for p in w.map.pieces():
 		if p is Npc and (p as Npc).actor_id == id:
 			return p
-	push_error("Cutscene: no actor '%s' on %s" % [id, w.map.map_id()])
+	Log.error(Log.STORY, "Cutscene: no such actor", {"actor": id, "map": w.map.map_id()})
 	return null
 
 
@@ -128,6 +139,6 @@ func _spot(w: Overworld, where: String) -> Variant:
 		return Vector2i(int(parts[0]), int(parts[1]))
 	var s := w.map.spawn(where)
 	if s == null:
-		push_error("Cutscene: no spawn '%s' on %s" % [where, w.map.map_id()])
+		Log.error(Log.STORY, "Cutscene: no such spawn", {"spawn": where, "map": w.map.map_id()})
 		return null
 	return s.tile()

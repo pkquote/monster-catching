@@ -44,6 +44,8 @@ Scout Ana 1v1, Rival 2v2, and a **Custom battle** panel for any format up to 3v3
 
 - `saves/<playthrough>/autosave.json` and `save_<timestamp>.json`, plus `saves/last.json` (the Resume target)
 - `settings.json`
+- `logs/session_<date>_<time>.log` (the newest 10 play sessions) and `logging.cfg` (log levels). F1 → **Logs...**
+  shows recent records and changes levels live; see [documentation/logging.md](documentation/logging.md).
 
 ## Adding content
 

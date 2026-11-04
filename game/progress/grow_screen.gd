@@ -41,9 +41,10 @@ func _ask(parent: Node, c: CreatureInstance, into: String) -> bool:
 	var new_name := db.creature(into).name
 	_show_species(c.species)
 	_title.text = old_name
-	var side := _dominant_side(db, c, into)
+	var branch := Progression.growth_branch(db, c)
+	var side: String = branch.get("affinity", "") if branch.get("into", "") == into else ""
 	if side != "":
-		_body.text = "%s is ready to grow! Its %s side is strongest: it will become %s." % [old_name, side, new_name]
+		_body.text = "%s is ready to grow! Its %s side is strongest: it will become %s." % [old_name, db.affinity(side).name, new_name]
 	else:
 		_body.text = "%s is ready to grow! It will become %s." % [old_name, new_name]
 	var choice = await menu.choose("", [{"label": "Grow now", "value": true},
@@ -58,18 +59,6 @@ func _ask(parent: Node, c: CreatureInstance, into: String) -> bool:
 	for move in result.offered:
 		await LearnMoveScreen.run(parent, c, move)
 	return true
-
-
-## The affinity's display name when the chosen branch follows the dominant
-## Affinity (and it met the threshold); "" when the default branch applies.
-func _dominant_side(db: Database, c: CreatureInstance, into: String) -> String:
-	var dominant := Progression.dominant_affinity(db, c)
-	if dominant == "" or int(c.affinity.get(dominant, 0)) < db.balance.growth_affinity_threshold:
-		return ""
-	for g in c.species_def(db).growth:
-		if g.into == into and g.affinity == dominant:
-			return db.affinity(dominant).name
-	return ""
 
 
 func _show_species(species: String) -> void:

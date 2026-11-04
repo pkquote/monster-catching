@@ -122,6 +122,9 @@ static func apply_results(db: Database, save: SaveGame, engine: BattleEngine) ->
 	if summary.outcome == "won" and engine.setup.tamer_id != "":
 		summary.money = db.tamer(engine.setup.tamer_id).reward_money
 		save.money += summary.money
+	Log.info(Log.BATTLE, "Results applied", {"outcome": summary.outcome, "money": summary.money,
+		"captured": summary.captured, "to_storage": summary.to_storage,
+		"levelled": summary.progress.map(func(e: Dictionary): return e.creature.species)})
 	return summary
 
 

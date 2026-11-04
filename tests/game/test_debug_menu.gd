@@ -220,3 +220,88 @@ func test_main_page_fits_the_screen() -> void:
 	assert_float(rect.position.y).is_greater_equal(0.0)
 	assert_float(rect.end.y).is_less_equal(360.0)
 	DebugMenu.close()
+
+
+# --- Logs page --------------------------------------------------------------------
+
+const TEST_LOG_CFG := "user://test_debug_logging.cfg"
+
+
+func _open_logs() -> void:
+	DebugMenu.open()
+	_labels()["Logs..."].pressed.emit()
+	await get_tree().process_frame
+
+
+func test_logs_page_lists_recent_records() -> void:
+	var state := Log.save_state()
+	Log.set_level(Log.UI, Log.Level.INFO)
+	Log.info(Log.UI, "viewer probe line")
+	await _open_logs()
+	assert_bool("\n".join(DebugMenu.log_lines()).contains("viewer probe line")).is_true()
+	DebugMenu.close()
+	Log.restore_state(state)
+
+
+func test_logs_page_filters_by_level_and_category() -> void:
+	var state := Log.save_state()
+	Log.set_level(Log.UI, Log.Level.INFO)
+	Log.set_level(Log.SAVE, Log.Level.INFO)
+	Log.info(Log.UI, "filter probe ui")
+	Log.warn(Log.SAVE, "filter probe save")
+	await _open_logs()
+	DebugMenu.set_log_filter(Log.Level.WARN, "")
+	var text := "\n".join(DebugMenu.log_lines())
+	assert_bool(text.contains("filter probe save")).is_true()
+	assert_bool(text.contains("filter probe ui")).is_false()
+	DebugMenu.set_log_filter(Log.Level.TRACE, Log.UI)
+	text = "\n".join(DebugMenu.log_lines())
+	assert_bool(text.contains("filter probe ui")).is_true()
+	assert_bool(text.contains("filter probe save")).is_false()
+	DebugMenu.close()
+	Log.restore_state(state)
+
+
+func test_logs_page_changes_and_saves_levels() -> void:
+	var state := Log.save_state()
+	var old_path: String = Logging.config_path
+	Logging.config_path = TEST_LOG_CFG
+	await _open_logs()
+	DebugMenu.set_category_level(Log.BATTLE, Log.Level.TRACE)
+	assert_int(Log.level_of(Log.BATTLE)).is_equal(Log.Level.TRACE)
+	_labels()["Save levels"].pressed.emit()
+	var cfg := ConfigFile.new()
+	assert_int(cfg.load(TEST_LOG_CFG)).is_equal(OK)
+	assert_str(str(cfg.get_value("levels", "battle"))).is_equal("TRACE")
+	DebugMenu.close()
+	Logging.config_path = old_path
+	Log.restore_state(state)
+	DirAccess.remove_absolute(ProjectSettings.globalize_path(TEST_LOG_CFG))
+
+
+func test_logs_page_fits_the_screen() -> void:
+	await _open_logs()
+	await get_tree().process_frame
+	var panel: Control = DebugMenu._scroll.get_parent()
+	assert_float(panel.position.y + panel.size.y).is_less_equal(360.0)
+	DebugMenu.close()
+
+
+func test_logs_page_keyboard_never_gets_stuck_in_the_log_text() -> void:
+	for i in 30:  # a real log is long: Down would walk the caret line by line
+		Log.warn(Log.UI, "keyboard probe %d" % i)
+	await _open_logs()
+	await get_tree().process_frame
+	var view: Control = DebugMenu._log_view
+	view.grab_focus()
+	await get_tree().process_frame
+	for i in 6:  # a real key press: it is also the TextEdit's caret-down shortcut
+		for pressed in [true, false]:
+			var ev := InputEventKey.new()
+			ev.keycode = KEY_DOWN
+			ev.physical_keycode = KEY_DOWN
+			ev.pressed = pressed
+			get_viewport().push_input(ev)
+		await get_tree().process_frame
+	assert_object(get_viewport().gui_get_focus_owner()).is_not_same(view)
+	DebugMenu.close()

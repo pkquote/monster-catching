@@ -6,6 +6,36 @@ extends RefCounted
 
 ## Moves the creature at `from` to index `to`, shifting the others.
 static func reorder(save: SaveGame, from: int, to: int) -> String:
+	return _report("reorder", _reorder(save, from, to), {"from": from, "to": to})
+
+
+## Moves a party creature to the end of the box.
+static func deposit(db: Database, save: SaveGame, party_i: int) -> String:
+	return _report("deposit", _deposit(db, save, party_i), {"party": party_i})
+
+
+## Moves a box creature to the end of the party.
+static func withdraw(db: Database, save: SaveGame, box_i: int) -> String:
+	return _report("withdraw", _withdraw(db, save, box_i), {"box": box_i})
+
+
+## Exchanges a party creature with a box creature, each taking the other's slot.
+static func swap(db: Database, save: SaveGame, party_i: int, box_i: int) -> String:
+	return _report("swap", _swap(db, save, party_i, box_i), {"party": party_i, "box": box_i})
+
+
+static func _report(op: String, reason: String, data: Dictionary) -> String:
+	data["op"] = op
+	if reason == "":
+		Log.debug(Log.PROGRESS, "Storage " + op, data)
+	else:
+		data["reason"] = reason
+		Log.debug(Log.PROGRESS, "Storage refused", data)
+	return reason
+
+
+## Moves the creature at `from` to index `to`, shifting the others.
+static func _reorder(save: SaveGame, from: int, to: int) -> String:
 	var n := save.party.size()
 	if from < 0 or from >= n or to < 0 or to >= n:
 		return "bad_index"
@@ -16,7 +46,7 @@ static func reorder(save: SaveGame, from: int, to: int) -> String:
 
 
 ## Moves a party creature to the end of the box.
-static func deposit(_db: Database, save: SaveGame, party_i: int) -> String:
+static func _deposit(_db: Database, save: SaveGame, party_i: int) -> String:
 	if party_i < 0 or party_i >= save.party.size():
 		return "bad_index"
 	if healthy_after(save, save.party[party_i], null) < 1:
@@ -27,7 +57,7 @@ static func deposit(_db: Database, save: SaveGame, party_i: int) -> String:
 
 
 ## Moves a box creature to the end of the party.
-static func withdraw(db: Database, save: SaveGame, box_i: int) -> String:
+static func _withdraw(db: Database, save: SaveGame, box_i: int) -> String:
 	if box_i < 0 or box_i >= save.storage.size():
 		return "bad_index"
 	if save.party.size() >= int(db.balance.party_size):
@@ -38,7 +68,7 @@ static func withdraw(db: Database, save: SaveGame, box_i: int) -> String:
 
 
 ## Exchanges a party creature with a box creature, each taking the other's slot.
-static func swap(_db: Database, save: SaveGame, party_i: int, box_i: int) -> String:
+static func _swap(_db: Database, save: SaveGame, party_i: int, box_i: int) -> String:
 	if party_i < 0 or party_i >= save.party.size() or box_i < 0 or box_i >= save.storage.size():
 		return "bad_index"
 	var out: CreatureInstance = save.party[party_i]

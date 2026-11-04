@@ -123,6 +123,7 @@ func read(path: String) -> Dictionary:
 	if not (version is int or version is float):
 		return _fail("missing schema version")
 	var v := int(version)
+	var from_schema := v
 	if v > SaveGame.SCHEMA:
 		return _fail("made by a newer version of the game (schema %d)" % v)
 	while v < SaveGame.SCHEMA:
@@ -131,6 +132,8 @@ func read(path: String) -> Dictionary:
 			return _fail("no upgrade path from schema %d" % v)
 		d = steps[v].call(d)
 		v += 1
+	if from_schema < SaveGame.SCHEMA:
+		Log.info(Log.SAVE, "Migrated", {"path": path, "from": from_schema, "to": SaveGame.SCHEMA})
 	var save := SaveGame.from_dict(d)
 	if save == null:
 		return _fail("missing required fields")

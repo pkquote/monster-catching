@@ -39,12 +39,15 @@ func start_new_game(player_name: String) -> String:
 func load_from(path: String) -> String:
 	var r := store.read(path)
 	if not r.ok:
+		Log.warn(Log.SAVE, "Load failed", {"path": path, "error": r.error})
 		return r.error
 	current = r.save
 	for c: CreatureInstance in current.party + current.storage:
 		Progression.backfill_pool(DataRegistry.db, c)
 	current_path = path
 	store.set_last(path)
+	Log.info(Log.SAVE, "Loaded", {"path": path, "player": current.player_name,
+		"location": current.location, "party": current.party.size(), "storage": current.storage.size()})
 	return ""
 
 
@@ -89,4 +92,7 @@ func _write(kind: String) -> String:
 	var path := store.write(current, kind, now_ms())
 	if path != "":
 		current_path = path
+		Log.info(Log.SAVE, "Saved", {"path": path, "kind": kind, "location": current.location})
+	else:
+		Log.error(Log.SAVE, "Save failed", {"kind": kind, "root": store.root})
 	return path

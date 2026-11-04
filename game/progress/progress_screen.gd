@@ -13,6 +13,7 @@ var _bottom: PanelContainer
 
 
 func _ready() -> void:
+	Log.debug(Log.UI, "Screen opened", {"screen": get_script().get_global_name()})
 	layer = 72
 	_root = Control.new()
 	_root.theme = UIKit.theme()
@@ -52,6 +53,7 @@ func page_text() -> String:
 
 ## Detaches and frees the screen. Deferred so it is safe from a menu's signal.
 func close() -> void:
+	Log.debug(Log.UI, "Screen closed", {"screen": get_script().get_global_name()})
 	if get_parent() != null:
 		get_parent().remove_child(self)
 	queue_free()

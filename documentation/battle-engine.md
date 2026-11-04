@@ -43,7 +43,7 @@ engine.commit(0)               # write the player's creatures back (BattleLaunch
 ### Actions
 
 | Action | Constructor | Notes |
-|---|---|---|
+| --- | --- | --- |
 | Move | `BattleAction.use_move(bid, move_id, target_bid)` | Target is only needed for `one_enemy` / `one_ally` moves. An invalid target is replaced with a random valid one. |
 | Item | `BattleAction.use_item(bid, item_id, target_bid)` | Uses up one item from the side's bag. Capture items only work in wild battles. Healing items can target benched allies. |
 | Swap | `BattleAction.swap(bid, bench_bid)` | The creature leaving the field has its stat stages reset. |
@@ -66,7 +66,7 @@ engine.commit(0)               # write the player's creatures back (BattleLaunch
 ## Formulas
 
 | What | Formula |
-|---|---|
+| --- | --- |
 | HP | `2·base·Lv/100 + Lv + 10` |
 | Atk / Def / Spd | `2·base·Lv/100 + 5` |
 | XP to reach a level | `Lv³` |
@@ -99,7 +99,7 @@ engine.commit(0)               # write the player's creatures back (BattleLaunch
 Bond (−100…+100) is stored on the `CreatureInstance`. Changes come from `balance.bond.changes`:
 
 | Happening | When |
-|---|---|
+| --- | --- |
 | `battle_won` | Every creature on the winning side that took part |
 | `knockout` | The creature that landed the blow |
 | `fainted` | The creature that fainted |
@@ -134,7 +134,7 @@ at `lash_out_threshold` or below a `lash_out_chance` chance to Scrap itself or a
 When one side has fewer creatures on the field (`r = enemy / ally > 1`):
 
 | Bonus | Value |
-|---|---|
+| --- | --- |
 | Extra actions per creature each round | `floor((r − 1) × bonus_actions_per_ratio)` (at 0.5: 1v2 +0, 1v3 +1, 2v3 +0) |
 | Physical/Special Atk and Def | `+stat_bonus_per_ratio × (r − 1)`, capped |
 | Damage taken from spread moves | `−spread_reduction_per_ratio × (r − 1)`, capped |
@@ -148,7 +148,7 @@ Battle happenings add points to Affinity tracks on the creature responsible. The
 come from `balance.affinity_awards`:
 
 | Happening | Credited to |
-|---|---|
+| --- | --- |
 | `hit_dealt`, `knockout` | The attacker |
 | `hit_survived` | The creature that took the hit and stayed up |
 | `heal` | The healer |
@@ -163,7 +163,7 @@ the creature has reached, then the branch matching its dominant Affinity if that
 ## AI styles
 
 | Style | Behavior |
-|---|---|
+| --- | --- |
 | `basic` | Random move and target. |
 | `aggressive` | Highest expected damage, with a bonus for knockouts. Heals when below half HP. |
 | `tactician` | Aggressive scoring plus value for setting up reactions on the enemy side, new states its team can follow up on, statuses and debuffs. Setup values are multiples of its best available damage, so they scale with level. It avoids triggering reactions on its own side. |
@@ -178,7 +178,7 @@ and the round loop, and hands the rest to three parts (each extends `BattlePart`
 engine weakly so the engine can be freed):
 
 | Part | File | Owns |
-|---|---|---|
+| --- | --- | --- |
 | `engine.actions` | `action_runner.gd` | turn order; running moves (energy, skipped turns, Bond misbehaviour), items, swaps, Rest, fleeing |
 | `engine.field_rules` | `field_rules.gd` | applying, stacking, pushing out, expiring and cashing in field states; reactions |
 | `engine.rewards` | `battle_rewards.gd` | XP from knockouts, Bond changes, Affinity points and the per-battle Affinity log |
@@ -192,7 +192,7 @@ in `SILENT`. To add an event: add the constant (and to `ALL`), emit it, add a ro
 in `BattleText` (and `BattlePlayback` if it changes what's on screen).
 
 | Event | Key fields |
-|---|---|
+| --- | --- |
 | `battle_start` | `wild`, `tamer`, `slots` |
 | `send_out` | `side`, `slot`, `bid`, `species`, `level`, `hp`, `max_hp`, `energy`, `max_energy` |
 | `round_start` | `round` |

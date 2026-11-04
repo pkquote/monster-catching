@@ -25,5 +25,5 @@ func _load(path: String) -> void:
 	if err == "":
 		SceneRouter.goto(SceneRouter.WORLD)
 	else:
-		push_warning("Resume failed: " + err)
+		Log.warn(Log.SAVE, "Resume failed", {"error": err})
 		SceneRouter.goto(SceneRouter.LOAD_GAME)

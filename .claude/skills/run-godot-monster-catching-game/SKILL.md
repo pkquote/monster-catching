@@ -122,6 +122,12 @@ This validates the JSON content, compiles the dialogue, runs every gdUnit4 suite
 
 ## Gotchas
 
+- **Read the game's log when something goes wrong.** Each windowed run writes
+  `%APPDATA%/Godot/app_userdata/Monster Catching Game/logs/session_<date>_<time>.log` (newest 10
+  kept; headless runs write none). It includes engine/script errors with stack traces. To trace
+  more, put levels in `user://logging.cfg` (`[levels]` `battle="TRACE"`, `world="DEBUG"`) before
+  the run; see `documentation/logging.md`.
+
 - **Don't use `--headless` for screenshots.** The driver waits on
   `RenderingServer.frame_post_draw`, which never fires without a renderer, so the run hangs
   until `timeout` kills it (exit 124, no PNG). Headless is fine for `--import` and the tests.

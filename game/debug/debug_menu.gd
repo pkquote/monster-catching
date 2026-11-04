@@ -19,6 +19,13 @@ var _scroll: ScrollContainer
 var _status: Label
 var _rng := RandomNumberGenerator.new()
 var _restore_focus: Control
+var _log_view: TextEdit
+var _log_min: Log.Level = Log.Level.DEBUG
+var _log_category := ""
+
+const LOG_PAGE_WIDTH := 580.0
+const LOG_VIEW_LINES := 300
+const LOG_LEVELS: Array = [Log.Level.TRACE, Log.Level.DEBUG, Log.Level.INFO, Log.Level.WARN, Log.Level.ERROR]
 
 
 func _ready() -> void:
@@ -86,6 +93,8 @@ func close() -> void:
 # --- Pages -------------------------------------------------------------------------
 
 func _clear() -> void:
+	_box.custom_minimum_size.x = 260
+	_log_view = null
 	for c in _box.get_children():
 		_box.remove_child(c)
 		c.queue_free()
@@ -120,8 +129,93 @@ func _show_main(status := "") -> void:
 		elif s.party.is_empty():
 			UIKit.label(_box, "Get a test party to unlock battles.", 11, UIKit.MUTED)
 	UIKit.spacer(_box, 4)
+	UIKit.button(_box, "Logs...", _show_logs)
 	UIKit.button(_box, "Close", close)
 	_focus_first()
+
+
+# --- Logs page ----------------------------------------------------------------------
+
+## Recent records (newest first) filtered by a minimum level and a category, the
+## live level of each category, and where the session files are.
+func _show_logs(status := "") -> void:
+	_clear()
+	_box.custom_minimum_size.x = LOG_PAGE_WIDTH
+	UIKit.label(_box, "Logs", UIKit.HEADING_SIZE, UIKit.ACCENT)
+	_status = UIKit.label(_box, status, UIKit.BODY_SIZE, UIKit.ACCENT)
+	var filters := GridContainer.new()
+	filters.columns = 4
+	filters.add_theme_constant_override("h_separation", 8)
+	_box.add_child(filters)
+	var shown := _option_row(filters, "Show at least", LOG_LEVELS.map(Log.level_name), LOG_LEVELS.find(_log_min))
+	shown.item_selected.connect(func(i: int) -> void: set_log_filter(LOG_LEVELS[i], _log_category))
+	var cats: Array = [""] + Array(Log.CATEGORIES)
+	var cat := _option_row(filters, "Category", cats.map(func(c): return "all" if c == "" else c),
+		cats.find(_log_category))
+	cat.item_selected.connect(func(i: int) -> void: set_log_filter(_log_min, cats[i]))
+	_log_view = TextEdit.new()
+	_log_view.editable = false
+	_log_view.focus_mode = Control.FOCUS_NONE  # keyboard focus skips it (it would swallow Up/Down); the wheel scrolls it
+	_log_view.wrap_mode = TextEdit.LINE_WRAPPING_BOUNDARY
+	_log_view.custom_minimum_size = Vector2(LOG_PAGE_WIDTH, 110)
+	_log_view.add_theme_font_size_override("font_size", 10)
+	_box.add_child(_log_view)
+	_refresh_log_view()
+	UIKit.label(_box, "Levels (change live; Save keeps them)", 11, UIKit.MUTED)
+	var levels := GridContainer.new()
+	levels.columns = 6
+	levels.add_theme_constant_override("h_separation", 8)
+	_box.add_child(levels)
+	var all_levels: Array = LOG_LEVELS + [Log.Level.OFF]
+	for c in ["default"] + Array(Log.CATEGORIES):
+		var current: Log.Level = Log.default_level if c == "default" else Log.level_of(c)
+		var pick := _option_row(levels, c, all_levels.map(Log.level_name), all_levels.find(current))
+		pick.item_selected.connect(func(i: int) -> void: set_category_level(c, all_levels[i]))
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 6)
+	_box.add_child(row)
+	UIKit.button(row, "Save levels", func() -> void:
+		_status.text = "Levels saved." if Logging.save_levels() == OK else "Couldn't save the levels.")
+	UIKit.button(row, "Open log folder", func() -> void: OS.shell_open(Logging.log_dir()))
+	UIKit.button(row, "Refresh", _refresh_log_view)
+	UIKit.button(row, "Back", func() -> void: _show_main())
+	_focus_first()
+
+
+## Shows records at or above `min_level` in `category` ("" = all).
+func set_log_filter(min_level: Log.Level, category: String) -> void:
+	_log_min = min_level
+	_log_category = category
+	_refresh_log_view()
+
+
+## Changes a category's level ("default" changes the fallback level) right away.
+func set_category_level(category: String, level: Log.Level) -> void:
+	if category == "default":
+		Log.default_level = level
+	else:
+		Log.set_level(category, level)
+	Log.info(Log.SETTINGS, "Log level changed", {"category": category, "level": Log.level_name(level)})
+	var note := "%s: %s" % [category, Log.level_name(level)]
+	if category == "default" and _log_view != null:
+		_show_logs(note)  # categories that follow the default show the new value
+	elif _status != null:
+		_status.text = note
+
+
+## The lines the Logs page is showing (newest first).
+func log_lines() -> PackedStringArray:
+	var out := PackedStringArray()
+	for r in Logging.memory.filtered(_log_min, _log_category).slice(0, LOG_VIEW_LINES):
+		out.append(Log.format(r))
+	return out
+
+
+func _refresh_log_view() -> void:
+	if _log_view == null or not is_instance_valid(_log_view):
+		return
+	var lines := log_lines()
+	_log_view.text = "\n".join(lines) if not lines.is_empty() else "(nothing at this level yet)"
 
 
 ## Any format (1v3, 3v1...), wild or tamer, and the foes' level.
@@ -330,7 +424,10 @@ func _option_row(grid: GridContainer, text: String, choices: Array, selected: in
 func _focus_first() -> void:
 	_scroll.custom_minimum_size.y = minf(_box.get_combined_minimum_size().y, MAX_PAGE_HEIGHT)
 	for c in _find_focusable(_box):
-		c.grab_focus.call_deferred()
+		# Deferred until the page is laid out; the page may be rebuilt or closed first.
+		(func() -> void:
+			if is_instance_valid(c) and c.is_inside_tree():
+				c.grab_focus()).call_deferred()
 		return
 
 

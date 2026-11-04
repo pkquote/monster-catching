@@ -22,6 +22,8 @@ static func award_xp(db: Database, c: CreatureInstance, amount: int, bid: int = 
 		c.energy += c.max_energy(db) - old_energy
 		events.append({"type": BattleEvents.LEVEL_UP, "bid": bid, "level": c.level,
 			"training_points": training_points_available(db, c)})
+		Log.info(Log.PROGRESS, "Level up", {"species": c.species, "level": c.level,
+			"training_points": training_points_available(db, c)})
 		for l in c.species_def(db).learnset:
 			if l.level != c.level or c.moves.has(l.move):
 				continue
@@ -30,8 +32,10 @@ static func award_xp(db: Database, c: CreatureInstance, amount: int, bid: int = 
 			if c.moves.size() < db.balance.max_moves:
 				c.moves.append(l.move)
 				events.append({"type": BattleEvents.MOVE_LEARNED, "bid": bid, "move": l.move})
+				Log.info(Log.PROGRESS, "Move learned", {"species": c.species, "move": l.move})
 			else:
 				events.append({"type": BattleEvents.MOVE_OFFERED, "bid": bid, "move": l.move})
+				Log.debug(Log.PROGRESS, "Move offered", {"species": c.species, "move": l.move})
 	return events
 
 
@@ -59,17 +63,23 @@ static func dominant_affinity(db: Database, c: CreatureInstance) -> String:
 
 
 ## Species this creature would grow into right now, or "" if none is due.
+static func growth_target(db: Database, c: CreatureInstance) -> String:
+	return growth_branch(db, c).get("into", "")
+
+
+## The growth due right now: { into, affinity } where `affinity` is the track that
+## chose this branch ("" for the default branch), or {} if none is due.
 ## Rules: take the lowest growth level the creature has reached; among those
 ## branches pick the one matching its dominant Affinity (if that track meets
 ## the threshold), otherwise the default branch.
-static func growth_target(db: Database, c: CreatureInstance) -> String:
+static func growth_branch(db: Database, c: CreatureInstance) -> Dictionary:
 	var growth: Array = c.species_def(db).growth
 	var due_level := -1
 	for g in growth:
 		if g.level <= c.level and (due_level == -1 or g.level < due_level):
 			due_level = g.level
 	if due_level == -1:
-		return ""
+		return {}
 	var dominant := dominant_affinity(db, c)
 	var meets: bool = dominant != "" and int(c.affinity.get(dominant, 0)) >= db.balance.growth_affinity_threshold
 	var fallback := ""
@@ -77,10 +87,10 @@ static func growth_target(db: Database, c: CreatureInstance) -> String:
 		if g.level != due_level:
 			continue
 		if meets and g.affinity == dominant:
-			return g.into
+			return {"into": g.into, "affinity": dominant}
 		if g.default:
 			fallback = g.into
-	return fallback
+	return {"into": fallback, "affinity": ""} if fallback != "" else {}
 
 
 ## Changes species, keeping level, XP, moves, Affinity, Bond and training.
@@ -88,6 +98,7 @@ static func growth_target(db: Database, c: CreatureInstance) -> String:
 ## current level join the pool; they take a free slot or are reported as offered.
 static func apply_growth(db: Database, c: CreatureInstance, into: String) -> Dictionary:
 	var from := c.species
+	var branch := growth_branch(db, c)
 	var hp_ratio := float(c.hp) / float(c.max_hp(db))
 	var energy_ratio := float(c.energy) / float(maxi(1, c.max_energy(db)))
 	c.species = into
@@ -104,6 +115,11 @@ static func apply_growth(db: Database, c: CreatureInstance, into: String) -> Dic
 			learned.append(m)
 		else:
 			offered.append(m)
+	Log.info(Log.PROGRESS, "Grew", {"from": from, "into": into, "level": c.level,
+		"affinity": branch.get("affinity", "") if branch.get("into", "") == into else "",
+		"learned": learned})
+	for m in offered:
+		Log.debug(Log.PROGRESS, "Move offered", {"species": c.species, "move": m})
 	return {"type": "grew", "from": from, "into": into, "learned": learned, "offered": offered}
 
 
@@ -123,6 +139,7 @@ static func set_moves(db: Database, c: CreatureInstance, slots: PackedStringArra
 		if not c.move_pool.has(m):
 			return "not_in_pool"
 	c.moves = slots.duplicate()
+	Log.debug(Log.PROGRESS, "Moves set", {"species": c.species, "moves": Array(slots)})
 	return ""
 
 
@@ -134,17 +151,28 @@ static func progress_entry(db: Database, c: CreatureInstance, level_before: int)
 		return {}
 	var offered: Array[String] = []
 	for l in c.species_def(db).learnset:
-		if l.level > level_before and l.level <= c.level 				and c.move_pool.has(l.move) and not c.moves.has(l.move) and not offered.has(l.move):
+		if l.level <= level_before or l.level > c.level:
+			continue
+		if c.move_pool.has(l.move) and not c.moves.has(l.move) and not offered.has(l.move):
 			offered.append(l.move)
 	return {"creature": c, "offered_moves": offered, "growth_due": growth_target(db, c) != ""}
 
 
 ## Adds every learnset move at or below the creature's level that its pool lacks
-## (for saves from before move pools). Safe to call repeatedly.
+## (for saves from before move pools). Safe to call repeatedly. A species that no
+## longer exists in the data is left alone rather than breaking the load.
 static func backfill_pool(db: Database, c: CreatureInstance) -> void:
-	for m in c.species_def(db).moves_up_to(c.level):
+	var def := c.species_def(db)
+	if def == null:
+		Log.warn(Log.SAVE, "Unknown species in save; move pool left as is", {"species": c.species})
+		return
+	var added: Array[String] = []
+	for m in def.moves_up_to(c.level):
 		if not c.move_pool.has(m):
 			c.move_pool.append(m)
+			added.append(m)
+	if not added.is_empty():
+		Log.debug(Log.SAVE, "Move pool backfilled", {"species": c.species, "added": added})
 
 
 # --- Training points -----------------------------------------------------------
@@ -167,6 +195,16 @@ static func training_points_available(db: Database, c: CreatureInstance) -> int:
 ## Puts `points` into `stat`. Returns "" on success, or why it was refused.
 ## HP and energy gained this way are added to current HP/energy too.
 static func train(db: Database, c: CreatureInstance, stat: String, points: int) -> String:
+	var refused := _train(db, c, stat, points)
+	if refused == "":
+		Log.debug(Log.PROGRESS, "Trained", {"species": c.species, "stat": stat, "points": points,
+			"now": c.trained(stat)})
+	else:
+		Log.debug(Log.PROGRESS, "Training refused", {"species": c.species, "stat": stat, "reason": refused})
+	return refused
+
+
+static func _train(db: Database, c: CreatureInstance, stat: String, points: int) -> String:
 	if not stat in DataSchemas.TRAINABLE_STATS:
 		return "not_trainable"
 	if points <= 0:
@@ -189,6 +227,7 @@ static func train(db: Database, c: CreatureInstance, stat: String, points: int) 
 ## fainted one stays at 0). Returns the points refunded.
 static func reset_training(db: Database, c: CreatureInstance) -> int:
 	var refunded := training_points_spent(c)
+	Log.info(Log.PROGRESS, "Training reset", {"species": c.species, "refunded": refunded})
 	c.training = {}
 	if c.hp > 0:
 		c.hp = clampi(c.hp, 1, c.max_hp(db))

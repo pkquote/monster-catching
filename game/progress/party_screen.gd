@@ -54,10 +54,6 @@ static func _add_bar(parent: Control, y: float, value: float, max_value: float, 
 	parent.add_child(bar)
 
 
-func _ready() -> void:
-	super()
-	_bottom.position.y = 84  # below the info panel, with room for six rows + Back
-
 
 func _loop() -> void:
 	var db := DataRegistry.db

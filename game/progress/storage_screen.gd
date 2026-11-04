@@ -35,12 +35,6 @@ static func refusal_text(reason: String) -> String:
 	return ""
 
 
-func _ready() -> void:
-	super()
-	_info.get_parent().position.y = 4  # as the Summary screen: leaves room for ten rows
-	_bottom.position.y = 68
-
-
 ## One compact list row for a creature, `prefix` says which side it is on.
 func _row(prefix: String, c: CreatureInstance, value: Variant) -> Dictionary:
 	var db := DataRegistry.db
@@ -113,7 +107,7 @@ func _nav_extras() -> Array:
 
 
 func _loop() -> void:
-	menu.button_width = 305
+	menu.button_width = HALF_WIDTH
 	while true:
 		_show_header()
 		var pick = await menu.choose("", _grid_options(true, true, _nav_extras()), true, 2)

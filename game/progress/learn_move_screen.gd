@@ -42,10 +42,7 @@ func _ask(c: CreatureInstance, move: String, equip: bool) -> bool:
 		options.append({"label": "Replace " + db.move(slot).name, "value": slot})
 	options.append({"label": CANCEL if equip else KEEP, "value": null})
 	_body.text = "\n".join(lines)
-	menu.button_width = 296  # two columns: the info panel above needs the height
-	await get_tree().process_frame  # wrapped text needs a layout pass before it has a height
-	var top: Control = _info.get_parent()
-	_bottom.position.y = top.position.y + top.get_combined_minimum_size().y + 2
+	menu.button_width = HALF_WIDTH  # two columns, so the move list leaves room for the text
 	var choice = await menu.choose("", options, true, 2)
 	if choice == null:
 		return false

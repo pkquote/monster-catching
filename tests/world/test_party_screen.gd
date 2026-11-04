@@ -149,10 +149,8 @@ func test_six_rows_and_back_fit_the_screen() -> void:
 	for i in 6:
 		Story.give_creature("tidepup", 5)
 	var s := await _open()
-	var bottom: Control = s.menu.get_parent()
-	assert_float(bottom.position.y + bottom.get_combined_minimum_size().y).is_less_equal(360.0)
-	var top: Control = s._info.get_parent()
-	assert_float(top.position.y + top.get_combined_minimum_size().y).is_less_equal(bottom.position.y)
+	await get_tree().process_frame
+	ScreenFit.check(self, s)
 
 
 func test_summary_opens_from_row() -> void:

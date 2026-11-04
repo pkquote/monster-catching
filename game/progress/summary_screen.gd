@@ -8,7 +8,7 @@ const TABS := ["stats", "moves", "training"]
 const TAB_NAMES := {"stats": "Stats", "moves": "Moves", "training": "Training"}
 const STAT_NAMES := {"hp": "HP", "stamina": "Stamina", "patk": "Physical Attack", "pdef": "Physical Defense",
 	"satk": "Special Attack", "sdef": "Special Defense", "spd": "Speed", "resolve": "Resolve", "luck": "Luck"}
-const COLUMN_WIDTH := 296
+const COLUMN_WIDTH := ProgressScreen.HALF_WIDTH
 const REFRESH := "@refresh"
 const PREV := "@prev"
 const NEXT := "@next"
@@ -39,7 +39,6 @@ func _ready() -> void:
 	super()
 	menu.button_width = COLUMN_WIDTH
 	menu.linear_focus = true  # Up/Down must reach both columns; Left/Right belong to the tabs
-	(_info.get_parent() as Control).position.y = 4
 	_extra = VBoxContainer.new()
 	_body.get_parent().add_child(_extra)
 
@@ -94,15 +93,8 @@ func _loop(parent: Node) -> void:
 	var db := DataRegistry.db
 	while true:
 		var c := creature()
-		var shown_tab := tab
-		var shown_index := _index
 		_title.text = "%s  Lv %d  -  %s" % [c.display_name(db), c.level, TAB_NAMES[tab]]
 		var options: Array = _render(db, c)
-		await get_tree().process_frame  # wrapped text needs a layout pass before it has a height
-		if tab != shown_tab or _index != shown_index:
-			continue  # switched during that frame (the refresh had no menu to interrupt): draw the new page
-		var top: Control = _info.get_parent()
-		_bottom.position.y = top.position.y + top.get_combined_minimum_size().y + 2
 		if _party.size() > 1:
 			options.append({"label": "Previous creature", "value": PREV})
 			options.append({"label": "Next creature", "value": NEXT})

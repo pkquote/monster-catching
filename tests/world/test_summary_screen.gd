@@ -229,10 +229,8 @@ func test_shoulder_actions_switch_creature() -> void:
 
 
 func _assert_fits(s: SummaryScreen) -> void:
-	var bottom: Control = s.menu.get_parent()
-	var top: Control = s._info.get_parent()
-	assert_float(top.position.y + top.get_combined_minimum_size().y).is_less_equal(bottom.position.y)
-	assert_float(bottom.position.y + bottom.get_combined_minimum_size().y).is_less_equal(360.0)
+	await get_tree().process_frame
+	ScreenFit.check(self, s)
 
 
 func test_every_tab_fits_the_screen() -> void:
@@ -242,7 +240,7 @@ func test_every_tab_fits_the_screen() -> void:
 	for t in SummaryScreen.TABS:
 		s.show_tab(t)
 		await get_tree().process_frame
-		_assert_fits(s)
+		await _assert_fits(s)
 
 
 func test_moves_tab_with_a_full_pool_fits() -> void:
@@ -255,7 +253,7 @@ func test_moves_tab_with_a_full_pool_fits() -> void:
 	var s := await _open()
 	s.show_tab("moves")
 	await get_tree().process_frame
-	_assert_fits(s)
+	await _assert_fits(s)
 
 
 func test_moves_tab_shows_empty_slots() -> void:
@@ -275,7 +273,7 @@ func test_first_page_fits_the_screen() -> void:
 	var s := await _open()
 	await get_tree().process_frame
 	await get_tree().process_frame
-	_assert_fits(s)
+	await _assert_fits(s)
 
 
 func _focus_text() -> String:

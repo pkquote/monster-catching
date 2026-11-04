@@ -238,10 +238,7 @@ func test_learn_move_screen_fits_the_screen() -> void:
 	await _answer_wait(LearnMoveScreen)
 	var s := _screen(LearnMoveScreen) as LearnMoveScreen
 	await get_tree().process_frame
-	var bottom: Control = s.menu.get_parent()
-	var top: Control = s._info.get_parent()
-	assert_float(top.position.y + top.get_combined_minimum_size().y).is_less_equal(bottom.position.y)
-	assert_float(bottom.position.y + bottom.get_combined_minimum_size().y).is_less_equal(360.0)
+	ScreenFit.check(self, s)
 	s.menu.pick_label("Keep it for later")
 	await _wait(done)
 

@@ -4,8 +4,8 @@ extends RefCounted
 ## returns event dictionaries describing what happened.
 
 
-## Adds XP, levels up as many times as earned, learns moves (into free slots only;
-## a full moveset reports `move_offered` for the UI to decide).
+## Adds XP, levels up as many times as earned, learns moves (always into the pool;
+## into a slot only if one is free, otherwise `move_offered` for the UI to decide).
 static func award_xp(db: Database, c: CreatureInstance, amount: int, bid: int = -1) -> Array:
 	var events: Array = []
 	if amount <= 0 or c.level >= db.balance.level_cap:
@@ -25,6 +25,8 @@ static func award_xp(db: Database, c: CreatureInstance, amount: int, bid: int = 
 		for l in c.species_def(db).learnset:
 			if l.level != c.level or c.moves.has(l.move):
 				continue
+			if not c.move_pool.has(l.move):
+				c.move_pool.append(l.move)
 			if c.moves.size() < db.balance.max_moves:
 				c.moves.append(l.move)
 				events.append({"type": BattleEvents.MOVE_LEARNED, "bid": bid, "move": l.move})
@@ -82,7 +84,8 @@ static func growth_target(db: Database, c: CreatureInstance) -> String:
 
 
 ## Changes species, keeping level, XP, moves, Affinity, Bond and training.
-## HP and energy keep their ratios.
+## HP and energy keep their ratios. Moves the new species learns at or below the
+## current level join the pool; they take a free slot or are reported as offered.
 static func apply_growth(db: Database, c: CreatureInstance, into: String) -> Dictionary:
 	var from := c.species
 	var hp_ratio := float(c.hp) / float(c.max_hp(db))
@@ -90,7 +93,58 @@ static func apply_growth(db: Database, c: CreatureInstance, into: String) -> Dic
 	c.species = into
 	c.hp = maxi(1, roundi(hp_ratio * c.max_hp(db))) if c.hp > 0 else 0
 	c.energy = roundi(energy_ratio * c.max_energy(db))
-	return {"type": "grew", "from": from, "into": into}
+	var learned: Array[String] = []
+	var offered: Array[String] = []
+	for m in c.species_def(db).moves_up_to(c.level):
+		if c.move_pool.has(m):
+			continue
+		c.move_pool.append(m)
+		if c.moves.size() < db.balance.max_moves:
+			c.moves.append(m)
+			learned.append(m)
+		else:
+			offered.append(m)
+	return {"type": "grew", "from": from, "into": into, "learned": learned, "offered": offered}
+
+
+## Replaces the equipped moves with `slots`. Returns "" on success, or why it was
+## refused: "empty", "too_many", "duplicate" or "not_in_pool".
+static func set_moves(db: Database, c: CreatureInstance, slots: PackedStringArray) -> String:
+	if slots.is_empty():
+		return "empty"
+	if slots.size() > db.balance.max_moves:
+		return "too_many"
+	var seen := {}
+	for m in slots:
+		if seen.has(m):
+			return "duplicate"
+		seen[m] = true
+	for m in slots:
+		if not c.move_pool.has(m):
+			return "not_in_pool"
+	c.moves = slots.duplicate()
+	return ""
+
+
+## Summary of a level gain for the post-battle progress screen, or {} if the
+## creature did not level. offered_moves are pool moves learned in the gained
+## levels that did not get a slot.
+static func progress_entry(db: Database, c: CreatureInstance, level_before: int) -> Dictionary:
+	if c.level <= level_before:
+		return {}
+	var offered: Array[String] = []
+	for l in c.species_def(db).learnset:
+		if l.level > level_before and l.level <= c.level 				and c.move_pool.has(l.move) and not c.moves.has(l.move) and not offered.has(l.move):
+			offered.append(l.move)
+	return {"creature": c, "offered_moves": offered, "growth_due": growth_target(db, c) != ""}
+
+
+## Adds every learnset move at or below the creature's level that its pool lacks
+## (for saves from before move pools). Safe to call repeatedly.
+static func backfill_pool(db: Database, c: CreatureInstance) -> void:
+	for m in c.species_def(db).moves_up_to(c.level):
+		if not c.move_pool.has(m):
+			c.move_pool.append(m)
 
 
 # --- Training points -----------------------------------------------------------
@@ -128,6 +182,18 @@ static func train(db: Database, c: CreatureInstance, stat: String, points: int) 
 		c.hp += c.max_hp(db) - old_hp
 	c.energy += c.max_energy(db) - old_energy
 	return ""
+
+
+## Refunds every trained point. Max HP/energy drop by what training gave, and
+## current HP/energy are clamped (a living creature keeps at least 1 HP; a
+## fainted one stays at 0). Returns the points refunded.
+static func reset_training(db: Database, c: CreatureInstance) -> int:
+	var refunded := training_points_spent(c)
+	c.training = {}
+	if c.hp > 0:
+		c.hp = clampi(c.hp, 1, c.max_hp(db))
+	c.energy = mini(c.energy, c.max_energy(db))
+	return refunded
 
 
 # --- Bond ------------------------------------------------------------------------

@@ -37,8 +37,8 @@ Building maps (painting tiles, placing doors, NPCs, items, tamers, triggers; che
 Press F5 in the editor (or run the project). The game boots to a splash screen, then the title
 menu: Resume, New Game, Load Game, Settings, Quit. A new game starts at home in Fernmoor Town; walk
 out to meet the professor and pick a starter. Arrow keys / WASD move, Shift runs, Z / Enter talks and
-confirms, C / Tab opens the menu (Party, Bag, Save, Settings, Quit). Press **F1** on any screen (debug
-builds only) for the debug tools: **Get test party**, **Heal party**, and test battles (wild Route 1,
+confirms, C / Tab opens the menu (Party, Bag, Save, Settings, Quit). Party shows each creature's Summary (stats, moves, training), lets you reorder the team and, outside unsafe areas, reach the creature box; storage boxes in buildings do the same. Press **F1** on any screen (debug
+builds only) for the debug tools: **Get test party**, **Heal party**, **Give XP**, **Set Affinity**, **Fill box**, and test battles (wild Route 1,
 Scout Ana 1v1, Rival 2v2, and a **Custom battle** panel for any format up to 3v3, such as 1v3 or 3v1). Player data lives in Godot's user folder
 (`%APPDATA%/Godot/app_userdata/Monster Catching Game/` on Windows):
 

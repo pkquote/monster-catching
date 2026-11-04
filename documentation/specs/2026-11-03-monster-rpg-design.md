@@ -1,7 +1,7 @@
 # Monster-Catching RPG — Design Spec
 
 Date: 2026-11-03
-Status: Approved. M0–M3 implemented; M4 (progression + menus) next.
+Status: Approved. M0–M4 implemented.
 
 ## 1. Intent
 

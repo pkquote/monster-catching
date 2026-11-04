@@ -67,6 +67,18 @@ to the heal centre and the tour would wander off).
 timeout 400 "$GODOT" --path . --script res://.claude/skills/run-godot-monster-catching-game/driver.gd -- --mode=overworld --out="$TMPDIR/ow_shots" 2>&1 | grep "\[driver\]"
 ```
 
+Progress tour (M4): new game → F1 → Get test party → Set Affinity (Striker) → Give XP to level 16 →
+Learn Move (replace one, keep the others) → Grow now (Tidepup → Torrentusk) → Menu → Party (move it to
+second place) → Summary (all three tabs, +1 Speed) → Bag → Reset Seed → the heal centre's Storage Box
+(deposit, withdraw) → Route 1's deep grass, where Party → a row says it isn't safe to swap. It checks
+21 expectations and takes about 60 s. It places the player with `ow.player.place(...)` and uses
+`ow.change_map()` for the trips (as the overworld tour does) and walks the last tiles into the grass.
+Menu choices use `pick_menu(label)` (`CommandMenu.pick_label`); tabs use real Left/Right keys.
+
+```bash
+timeout 300 "$GODOT" --path . --script res://.claude/skills/run-godot-monster-catching-game/driver.gd -- --mode=progress --out="$TMPDIR/progress_shots" 2>&1 | grep "\[driver\]"
+```
+
 Screenshot a single scene:
 
 ```bash
@@ -78,6 +90,7 @@ timeout 60 "$GODOT" --path . --script res://.claude/skills/run-godot-monster-cat
 | `--mode=frontend` | default; the tour above |
 | `--mode=battle` | the battle tour above (`b00_…` to `b13_…` screenshots) |
 | `--mode=overworld` | the overworld tour above (`o01_…` to `o16_…` screenshots) |
+| `--mode=progress` | the progress tour above (`p01_…` to `p21_…` screenshots) |
 | `--mode=scene` | open `--scene` (default: main scene), wait `--frames` (default 60), screenshot |
 | `--out=<dir>` | screenshot folder; `user://` paths allowed (default `user://run_shots`) |
 
@@ -104,7 +117,7 @@ bash scripts/check.sh
 ```
 
 This validates the JSON content, compiles the dialogue, runs every gdUnit4 suite and regenerates
-`documentation/compendium.md`. Expected: `All checks passed.` with 43 `Statistics:` lines, all
+`documentation/compendium.md`. Expected: `All checks passed.` with 49 `Statistics:` lines, all
 `PASSED`.
 
 ## Gotchas

@@ -417,6 +417,8 @@ func _effect(e: Dictionary) -> String:
 				s += ", scales with stacks consumed"
 		"damage_fraction":
 			s = "Loses %s max HP each round" % _pct(e.fraction)
+		"reset_training":
+			s = "Returns all spent training points (field use only)"
 		"skip_chance":
 			s = "%d%% chance to lose its action" % e.chance
 		"heal":

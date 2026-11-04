@@ -88,11 +88,20 @@ static func party_level(save: SaveGame) -> int:
 ## Writes the battle's outcome into the save: the party's battle copies (HP, energy,
 ## XP, Bond...), the bag, catches and money. Call once, after the battle ends.
 ## Returns a summary for the UI:
-## { outcome, captured: Array[String names], to_storage: int, money: int }
+## { outcome, captured: Array[String names], to_storage: int, money: int,
+## progress: Array of Progression.progress_entry dicts, in party order }
 static func apply_results(db: Database, save: SaveGame, engine: BattleEngine) -> Dictionary:
+	var levels_before := {}
+	for b in engine.sides[0].battlers:
+		levels_before[b.source] = b.source.level
 	engine.commit(0)
 	var res := engine.result()
-	var summary := {"outcome": "", "captured": [], "to_storage": 0, "money": 0}
+	var summary := {"outcome": "", "captured": [], "to_storage": 0, "money": 0, "progress": []}
+	for c: CreatureInstance in save.party:
+		if levels_before.has(c):
+			var entry := Progression.progress_entry(db, c, levels_before[c])
+			if not entry.is_empty():
+				summary.progress.append(entry)
 	save.inventory = {}
 	for item in engine.sides[0].items:
 		if int(engine.sides[0].items[item]) > 0:

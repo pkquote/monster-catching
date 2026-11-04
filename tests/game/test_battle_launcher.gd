@@ -118,3 +118,31 @@ func test_custom_setup_caps_by_healthy_and_tamer_mode() -> void:
 	assert_str(setup.sides[1].ai).is_equal("tactician")
 	assert_str(setup.foe_name).is_equal("Sparring Partner")
 	assert_int(BattleLauncher.party_level(s)).is_equal(8)
+
+
+func _levelling_engine(s: SaveGame, moves: Array, xp_gain: int) -> BattleEngine:
+	var lead := FixtureDB.make(real, "tidepup", 8, moves)
+	lead.xp = Stats.xp_for_level(9) - 1
+	s.party = [lead, FixtureDB.make(real, "emberkit", 8)]
+	var e := BattleEngine.new(real, RandomNumberGenerator.new(), BattleLauncher.wild_setup(s, [FixtureDB.make(real, "tidepup", 2)], 1))
+	e.start()
+	if xp_gain > 0:
+		Progression.award_xp(real, e.sides[0].battlers[0].creature, xp_gain)
+	return e
+
+
+func test_results_report_levelled_creatures() -> void:
+	var s := _save()
+	var e := _levelling_engine(s, ["tackle", "splash_jab", "drench", "taunting_howl"], 1)
+	var summary := BattleLauncher.apply_results(real, s, e)
+	assert_int(summary.progress.size()).is_equal(1)
+	assert_object(summary.progress[0].creature).is_same(s.party[0])
+	assert_int(s.party[0].level).is_equal(9)
+	assert_array(summary.progress[0].offered_moves).contains_exactly(["riptide"])
+
+
+func test_results_progress_empty_without_levels() -> void:
+	var s := _save()
+	var e := _levelling_engine(s, ["tackle", "splash_jab", "drench", "taunting_howl"], 0)
+	var summary := BattleLauncher.apply_results(real, s, e)
+	assert_array(summary.progress).is_empty()

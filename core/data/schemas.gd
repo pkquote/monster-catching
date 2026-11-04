@@ -68,6 +68,7 @@ const EFFECT_OPS := {
 	"heal": {
 		"fraction": {"t": "number", "min": 0.0, "max": 1.0},
 	},
+	"reset_training": {},
 	"damage_fraction": {
 		"fraction": {"t": "number", "min": 0.0, "max": 1.0},
 	},
@@ -155,7 +156,7 @@ const ENTRY := {
 		"id": {"t": "id"},
 		"name": {"t": "string"},
 		"description": {"t": "string", "opt": true},
-		"category": {"t": "enum", "values": ["capture", "heal", "battle", "key"]},
+		"category": {"t": "enum", "values": ["capture", "heal", "battle", "key", "training"]},
 		"price": {"t": "int", "min": 0},
 		"target": {"t": "enum", "values": TARGETS, "opt": true},
 		"effects": {"t": "effects", "opt": true},

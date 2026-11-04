@@ -13,6 +13,8 @@ var energy: int = 0
 ## -100..100 (limits from balance.bond). Reflects how the creature is treated.
 var bond: int = 0
 var moves: PackedStringArray = []
+## Every move this creature has learned, slotted or not. Always contains `moves`.
+var move_pool: PackedStringArray = []
 ## affinity id -> points
 var affinity: Dictionary = {}
 ## stat id -> training points spent on it
@@ -28,11 +30,15 @@ static func create(db: Database, species_id: String, at_level: int,
 	c.species = species_id
 	c.level = clampi(at_level, 1, db.balance.level_cap)
 	c.xp = Stats.xp_for_level(c.level)
+	var learnable := db.creature(species_id).moves_up_to(c.level)
 	if move_ids.is_empty():
-		var learnable := db.creature(species_id).moves_up_to(c.level)
 		c.moves = learnable.slice(maxi(0, learnable.size() - db.balance.max_moves))
 	else:
 		c.moves = move_ids.duplicate()
+	c.move_pool = c.moves.duplicate()
+	for m in learnable:
+		if not c.move_pool.has(m):
+			c.move_pool.append(m)
 	for a in db.ids("affinities"):
 		c.affinity[a] = 0
 	c.hp = c.max_hp(db)
@@ -94,6 +100,7 @@ func copy_from(other: CreatureInstance) -> void:
 	energy = d.energy
 	bond = d.bond
 	moves = PackedStringArray(d.moves)
+	move_pool = PackedStringArray(d.move_pool)
 	affinity = d.affinity
 	training = d.training
 	status = d.status
@@ -102,7 +109,7 @@ func copy_from(other: CreatureInstance) -> void:
 func to_dict() -> Dictionary:
 	return {
 		"species": species, "nickname": nickname, "level": level, "xp": xp, "hp": hp,
-		"energy": energy, "bond": bond, "moves": Array(moves), "affinity": affinity.duplicate(),
+		"energy": energy, "bond": bond, "moves": Array(moves), "move_pool": Array(move_pool), "affinity": affinity.duplicate(),
 		"training": training.duplicate(), "status": status,
 	}
 
@@ -117,6 +124,7 @@ static func from_dict(d: Dictionary) -> CreatureInstance:
 	c.energy = int(d.get("energy", 0))
 	c.bond = int(d.get("bond", 0))
 	c.moves = PackedStringArray(d.moves)
+	c.move_pool = PackedStringArray(d.get("move_pool", d.moves))
 	c.status = d.get("status", "")
 	for k in d.get("affinity", {}):
 		c.affinity[k] = int(d.affinity[k])

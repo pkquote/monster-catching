@@ -5,7 +5,9 @@ extends VBoxContainer
 ##
 ## Option: { label: String, value: Variant, disabled: bool = false, hint: Variant = null }
 ## `hint` is passed to the `hovered` signal when an option gains focus (used to
-## highlight targets on the stage).
+## highlight targets on the stage). `decorate`: an optional Callable(Button) run
+## on the new button, for icons and extra controls. `focus`: true marks the option that
+## starts focused (the first enabled one when none is marked or it is disabled).
 
 signal picked(value: Variant)
 signal hovered(hint: Variant)
@@ -14,6 +16,10 @@ const COLUMNS := 3
 
 ## Fixed button width; 0 = the default (196 in 3 columns, 300 otherwise).
 var button_width := 0
+
+## Opt-in: Up/Down (and Tab) walk the enabled options in reading order, wrapping, even in
+## several columns. Godot's own grid focus keeps to a column, which strands the others.
+var linear_focus := false
 
 var _title: Label
 var _grid: GridContainer
@@ -34,9 +40,12 @@ func _ready() -> void:
 func choose(title: String, options: Array, allow_cancel := true, columns := COLUMNS) -> Variant:
 	_clear()
 	_title.text = title
+	_title.visible = title != ""
 	_grid.columns = columns
 	_allow_cancel = allow_cancel
 	var first: Button = null
+	var marked: Button = null
+	var enabled: Array[Button] = []
 	for o in options:
 		var b := Button.new()
 		b.text = o.label
@@ -46,6 +55,9 @@ func choose(title: String, options: Array, allow_cancel := true, columns := COLU
 		b.clip_text = true
 		b.alignment = HORIZONTAL_ALIGNMENT_LEFT
 		b.add_theme_font_size_override("font_size", 11)
+		var decorate = o.get("decorate")
+		if decorate is Callable:
+			decorate.call(b)
 		var value = o.value
 		b.pressed.connect(func(): _finish(value))
 		var hint = o.get("hint")
@@ -53,19 +65,51 @@ func choose(title: String, options: Array, allow_cancel := true, columns := COLU
 		_grid.add_child(b)
 		if first == null and not b.disabled:
 			first = b
+		if not b.disabled:
+			enabled.append(b)
+			if marked == null and o.get("focus", false):
+				marked = b
+	if linear_focus:
+		_chain(enabled)
+	if marked != null:
+		first = marked
 	_active = true
 	if first != null:
-		first.grab_focus.call_deferred()
+		_focus_later.call_deferred(first)
 	var result = await picked
 	hovered.emit(null)
 	return result
+
+
+## The deferred grab: the menu may have been closed (or cleared) in the meantime.
+func _focus_later(b: Button) -> void:
+	if is_instance_valid(b) and b.is_inside_tree():
+		b.grab_focus()
+
+
+## Links `buttons` into one focus loop: Up/Down and Tab/Shift+Tab step through them in order.
+func _chain(buttons: Array[Button]) -> void:
+	for i in buttons.size():
+		var prev := buttons[posmod(i - 1, buttons.size())]
+		var next := buttons[(i + 1) % buttons.size()]
+		var b := buttons[i]
+		b.focus_neighbor_top = b.get_path_to(prev)
+		b.focus_neighbor_bottom = b.get_path_to(next)
+		b.focus_previous = b.get_path_to(prev)
+		b.focus_next = b.get_path_to(next)
 
 
 ## Shows a message with no choices (e.g. during playback).
 func show_idle(text: String = "") -> void:
 	_clear()
 	_title.text = text
+	_title.visible = text != ""
 	_active = false
+
+
+## Ends the current `choose()` with `value` (for keys the owning screen handles itself).
+func interrupt(value: Variant) -> void:
+	_finish(value)
 
 
 func is_choosing() -> bool:

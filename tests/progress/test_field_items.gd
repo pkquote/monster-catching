@@ -45,6 +45,40 @@ func test_full_creature_is_no_effect() -> void:
 	assert_int(save.inventory.salve).is_equal(2)
 
 
+func test_reset_seed_refunds_and_is_spent() -> void:
+	save.inventory.reset_seed = 1
+	c.training = {"patk": 3, "hp": 2}
+	var r := FieldItems.use(db, save, "reset_seed", c)
+	assert_bool(r.ok).is_true()
+	assert_int(r.refunded).is_equal(5)
+	assert_bool(c.training.is_empty()).is_true()
+	assert_bool(save.inventory.has("reset_seed")).is_false()
+
+
+func test_reset_seed_refused_without_spent_points() -> void:
+	save.inventory.reset_seed = 1
+	var r := FieldItems.use(db, save, "reset_seed", c)
+	assert_bool(r.ok).is_false()
+	assert_str(r.error).is_equal("nothing_to_refund")
+	assert_int(r.refunded).is_equal(0)
+	assert_int(save.inventory.reset_seed).is_equal(1)
+
+
+func test_reset_seed_works_on_fainted_creature() -> void:
+	save.inventory.reset_seed = 1
+	c.training = {"patk": 2}
+	c.hp = 0
+	var r := FieldItems.use(db, save, "reset_seed", c)
+	assert_bool(r.ok).is_true()
+	assert_int(r.refunded).is_equal(2)
+	assert_int(c.hp).is_equal(0)
+
+
+func test_healing_results_report_zero_refunded() -> void:
+	c.hp = 1
+	assert_int(FieldItems.use(db, save, "salve", c).refunded).is_equal(0)
+
+
 func test_capture_item_is_not_usable() -> void:
 	assert_bool(FieldItems.can_use(db, "lure_cage")).is_false()
 	assert_bool(FieldItems.can_use(db, "salve")).is_true()

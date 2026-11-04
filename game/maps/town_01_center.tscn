@@ -1,74 +1,80 @@
 [gd_scene format=4]
 
-[ext_resource type="Script" path="res://game/overworld/game_map.gd" id="1_kw4of"]
-[ext_resource type="TileSet" path="res://game/maps/tiles/placeholder_tileset.tres" id="2_2ymci"]
-[ext_resource type="PackedScene" path="res://game/overworld/pieces/spawn.tscn" id="3_xduo7"]
-[ext_resource type="Script" path="res://game/overworld/pieces/spawn.gd" id="4_fb4es"]
-[ext_resource type="PackedScene" path="res://game/overworld/pieces/door.tscn" id="5_nnshl"]
-[ext_resource type="Script" path="res://game/overworld/pieces/door.gd" id="6_5iold"]
-[ext_resource type="PackedScene" path="res://game/overworld/pieces/heal_spot.tscn" id="7_qifju"]
-[ext_resource type="Script" path="res://game/overworld/pieces/heal_spot.gd" id="8_6kye2"]
-[ext_resource type="PackedScene" path="res://game/overworld/pieces/npc.tscn" id="9_gqw12"]
-[ext_resource type="Script" path="res://game/overworld/pieces/npc.gd" id="10_21cva"]
-[ext_resource type="PackedScene" path="res://game/overworld/pieces/shop_counter.tscn" id="11_c41ry"]
-[ext_resource type="Script" path="res://game/overworld/pieces/shop_counter.gd" id="12_ekw8h"]
+[ext_resource type="Script" path="res://game/overworld/game_map.gd" id="1_xduo7"]
+[ext_resource type="TileSet" path="res://game/maps/tiles/placeholder_tileset.tres" id="2_fb4es"]
+[ext_resource type="PackedScene" path="res://game/overworld/pieces/spawn.tscn" id="3_nnshl"]
+[ext_resource type="Script" path="res://game/overworld/pieces/spawn.gd" id="4_5iold"]
+[ext_resource type="PackedScene" path="res://game/overworld/pieces/door.tscn" id="5_qifju"]
+[ext_resource type="Script" path="res://game/overworld/pieces/door.gd" id="6_6kye2"]
+[ext_resource type="PackedScene" path="res://game/overworld/pieces/heal_spot.tscn" id="7_gqw12"]
+[ext_resource type="Script" path="res://game/overworld/pieces/heal_spot.gd" id="8_21cva"]
+[ext_resource type="PackedScene" path="res://game/overworld/pieces/npc.tscn" id="9_c41ry"]
+[ext_resource type="Script" path="res://game/overworld/pieces/npc.gd" id="10_ekw8h"]
+[ext_resource type="PackedScene" path="res://game/overworld/pieces/shop_counter.tscn" id="11_8jrbe"]
+[ext_resource type="Script" path="res://game/overworld/pieces/shop_counter.gd" id="12_cnavs"]
+[ext_resource type="PackedScene" path="res://game/overworld/pieces/storage_box.tscn" id="13_2qywn"]
+[ext_resource type="Script" path="res://game/overworld/pieces/storage_box.gd" id="14_c0efy"]
 
-[node name="Town01Center" type="Node2D" unique_id=1446602248]
-script = ExtResource("1_kw4of")
+[node name="Town01Center" type="Node2D" unique_id=505862285]
+script = ExtResource("1_xduo7")
 display_name = "Fernmoor Town"
 indoor = true
 
-[node name="Ground" type="TileMapLayer" parent="." unique_id=777422165]
+[node name="Ground" type="TileMapLayer" parent="." unique_id=351931985]
 tile_map_data = PackedByteArray("AAAAAAAAAAAFAAAAAAABAAAAAAAFAAAAAAACAAAAAAAFAAAAAAADAAAAAAAFAAAAAAAEAAAAAAAFAAAAAAAFAAAAAAAFAAAAAAAGAAAAAAAFAAAAAAAHAAAAAAAFAAAAAAAIAAAAAAAFAAAAAAAJAAAAAAAFAAAAAAAKAAAAAAAFAAAAAAAAAAEAAAAFAAAAAAABAAEAAAAIAAAAAAACAAEAAAAIAAAAAAADAAEAAAAIAAAAAAAEAAEAAAAIAAAAAAAFAAEAAAAIAAAAAAAGAAEAAAAIAAAAAAAHAAEAAAAIAAAAAAAIAAEAAAAIAAAAAAAJAAEAAAAIAAAAAAAKAAEAAAAFAAAAAAAAAAIAAAAFAAAAAAABAAIAAAAKAAAAAAACAAIAAAAKAAAAAAADAAIAAAAKAAAAAAAEAAIAAAAKAAAAAAAFAAIAAAAKAAAAAAAGAAIAAAAKAAAAAAAHAAIAAAAKAAAAAAAIAAIAAAAKAAAAAAAJAAIAAAAKAAAAAAAKAAIAAAAFAAAAAAAAAAMAAAAFAAAAAAABAAMAAAAIAAAAAAACAAMAAAAIAAAAAAADAAMAAAAIAAAAAAAEAAMAAAAIAAAAAAAFAAMAAAAIAAAAAAAGAAMAAAAIAAAAAAAHAAMAAAAIAAAAAAAIAAMAAAAIAAAAAAAJAAMAAAAIAAAAAAAKAAMAAAAFAAAAAAAAAAQAAAAFAAAAAAABAAQAAAAIAAAAAAACAAQAAAAIAAAAAAADAAQAAAAJAAAAAAAEAAQAAAAJAAAAAAAFAAQAAAAJAAAAAAAGAAQAAAAJAAAAAAAHAAQAAAAJAAAAAAAIAAQAAAAIAAAAAAAJAAQAAAAIAAAAAAAKAAQAAAAFAAAAAAAAAAUAAAAFAAAAAAABAAUAAAAIAAAAAAACAAUAAAAIAAAAAAADAAUAAAAJAAAAAAAEAAUAAAAJAAAAAAAFAAUAAAAJAAAAAAAGAAUAAAAJAAAAAAAHAAUAAAAJAAAAAAAIAAUAAAAIAAAAAAAJAAUAAAAIAAAAAAAKAAUAAAAFAAAAAAAAAAYAAAAFAAAAAAABAAYAAAAIAAAAAAACAAYAAAAIAAAAAAADAAYAAAAIAAAAAAAEAAYAAAAIAAAAAAAFAAYAAAAIAAAAAAAGAAYAAAAIAAAAAAAHAAYAAAAIAAAAAAAIAAYAAAAIAAAAAAAJAAYAAAAIAAAAAAAKAAYAAAAFAAAAAAAAAAcAAAAFAAAAAAABAAcAAAAFAAAAAAACAAcAAAAFAAAAAAADAAcAAAAFAAAAAAAEAAcAAAAFAAAAAAAFAAcAAAAHAAAAAAAGAAcAAAAFAAAAAAAHAAcAAAAFAAAAAAAIAAcAAAAFAAAAAAAJAAcAAAAFAAAAAAAKAAcAAAAFAAAAAAA=")
-tile_set = ExtResource("2_2ymci")
+tile_set = ExtResource("2_fb4es")
 
-[node name="Decor" type="TileMapLayer" parent="." unique_id=1779938871]
-tile_set = ExtResource("2_2ymci")
+[node name="Decor" type="TileMapLayer" parent="." unique_id=1487135881]
+tile_set = ExtResource("2_fb4es")
 
-[node name="Entities" type="Node2D" parent="." unique_id=1947677186]
+[node name="Entities" type="Node2D" parent="." unique_id=242882679]
 y_sort_enabled = true
 
-[node name="Entry" type="Node2D" parent="Entities" unique_id=1026714821 instance=ExtResource("3_xduo7")]
+[node name="Entry" type="Node2D" parent="Entities" unique_id=1411221353 instance=ExtResource("3_nnshl")]
 position = Vector2(176, 208)
-script = ExtResource("4_fb4es")
+script = ExtResource("4_5iold")
 id = "entry"
 
-[node name="Heal" type="Node2D" parent="Entities" unique_id=1940796123 instance=ExtResource("3_xduo7")]
+[node name="Heal" type="Node2D" parent="Entities" unique_id=2126949387 instance=ExtResource("3_nnshl")]
 position = Vector2(112, 112)
-script = ExtResource("4_fb4es")
+script = ExtResource("4_5iold")
 id = "heal"
 
-[node name="Door" type="Node2D" parent="Entities" unique_id=1137221301 instance=ExtResource("5_nnshl")]
+[node name="Door" type="Node2D" parent="Entities" unique_id=354226797 instance=ExtResource("5_qifju")]
 position = Vector2(176, 240)
-script = ExtResource("6_5iold")
+script = ExtResource("6_6kye2")
 target_map = "town_01"
 target_spawn = "from_center"
 
-[node name="HealCounter" type="Node2D" parent="Entities" unique_id=533441024 instance=ExtResource("7_qifju")]
+[node name="HealCounter" type="Node2D" parent="Entities" unique_id=179572047 instance=ExtResource("7_gqw12")]
 position = Vector2(112, 80)
-script = ExtResource("8_6kye2")
+script = ExtResource("8_21cva")
 
-[node name="Nurse" type="Node2D" parent="Entities" unique_id=907433245 instance=ExtResource("9_gqw12")]
+[node name="Nurse" type="Node2D" parent="Entities" unique_id=1983031521 instance=ExtResource("9_c41ry")]
 position = Vector2(112, 48)
-script = ExtResource("10_21cva")
+script = ExtResource("10_ekw8h")
 actor_id = "nurse"
 display_name = "Nurse"
 dialogue = "res://dialogue/town_01/npcs.dialogue"
 title = "nurse"
 
-[node name="ShopCounter" type="Node2D" parent="Entities" unique_id=804940319 instance=ExtResource("11_c41ry")]
+[node name="ShopCounter" type="Node2D" parent="Entities" unique_id=2035989050 instance=ExtResource("11_8jrbe")]
 position = Vector2(240, 80)
-script = ExtResource("12_ekw8h")
-stock = PackedStringArray("lure_cage", "tide_net", "snare_vine", "salve", "tonic")
+script = ExtResource("12_cnavs")
+stock = PackedStringArray("lure_cage", "tide_net", "snare_vine", "salve", "tonic", "reset_seed")
 
-[node name="Clerk" type="Node2D" parent="Entities" unique_id=652076238 instance=ExtResource("9_gqw12")]
+[node name="StorageBox" type="Node2D" parent="Entities" unique_id=1131091542 instance=ExtResource("13_2qywn")]
+position = Vector2(272, 80)
+script = ExtResource("14_c0efy")
+
+[node name="Clerk" type="Node2D" parent="Entities" unique_id=737799047 instance=ExtResource("9_c41ry")]
 position = Vector2(240, 48)
-script = ExtResource("10_21cva")
+script = ExtResource("10_ekw8h")
 actor_id = "clerk"
 display_name = "Clerk"
 dialogue = "res://dialogue/town_01/npcs.dialogue"
 title = "clerk"
 
-[node name="Above" type="TileMapLayer" parent="." unique_id=1082093654]
+[node name="Above" type="TileMapLayer" parent="." unique_id=662040226]
 z_index = 10
-tile_set = ExtResource("2_2ymci")
+tile_set = ExtResource("2_fb4es")

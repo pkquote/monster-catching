@@ -15,7 +15,7 @@ const LAST_FILE := "last.json"
 ## schema -> Callable(Dictionary) -> Dictionary that upgrades a save by one version.
 ## Add an entry here whenever SaveGame.SCHEMA goes up.
 static func migrations() -> Dictionary:
-	return {1: _v1_to_v2}
+	return {1: _v1_to_v2, 2: _v2_to_v3}
 
 var root: String
 
@@ -28,6 +28,17 @@ static func _v1_to_v2(d: Dictionary) -> Dictionary:
 	out.erase("flags")
 	out["position"] = {}
 	out["schema"] = 2
+	return out
+
+
+## Schema 2 -> 3 (M4): creatures gain a move pool. Starts as their current moves;
+## GameState.load_from tops it up from the learnset (core can't see the database).
+static func _v2_to_v3(d: Dictionary) -> Dictionary:
+	var out := d.duplicate(true)
+	for key in ["party", "storage"]:
+		for c in out.get(key, []):
+			c["move_pool"] = c.get("moves", []).duplicate()
+	out["schema"] = 3
 	return out
 
 

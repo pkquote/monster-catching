@@ -7,6 +7,8 @@ extends SceneTree
 ##   --mode=frontend      (default) full front-end tour: splash -> title -> new game -> world ->
 ##                        save -> quit -> load browser -> settings tabs -> rebind -> resume.
 ##                        Checks expectations and exits 1 if any fail.
+##   --mode=progress     M4 tour: test party, Give XP to 16, Learn Move, Grow, Party reorder, Summary tabs,
+##                        training, Reset Seed, Storage Box, unsafe zone.
 ##   --mode=scene         open one scene, wait, screenshot. Use with --scene / --frames.
 ##   --scene=res://...    scene for --mode=scene (default: the project's main scene)
 ##   --frames=N           frames to wait before the screenshot in scene mode (default 60)
@@ -37,6 +39,8 @@ func _initialize() -> void:
 			_run_battle()
 		"overworld":
 			_run_overworld()
+		"progress":
+			_run_progress()
 		_:
 			_run_frontend()
 
@@ -400,6 +404,204 @@ func _run_overworld() -> void:
 		"Resume puts you back where you saved (%s %s)" % [ow.map.map_id(), ow.player.feet_tile()])
 	_clear(RUN_SAVES)
 	_finish()
+
+
+func _run_progress() -> void:
+	await process_frame
+	var gs := root.get_node("GameState")
+	var router := root.get_node("SceneRouter")
+	gs.store = SaveStore.new(RUN_SAVES)
+	_clear(RUN_SAVES)
+	gs.start_new_game("Ana")
+	router.goto(router.WORLD)
+	await wait_scene("Overworld", 120)
+	await _frames(10)
+	var ow = current_scene
+
+	# 1. The test party (Tidepup, Emberkit, Voltmoth at level 8) from the F1 menu.
+	await key(KEY_F1)
+	await _frames(5)
+	press("Get test party")
+	await _frames(10)
+	await shot("p01_test_party")
+	expect(gs.current.party.size() == 3, "test party granted")
+	gs.current.inventory["reset_seed"] = 1
+
+	# 2. Striker Affinity on Tidepup, then Give XP to level 16.
+	press("Set Affinity...")
+	await _frames(5)
+	press("Striker")
+	await _frames(5)
+	await shot("p02_striker_affinity")
+	expect(gs.current.party[0].affinity.get("striker", 0) > 0, "Tidepup got the Striker affinity")
+	press("Give XP...")
+	await _frames(5)
+	press("To level 16")
+	await _frames(10)
+
+	# 3. Learn Move: replace a move on the first offer, keep the rest for later; 4. Grow now.
+	var replaced := false
+	var grew := false
+	var offers := 0
+	for i in 1200:
+		var m := _find_menu()
+		if m != null:
+			var labels := m.labels()
+			if "Grow now" in labels:
+				await _frames(5)
+				await shot("p05_grow_offer")
+				expect("Torrentusk" in _screen_page(m), "the Grow screen names Torrentusk (%s)" % _screen_page(m).replace("\n", " "))
+				m.pick_label("Grow now")
+				grew = true
+			elif labels.size() > 0 and labels[labels.size() - 1] == "Keep it for later":
+				offers += 1
+				await _frames(5)
+				if not replaced:
+					await shot("p03_learn_move")
+					expect("wants to learn" in _screen_title(m), "Learn Move screen opens (%s)" % _screen_title(m))
+					var before := Array(gs.current.party[0].moves)
+					m.pick_label("Replace")
+					replaced = true
+					await _frames(5)
+					expect(Array(gs.current.party[0].moves) != before, "a move was replaced (%s -> %s)" % [before, gs.current.party[0].moves])
+				else:
+					m.pick_label("Keep it for later")
+			elif "OK" in labels and grew:
+				await _frames(5)
+				await shot("p06_grown")
+				expect("grew into" in _screen_page(m), "the Grow screen says it grew (%s)" % _screen_page(m))
+				m.pick_label("OK")
+			else:
+				m.pick_label("")
+			await _frames(5)
+		elif not ow.is_locked():
+			break
+		await process_frame
+	await _frames(10)
+	expect(replaced and offers >= 1, "Learn Move was offered (%d offers)" % offers)
+	expect(gs.current.party[0].species == "torrentusk", "Tidepup grew into Torrentusk (%s)" % gs.current.party[0].species)
+	expect(not ow.is_locked(), "the world is unlocked after the progress screens")
+
+	# 5. Party: move Torrentusk to second place.
+	await key(KEY_C)
+	await pick_menu("Party")
+	await _frames(5)
+	await shot("p07_party")
+	await pick_menu("Torrentusk")
+	await _frames(3)
+	await shot("p08_party_row_menu")
+	await pick_menu("Move")
+	await _frames(3)
+	await shot("p09_party_move")
+	await pick_menu("Emberkit")
+	await _frames(3)
+	expect(gs.current.party[1].species == "torrentusk" and gs.current.party[0].species == "emberkit",
+		"Torrentusk moved to second place (%s, %s)" % [gs.current.party[0].species, gs.current.party[1].species])
+
+	# 6. Summary: all three tabs. 7. +1 Speed.
+	await pick_menu("Torrentusk")
+	await pick_menu("Summary")
+	await _frames(5)
+	await shot("p10_summary_stats")
+	var summ = _find_all(current_scene, "CanvasLayer").filter(func(n): return n.get("tab") != null)[0]
+	expect(summ.tab == "stats", "Summary opens on Stats")
+	await key(KEY_RIGHT)
+	await _frames(5)
+	await shot("p11_summary_moves")
+	expect(summ.tab == "moves", "Right switches to Moves")
+	await key(KEY_RIGHT)
+	await _frames(5)
+	await shot("p12_summary_training")
+	expect(summ.tab == "training", "Right switches to Training")
+	await pick_menu("+1 Speed")
+	await _frames(5)
+	await shot("p13_trained_speed")
+	expect(gs.current.party[1].trained("spd") == 1, "+1 Speed trained")
+	await pick_menu("Back")
+	await _frames(3)
+	await pick_menu("Cancel")
+	await pick_menu("Back")  # the party list
+	await _frames(3)
+
+	# 8. Bag: Reset Seed -> Torrentusk -> Yes.
+	await pick_menu("Bag")
+	await pick_menu("Reset Seed")
+	await _frames(3)
+	await shot("p14_seed_target")
+	await pick_menu("Torrentusk")
+	await _frames(3)
+	await shot("p15_seed_confirm")
+	await pick_menu("Yes")
+	await _frames(3)
+	await shot("p16_seed_done")
+	await pick_menu("OK")
+	expect(gs.current.party[1].trained("spd") == 0 and gs.current.inventory.get("reset_seed", 0) == 0,
+		"the Reset Seed returned the training points and was used up")
+	await pick_menu("Back")
+	await pick_menu("Close")
+	await wait_unlocked(ow)
+
+	# 9. The centre's Storage Box: deposit, then withdraw. (change_map for the trip.)
+	await ow.change_map("town_01_center", "entry")
+	await _frames(10)
+	ow.player.place(_tile_centre(8, 3), Vector2i.UP)
+	await key(KEY_Z)
+	await _frames(5)
+	await shot("p17_storage_open")
+	expect(_find_menu() != null and _screen_title(_find_menu()).begins_with("Box"), "the Storage Box opens the storage screen")
+	await pick_menu("Party: Voltmoth")
+	await _frames(3)
+	await shot("p18_storage_party_row")
+	await pick_menu("Deposit")
+	await _frames(5)
+	await shot("p19_storage_deposited")
+	expect(gs.current.party.size() == 2 and gs.current.storage.size() == 1, "Voltmoth deposited into the box")
+	await pick_menu("Box: Voltmoth")
+	await pick_menu("Withdraw")
+	await _frames(5)
+	await shot("p20_storage_withdrawn")
+	expect(gs.current.party.size() == 3 and gs.current.storage.size() == 0, "Voltmoth withdrawn again")
+	await pick_menu("Back")
+	await wait_unlocked(ow)
+
+	# 10. Route 1's deep grass is unsafe: Party -> a row shows the message, Storage is disabled.
+	await ow.change_map("route_01", "from_town")
+	await _frames(10)
+	ow.roller._rate = 0.0
+	ow.player.place(_tile_centre(12, 7), Vector2i.RIGHT)
+	await hold(KEY_D, 14)
+	expect(not ow.is_safe_here(), "the deep grass corner is unsafe (%s)" % ow.player.feet_tile())
+	await key(KEY_C)
+	await pick_menu("Party")
+	await pick_menu("Emberkit")
+	await _frames(3)
+	await shot("p21_unsafe_party_row")
+	var um := _find_menu()
+	expect(um != null and "It isn't safe to swap creatures here." in _screen_page(um), "the party row page says it isn't safe to swap")
+	expect(um != null and not um.pick_label("Storage"), "Storage can't be picked in the unsafe zone")
+	await pick_menu("Cancel")
+	await pick_menu("Back")
+	await pick_menu("Close")
+	_clear(RUN_SAVES)
+	_finish()
+
+
+## The ProgressScreen (a CanvasLayer) that owns `m`, or null.
+func _screen_of(m: CommandMenu) -> Node:
+	var n: Node = m
+	while n != null and not n.has_method("page_text"):
+		n = n.get_parent()
+	return n
+
+
+func _screen_title(m: CommandMenu) -> String:
+	var s := _screen_of(m)
+	return s.title_text() if s != null else ""
+
+
+func _screen_page(m: CommandMenu) -> String:
+	var s := _screen_of(m)
+	return s.page_text() if s != null else ""
 
 
 func _tile_centre(x: int, y: int) -> Vector2:

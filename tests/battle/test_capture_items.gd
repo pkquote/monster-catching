@@ -81,6 +81,14 @@ func test_capture_items_rejected_in_tamer_battle() -> void:
 	assert_int(e.sides[0].items.cage).is_equal(1)
 
 
+func test_training_items_hidden_and_refused_in_battle() -> void:
+	var e := _wild({"seed": 1, "potion": 1})
+	var events := e.resolve_round([BattleAction.use_item(_me(e).bid, "seed", _me(e).bid)])
+	assert_str(FixtureDB.events_of(events, "action_invalid")[0].reason).is_equal("field_only")
+	assert_int(e.sides[0].items.seed).is_equal(1)
+	assert_array(FixtureDB.events_of(events, "item_used")).is_empty()
+
+
 func test_potion_heals_benched_ally() -> void:
 	var e := _wild()
 	var benched: Battler = e.sides[0].bench()[0]

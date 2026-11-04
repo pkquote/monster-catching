@@ -27,14 +27,14 @@ static func legend() -> Dictionary:
 	}
 
 
-## def: { id, display_name, default_encounter?, indoor?, rows: Array[String],
+## def: { id, display_name, default_encounter?, indoor?, unsafe?, rows: Array[String],
 ##        pieces: Array[{ type, name, at: [x, y], props?: {} }] }
 ## Returns the saved path, or "" when the map exists and `force` is false.
 static func build(def: Dictionary, force := false) -> String:
 	var path := GameMap.path_of(def.id)
 	if ResourceLoader.exists(path) and not force:
 		return ""
-	var root := make_empty(def.get("display_name", ""), def.get("default_encounter", ""), def.get("indoor", false))
+	var root := make_empty(def.get("display_name", ""), def.get("default_encounter", ""), def.get("indoor", false), def.get("unsafe", false))
 	root.name = _pascal(def.id)
 	var ground: TileMapLayer = root.get_node("Ground")
 	var decor: TileMapLayer = root.get_node("Decor")
@@ -65,11 +65,12 @@ static func build(def: Dictionary, force := false) -> String:
 
 
 ## A GameMap with the four standard layers, ready to paint.
-static func make_empty(display_name := "", default_encounter := "", indoor := false) -> GameMap:
+static func make_empty(display_name := "", default_encounter := "", indoor := false, unsafe := false) -> GameMap:
 	var root := GameMap.new()
 	root.display_name = display_name
 	root.default_encounter = default_encounter
 	root.indoor = indoor
+	root.unsafe = unsafe
 	var ts: TileSet = load(TILESET)
 	for layer_name in ["Ground", "Decor"]:
 		var l := TileMapLayer.new()

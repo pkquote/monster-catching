@@ -1,9 +1,10 @@
 extends Node
 ## Roughs out the starter maps from ASCII layouts (see MapBuilder for the legend)
 ## and writes the blank map template. Existing maps are left alone, so edits made
-## in the Godot editor are safe; pass `-- --force` to rebuild everything.
+## in the Godot editor are safe; pass `-- --force` to rebuild everything, or `-- --only=id,id` to force-rebuild
+## just those maps.
 ##
-##   godot --headless --path . res://tools/build_maps.tscn [-- --force]
+##   godot --headless --path . res://tools/build_maps.tscn [-- --force | --only=a,b]
 ##
 ## It runs as a scene (not --script) so the game's autoloads exist: piece scripts
 ## use Story, and a script that fails to compile would drop the piece's settings.
@@ -19,7 +20,12 @@ const ROUTE_NPCS := "res://dialogue/route_01/npcs.dialogue"
 
 
 func _ready() -> void:
-	var force := "--force" in OS.get_cmdline_user_args()
+	var args := OS.get_cmdline_user_args()
+	var force := "--force" in args
+	var only := PackedStringArray()
+	for a in args:
+		if a.begins_with("--only="):
+			only = a.trim_prefix("--only=").split(",", false)
 	DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path(GameMap.MAPS_DIR))
 	if force or not ResourceLoader.exists(TEMPLATE):
 		var t := MapBuilder.make_empty("New map")
@@ -30,7 +36,7 @@ func _ready() -> void:
 		t.free()
 		print("Wrote ", TEMPLATE)
 	for def in maps():
-		var path := MapBuilder.build(def, force)
+		var path := MapBuilder.build(def, force or def.id in only)
 		print(("Wrote " + path) if path != "" else ("Kept " + GameMap.path_of(def.id)))
 	get_tree().quit(0)
 
@@ -147,7 +153,8 @@ static func maps() -> Array:
 				{"type": "npc", "name": "Nurse", "at": [3, 1], "props": {"actor_id": "nurse", "display_name": "Nurse",
 					"dialogue": NPCS, "title": "nurse"}},
 				{"type": "shop_counter", "name": "ShopCounter", "at": [7, 2], "props": {"stock":
-					PackedStringArray(["lure_cage", "tide_net", "snare_vine", "salve", "tonic"])}},
+					PackedStringArray(["lure_cage", "tide_net", "snare_vine", "salve", "tonic", "reset_seed"])}},
+				{"type": "storage_box", "name": "StorageBox", "at": [8, 2]},
 				{"type": "npc", "name": "Clerk", "at": [7, 1], "props": {"actor_id": "clerk", "display_name": "Clerk",
 					"dialogue": NPCS, "title": "clerk"}},
 			],
@@ -202,6 +209,7 @@ static func maps() -> Array:
 				{"type": "door", "name": "SouthExit", "at": [10, 39], "props": {"target_map": "town_01", "target_spawn": "from_route"}},
 				{"type": "encounter_area", "name": "DeepGrass", "at": [13, 6], "props": {"encounter": "route_01_deep_grass",
 					"size": Vector2i(5, 4)}},
+				{"type": "unsafe_area", "name": "UnsafeZone", "at": [13, 6], "props": {"size": Vector2i(5, 4)}},
 				{"type": "tamer", "name": "ScoutAna", "at": [4, 22], "props": {"actor_id": "ana", "display_name": "Scout Ana",
 					"tamer_id": "scout_ana", "sight": 6, "start_facing": "right", "dialogue": ROUTE_TAMERS,
 					"before_title": "ana_before", "after_title": "ana_after"}},
@@ -276,6 +284,7 @@ static func maps() -> Array:
 					"before_title": "battle", "after_title": "bye"}},
 				{"type": "encounter_area", "name": "DeepGrass", "at": [2, 2], "props": {"encounter": "route_01_deep_grass",
 					"size": Vector2i(2, 2)}},
+				{"type": "unsafe_area", "name": "UnsafeZone", "at": [2, 2], "props": {"size": Vector2i(2, 2)}},
 				{"type": "trigger", "name": "Gate", "at": [8, 5], "props": {"dialogue": TEST_TALK, "title": "sets_flag",
 					"once": true, "blocks_flag": "gate_off", "size": Vector2i(2, 1)}},
 			],

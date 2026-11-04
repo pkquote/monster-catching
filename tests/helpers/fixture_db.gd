@@ -140,6 +140,8 @@ static func raw() -> RawData:
 		"effects": [{"op": "restore_energy", "fraction": 0.5}]})
 	r.add_entry("items", {"id": "potion", "name": "Potion", "category": "heal", "price": 1, "target": "one_ally",
 		"effects": [{"op": "heal", "fraction": 0.5}]})
+	r.add_entry("items", {"id": "seed", "name": "Seed", "category": "training", "price": 1, "target": "one_ally",
+		"effects": [{"op": "reset_training"}]})
 	r.add_entry("tamers", {"id": "t1", "name": "T1", "max_active": 2, "ai": "aggressive", "reward_money": 1,
 		"party": [{"species": "blob", "level": 5}, {"species": "fish", "level": 5}]})
 	r.add_entry("encounters", {"id": "e1", "name": "E1", "pack_min": 1, "pack_max": 1,

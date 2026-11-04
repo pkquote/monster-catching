@@ -1,0 +1,6 @@
+{
+  "schema": 1,
+  "entries": [
+    {"id": "reset_seed", "name": "Reset Seed", "description": "Returns all of a creature's training points so they can be spent again.", "category": "training", "price": 600, "target": "one_ally", "effects": [{"op": "reset_training"}]}
+  ]
+}

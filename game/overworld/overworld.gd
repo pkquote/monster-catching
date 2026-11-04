@@ -203,9 +203,20 @@ func open_shop(stock: PackedStringArray) -> void:
 	unlock("menu")
 
 
+## The creature box. The Party screen (already under the "menu" lock) runs
+## StorageScreen directly instead of calling this.
+func open_storage() -> void:
+	if is_locked():
+		return
+	lock("menu")
+	await StorageScreen.run(self)
+	unlock("menu")
+
+
 ## The F1 debug menu stays shut during conversations, cutscenes and map changes.
 func blocks_debug_menu() -> bool:
-	return _talking or _locks.has("map_change") or _locks.has("cutscene") or _locks.has("tamer")
+	return _talking or _locks.has("map_change") or _locks.has("cutscene") or _locks.has("tamer") \
+			or _locks.has("progress")
 
 
 ## Accept: runs the piece on the tile the player faces (NPC, item, sign...).
@@ -331,9 +342,19 @@ func after_battle(summary: Dictionary, defeat_rules: bool) -> bool:
 		else:
 			for c: CreatureInstance in GameState.current.party:
 				c.heal_full(DataRegistry.db)
+	await run_progress(summary.get("progress", []))
 	if GameState.has_game():
 		GameState.autosave()
 	return won
+
+
+## Level-up choices (Learn Move, Grow) after a battle, over the map.
+func run_progress(progress: Array) -> void:
+	if progress.is_empty():
+		return
+	lock("progress")
+	await ProgressFlow.run(self, progress)
+	unlock("progress")
 
 
 # --- Conversations -------------------------------------------------------------------
@@ -369,6 +390,11 @@ func say_lines(lines: Array) -> void:
 	await dialogue_box.show_lines(lines)
 	unlock("dialogue")
 	_talking = false
+
+
+## False while the player stands somewhere unsafe (storage, swapping are blocked).
+func is_safe_here() -> bool:
+	return not map.unsafe_at(player.feet_tile())
 
 
 func is_talking() -> bool:

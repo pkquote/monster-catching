@@ -23,6 +23,7 @@ static func get_op(op: String) -> EffectOp:
 			"stat_mod": preload("op_passive.gd").new(),
 			"incoming_type_mod": preload("op_passive.gd").new(),
 			"skip_chance": preload("op_passive.gd").new(),
+			"reset_training": preload("op_passive.gd").new(),
 		}
 	return _registry.get(op)
 

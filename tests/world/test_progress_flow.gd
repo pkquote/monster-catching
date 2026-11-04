@@ -1,0 +1,255 @@
+extends GdUnitTestSuite
+## The after-battle step: Learn Move and Grow screens, run before the autosave.
+
+var world: Overworld
+var _old_store: SaveStore
+var _old_speed := ""
+
+
+func before() -> void:
+	_old_speed = Settings.data.text_speed
+	_old_store = GameState.store
+	GameState.store = SaveStore.new("user://test_progress_flow_saves")
+	Settings.data.text_speed = "instant"
+
+
+func after() -> void:
+	Settings.data.text_speed = _old_speed
+	GameState.store = _old_store
+
+
+func before_test() -> void:
+	Overworld.instant = true
+	GameState.start_new_game("Ana")
+	world = load("res://game/overworld/overworld.tscn").instantiate()
+	add_child(world)
+	await get_tree().process_frame
+	await world.change_map("test_b", "middle")
+
+
+func after_test() -> void:
+	world.free()
+	Overworld.instant = false
+	GameState.close_game()
+
+
+## A level-14 Tidepup with Tide Beam learned but unequipped (so it is offered).
+func _offered_pup() -> Dictionary:
+	var c := Story.give_creature("tidepup", 14)
+	c.moves = PackedStringArray(["tackle", "splash_jab", "drench", "riptide"])
+	return Progression.progress_entry(DataRegistry.db, c, 13)
+
+
+## A level-16 Tidepup, ready to grow into Torrentusk.
+func _grow_pup() -> Dictionary:
+	var c := Story.give_creature("tidepup", 16)
+	return Progression.progress_entry(DataRegistry.db, c, 15)
+
+
+func _screen(cls: Script) -> Node:
+	for n in world.get_children():
+		if is_instance_of(n, cls):
+			return n
+	return null
+
+
+## Waits for a screen of `cls` to be choosing, then picks `label`.
+func _answer(cls: Script, label: String) -> void:
+	for i in 200:
+		var s := _screen(cls)
+		if s != null and s.menu.is_choosing():
+			await get_tree().process_frame  # let the menu's deferred focus land first
+			assert_bool(s.menu.pick_label(label)).is_true()
+			await get_tree().process_frame
+			return
+		await get_tree().process_frame
+	fail("no %s screen offering %s" % [cls.get_global_name(), label])
+
+
+func _run_after(summary: Dictionary, done: Array) -> void:
+	done.append(await world.after_battle(summary, true))
+
+
+func _wait(done: Array) -> void:
+	for i in 200:
+		if not done.is_empty():
+			return
+		await get_tree().process_frame
+
+
+func test_learn_move_replace() -> void:
+	var entry := _offered_pup()
+	var c: CreatureInstance = entry.creature
+	assert_array(entry.offered_moves).is_equal(["tide_beam"])
+	var done: Array = []
+	_run_after({"outcome": "won", "progress": [entry]}, done)
+	await _answer(LearnMoveScreen, "Replace Tackle")
+	await _wait(done)
+	assert_array(done).is_equal([true])
+	assert_array(Array(c.moves)).is_equal(["tide_beam", "splash_jab", "drench", "riptide"])
+	assert_bool(c.move_pool.has("tackle")).is_true()
+	assert_object(_screen(LearnMoveScreen)).is_null()
+	assert_bool(world.is_locked()).is_false()
+
+
+func test_learn_move_keep() -> void:
+	var entry := _offered_pup()
+	var c: CreatureInstance = entry.creature
+	var done: Array = []
+	_run_after({"outcome": "won", "progress": [entry]}, done)
+	await _answer(LearnMoveScreen, "Keep it for later")
+	await _wait(done)
+	assert_array(Array(c.moves)).is_equal(["tackle", "splash_jab", "drench", "riptide"])
+	assert_bool(c.move_pool.has("tide_beam")).is_true()
+
+
+func test_learn_move_copy() -> void:
+	var entry := _offered_pup()
+	var done: Array = []
+	_run_after({"outcome": "won", "progress": [entry]}, done)
+	for i in 50:
+		await get_tree().process_frame
+	var s := _screen(LearnMoveScreen) as LearnMoveScreen
+	assert_str(s.title_text()).is_equal("Tidepup wants to learn Tide Beam")
+	assert_array(Array(s.menu.labels())).is_equal(["Replace Tackle", "Replace Splash Jab",
+		"Replace Drench", "Replace Riptide", "Keep it for later"])
+	await _answer(LearnMoveScreen, "Keep it for later")
+	await _wait(done)
+
+
+func test_grow_now_changes_species() -> void:
+	var entry := _grow_pup()
+	var c: CreatureInstance = entry.creature
+	assert_bool(entry.growth_due).is_true()
+	var done: Array = []
+	_run_after({"outcome": "won", "progress": [entry]}, done)
+	for i in 50:
+		await get_tree().process_frame
+	var g := _screen(GrowScreen) as GrowScreen
+	assert_str(g.page_text()).is_equal("Tidepup is ready to grow! It will become Torrentusk.")
+	await _answer(GrowScreen, "Grow now")
+	assert_str(c.species).is_equal("torrentusk")
+	assert_str(g.page_text()).is_equal("Tidepup grew into Torrentusk!")
+	await _answer(GrowScreen, "OK")
+	await _answer(LearnMoveScreen, "Keep it for later")  # Quake Stomp has no free slot
+	await _wait(done)
+	assert_array(done).is_equal([true])
+	assert_bool(c.move_pool.has("quake_stomp")).is_true()
+	assert_bool(c.moves.has("quake_stomp")).is_false()
+
+
+func test_grow_names_dominant_affinity() -> void:
+	var entry := _grow_pup()
+	var c: CreatureInstance = entry.creature
+	c.affinity["catalyst"] = 100
+	assert_str(Progression.growth_target(DataRegistry.db, c)).is_equal("mistcoil")
+	var done: Array = []
+	_run_after({"outcome": "won", "progress": [entry]}, done)
+	for i in 50:
+		await get_tree().process_frame
+	var g := _screen(GrowScreen) as GrowScreen
+	assert_str(g.page_text()).is_equal(
+		"Tidepup is ready to grow! Its Catalyst side is strongest: it will become Mistcoil.")
+	await _answer(GrowScreen, "Not yet")
+	await _wait(done)
+
+
+func test_grow_not_yet_keeps_ready() -> void:
+	var entry := _grow_pup()
+	var c: CreatureInstance = entry.creature
+	var done: Array = []
+	_run_after({"outcome": "won", "progress": [entry]}, done)
+	await _answer(GrowScreen, "Not yet")
+	await _wait(done)
+	assert_str(c.species).is_equal("tidepup")
+	assert_str(Progression.growth_target(DataRegistry.db, c)).is_equal("torrentusk")
+
+
+func test_not_yet_reoffered_only_after_level_gain() -> void:
+	var entry := _grow_pup()
+	var done: Array = []
+	_run_after({"outcome": "won", "progress": [entry]}, done)
+	await _answer(GrowScreen, "Not yet")
+	await _wait(done)
+	var again: Array = []
+	_run_after({"outcome": "won", "progress": []}, again)
+	await get_tree().process_frame
+	assert_array(again).is_equal([true])
+	assert_object(_screen(GrowScreen)).is_null()
+
+
+func test_grow_screen_skips_when_not_due() -> void:
+	var c := Story.give_creature("tidepup", 5)
+	var grew := await GrowScreen.run(world, c)
+	assert_bool(grew).is_false()
+	assert_object(_screen(GrowScreen)).is_null()
+
+
+func test_autosave_after_choices() -> void:
+	var entry := _offered_pup()
+	var done: Array = []
+	_run_after({"outcome": "won", "progress": [entry]}, done)
+	await _answer(LearnMoveScreen, "Replace Tackle")
+	await _wait(done)
+	var r := GameState.store.read(GameState.current_path)
+	assert_bool(r.ok).is_true()
+	assert_array(Array(r.save.party[0].moves)).is_equal(["tide_beam", "splash_jab", "drench", "riptide"])
+
+
+func test_loss_with_levels_runs_after_respawn() -> void:
+	var entry := _offered_pup()
+	var c: CreatureInstance = entry.creature
+	c.hp = 0
+	var done: Array = []
+	_run_after({"outcome": "lost", "progress": [entry]}, done)
+	for i in 300:
+		var s := _screen(LearnMoveScreen)
+		if s != null and s.menu.is_choosing():
+			break
+		world.dialogue_box.press_accept()
+		await get_tree().process_frame
+	assert_str(world.map.map_id()).is_equal(Overworld.new_game_map())
+	assert_bool(done.is_empty()).is_true()
+	await _answer(LearnMoveScreen, "Replace Tackle")
+	await _wait(done)
+	assert_array(done).is_equal([false])
+	var r := GameState.store.read(GameState.current_path)
+	assert_array(Array(r.save.party[0].moves)).is_equal(["tide_beam", "splash_jab", "drench", "riptide"])
+
+
+func test_progress_blocks_debug_menu() -> void:
+	var entry := _offered_pup()
+	var done: Array = []
+	_run_after({"outcome": "won", "progress": [entry]}, done)
+	for i in 20:
+		await get_tree().process_frame
+	assert_bool(world.blocks_debug_menu()).is_true()
+	await _answer(LearnMoveScreen, "Keep it for later")
+	await _wait(done)
+	assert_bool(world.blocks_debug_menu()).is_false()
+
+
+## The info panel (new move, its description, four current moves) must not run
+## under the menu, and the menu must stay on the 640x360 screen.
+func test_learn_move_screen_fits_the_screen() -> void:
+	var entry := _offered_pup()
+	var done: Array = []
+	_run_after({"outcome": "won", "progress": [entry]}, done)
+	await _answer_wait(LearnMoveScreen)
+	var s := _screen(LearnMoveScreen) as LearnMoveScreen
+	await get_tree().process_frame
+	var bottom: Control = s.menu.get_parent()
+	var top: Control = s._info.get_parent()
+	assert_float(top.position.y + top.get_combined_minimum_size().y).is_less_equal(bottom.position.y)
+	assert_float(bottom.position.y + bottom.get_combined_minimum_size().y).is_less_equal(360.0)
+	s.menu.pick_label("Keep it for later")
+	await _wait(done)
+
+
+func _answer_wait(cls: Script) -> void:
+	for i in 200:
+		var s := _screen(cls)
+		if s != null and s.menu.is_choosing():
+			return
+		await get_tree().process_frame
+	fail("no %s screen choosing" % cls.get_global_name())

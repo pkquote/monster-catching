@@ -1,7 +1,6 @@
 class_name PauseMenu
 extends SideMenu
 ## The Menu key on the overworld: Party, Bag, Save, Settings, Quit to title, Close.
-## (Full party/storage management arrives with M4.)
 
 
 ## Runs until closed (or until it leaves the overworld for Settings / the title).
@@ -15,7 +14,7 @@ func run(world: Overworld) -> void:
 		], true, 1)
 		match choice:
 			"party":
-				await _party()
+				await _party(world)
 			"bag":
 				await _bag()
 			"save":
@@ -37,27 +36,8 @@ func run(world: Overworld) -> void:
 	_close()
 
 
-func _party() -> void:
-	var db := DataRegistry.db
-	var lines := PackedStringArray()
-	for c: CreatureInstance in GameState.current.party:
-		lines.append(creature_line(db, c))
-		var moves := Array(c.moves).map(func(m): return db.move(m).name if db.move(m) != null else m)
-		lines.append("    " + ", ".join(moves))
-	if lines.is_empty():
-		lines.append("Nobody in your party yet.")
-	page("\n".join(lines))
-	await menu.choose("", [{"label": "Back", "value": null}], true, 1)
-	page("")
-
-
-static func creature_line(db: Database, c: CreatureInstance) -> String:
-	var types := " / ".join(Array(c.species_def(db).types).map(func(t): return db.type_def(t).name if db.type_def(t) else t))
-	var line := "%s  Lv %d  %s   HP %d/%d  EN %d/%d  Bond %+d" % [c.display_name(db), c.level, types,
-		c.hp, c.max_hp(db), c.energy, c.max_energy(db), c.bond]
-	if c.status != "":
-		line += "  " + db.status(c.status).name.to_upper()
-	return line
+func _party(world: Overworld) -> void:
+	await PartyScreen.run(world)
 
 
 func _bag() -> void:
@@ -78,17 +58,31 @@ func _bag() -> void:
 			page("%s\n%s" % [it.name, it.description])
 			await menu.choose("", [{"label": "Back", "value": null}], true, 1)
 			continue
+		var is_seed: bool = it.category == "training"
 		var who: Array = []
 		for c: CreatureInstance in GameState.current.party:
-			who.append({"label": "%s  HP %d/%d  EN %d/%d" % [c.display_name(db), c.hp, c.max_hp(db), c.energy, c.max_energy(db)], "value": c})
+			if is_seed:
+				who.append({"label": "%s  Lv %d  %d points spent" % [c.display_name(db), c.level,
+					Progression.training_points_spent(c)], "value": c})
+			else:
+				who.append({"label": "%s  HP %d/%d  EN %d/%d" % [c.display_name(db), c.hp, c.max_hp(db),
+					c.energy, c.max_energy(db)], "value": c})
 		who.append({"label": "Back", "value": null})
-		page("Use the %s on who?\n%s" % [it.name, it.description])
+		page("Use the %s on who?
+%s" % [it.name, it.description])
 		var target = await menu.choose("", who, true, 1)
 		if target == null:
+			continue
+		if is_seed and not await ResetSeedPrompt.confirm(menu, page, target):
 			continue
 		var r := FieldItems.use(db, GameState.current, item_id, target)
 		var msg := {"fainted": "It can't be used on a fainted creature.", "no_effect": "It won't have any effect.",
 			"none_left": "You don't have any left."}
-		page(("%s recovered." % target.display_name(db)) if r.ok else msg.get(r.error, "It can't be used."))
+		var cname: String = target.display_name(db)
+		if r.ok:
+			page(("%s's %s came back." % [cname, ResetSeedPrompt.points(r.refunded)]) if is_seed else "%s recovered." % cname)
+		else:
+			page(msg.get(r.error, "It can't be used."))
 		await menu.choose("", [{"label": "OK", "value": null}], true, 1)
 	page("")
+

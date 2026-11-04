@@ -41,6 +41,8 @@ func load_from(path: String) -> String:
 	if not r.ok:
 		return r.error
 	current = r.save
+	for c: CreatureInstance in current.party + current.storage:
+		Progression.backfill_pool(DataRegistry.db, c)
 	current_path = path
 	store.set_last(path)
 	return ""

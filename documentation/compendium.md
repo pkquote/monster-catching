@@ -7,7 +7,7 @@
 |---|---|
 | [Creatures](#creatures) | 8 |
 | [Moves](#moves) | 44 |
-| [Items](#items) | 5 |
+| [Items](#items) | 6 |
 | [Statuses](#statuses) | 4 |
 | [Field States](#field-states) | 12 |
 | [Reactions](#reactions) | 8 |
@@ -354,7 +354,7 @@ Base stats. *Total* sums the six battle stats (HP to Spd); Luck, Resolve and Sta
 | 1 | Tide Beam | Water | Special | 55 | 6 | 100% |
 | 1 | Drench | Water | Status | — | 4 | — |
 | 1 | Rime Veil | Ice | Status | — | 4 | — |
-| 18 | Glacier Crash | Ice | Physical | 80 | 9 | 85% |
+| 16 | Glacier Crash | Ice | Physical | 80 | 9 | 85% |
 
 ### Pebblet
 
@@ -420,7 +420,7 @@ Base stats. *Total* sums the six battle stats (HP to Spd); Luck, Resolve and Sta
 |---|---|---|---|---|---|---|
 | 1 | Splash Jab | Water | Physical | 40 | 2 | 100% |
 | 1 | Riptide | Water | Physical | 55 | 6 | 95% |
-| 18 | Quake Stomp | Earth | Physical | 70 | 9 | 100% |
+| 16 | Quake Stomp | Earth | Physical | 70 | 9 | 100% |
 
 ### Voltmoth
 
@@ -560,6 +560,7 @@ Grouped by type. Physical moves use P.Atk vs P.Def; special moves use S.Atk vs S
 | Item | Id | Category | Price | Target | Effects | Description |
 |---|---|---|---|---|---|---|
 | **Lure Cage** | `lure_cage` | Capture | 100 | One enemy | Capture x1 | A plain woven cage. Works anywhere. |
+| **Reset Seed** | `reset_seed` | Training | 600 | One ally | Returns all spent training points (field use only) | Returns all of a creature's training points so they can be spent again. |
 | **Salve** | `salve` | Heal | 150 | One ally | Heals 33% max HP | Restores a third of a creature's HP. |
 | **Snare Vine** | `snare_vine` | Capture | 250 | One enemy | Capture x0.8, x2.5 on Overgrown | Far more effective on an Overgrown side. |
 | **Tide Net** | `tide_net` | Capture | 250 | One enemy | Capture x0.8, x2.5 on Soaked | Far more effective on a Soaked side. |

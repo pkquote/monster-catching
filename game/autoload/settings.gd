@@ -12,6 +12,11 @@ const BUSES := {"Master": "master_volume", "Music": "music_volume", "SFX": "sfx_
 const UI_MIRROR := {"move_up": "ui_up", "move_down": "ui_down", "move_left": "ui_left",
 	"move_right": "ui_right", "accept": "ui_accept", "cancel": "ui_cancel"}
 const AXIS_DEADZONE := 0.5
+## Fixed (not rebindable) actions: the party screens' previous/next creature.
+const SHOULDER_ACTIONS := {
+	"prev_creature": [KEY_PAGEUP, JOY_BUTTON_LEFT_SHOULDER],
+	"next_creature": [KEY_PAGEDOWN, JOY_BUTTON_RIGHT_SHOULDER],
+}
 
 var data: GameSettings
 
@@ -79,6 +84,16 @@ func apply_controls() -> void:
 			InputMap.action_erase_events(ui)
 			for ev in InputMap.action_get_events(action):
 				InputMap.action_add_event(ui, ev)
+	for action in SHOULDER_ACTIONS:
+		if not InputMap.has_action(action):
+			InputMap.add_action(action, AXIS_DEADZONE)
+		InputMap.action_erase_events(action)
+		var key := InputEventKey.new()
+		key.physical_keycode = SHOULDER_ACTIONS[action][0]
+		InputMap.action_add_event(action, key)
+		var pad := InputEventJoypadButton.new()
+		pad.button_index = SHOULDER_ACTIONS[action][1]
+		InputMap.action_add_event(action, pad)
 	changed.emit()
 
 

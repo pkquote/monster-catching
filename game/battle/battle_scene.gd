@@ -199,7 +199,7 @@ func _item_choices() -> Array:
 	for id in bag:
 		var count := int(bag[id])
 		var item := db.item(id)
-		if count <= 0 or item == null or item.category == "key":
+		if count <= 0 or item == null or item.category == "key" or item.category == "training":
 			continue
 		if item.category == "capture" and not setup.is_wild:
 			continue

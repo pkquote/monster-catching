@@ -7,10 +7,15 @@ extends CanvasLayer
 
 const TOGGLE_KEY := KEY_F1
 const WILD_ENCOUNTER := "route_01_grass"
+const TARGET_LEVEL := 16
+const BOX_FILL := 12
+## Tallest a page may be (the panel adds its padding): keeps the panel on the 360px screen.
+const MAX_PAGE_HEIGHT := 320.0
 const TAMERS := [["scout_ana", "Scout Ana (1v1)"], ["rival_01", "Rival (2v2)"]]
 
 var _root: Control
 var _box: VBoxContainer
+var _scroll: ScrollContainer
 var _status: Label
 var _rng := RandomNumberGenerator.new()
 var _restore_focus: Control
@@ -54,10 +59,14 @@ func open() -> void:
 	center.set_anchors_preset(Control.PRESET_FULL_RECT)
 	_root.add_child(center)
 	var panel := UIKit.panel(center, 12)
+	_scroll = ScrollContainer.new()
+	_scroll.follow_focus = true
+	_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	panel.add_child(_scroll)
 	_box = VBoxContainer.new()
 	_box.custom_minimum_size = Vector2(260, 0)
 	_box.add_theme_constant_override("separation", 4)
-	panel.add_child(_box)
+	_scroll.add_child(_box)
 	_show_main()
 
 
@@ -66,6 +75,7 @@ func close() -> void:
 		return
 	_root.queue_free()
 	_root = null
+	_scroll = null
 	_box = null
 	get_tree().paused = false
 	if is_instance_valid(_restore_focus) and _restore_focus.is_inside_tree():
@@ -84,6 +94,7 @@ func _clear() -> void:
 func _show_main(status := "") -> void:
 	_clear()
 	UIKit.label(_box, "Debug (F1)", UIKit.HEADING_SIZE, UIKit.ACCENT)
+	_status = UIKit.label(_box, status, UIKit.BODY_SIZE, UIKit.ACCENT)  # up here: always in view
 	if not GameState.has_game():
 		UIKit.label(_box, "Start or load a game to use the party and battle tools.", 11, UIKit.MUTED, true)
 	else:
@@ -92,6 +103,10 @@ func _show_main(status := "") -> void:
 		var first := UIKit.button(_box, "Get test party", _grant_test_party)
 		first.disabled = s.story.flag(BattleLauncher.TEST_FLAG) or in_battle
 		UIKit.button(_box, "Heal party", _heal_party).disabled = s.party.is_empty() or in_battle
+		var can_tune := not s.party.is_empty() and not in_battle
+		UIKit.button(_box, "Give XP...", _show_give_xp).disabled = not can_tune
+		UIKit.button(_box, "Set Affinity...", _show_set_affinity).disabled = not can_tune
+		UIKit.button(_box, "Fill box", _fill_box).disabled = in_battle
 		UIKit.spacer(_box, 4)
 		UIKit.label(_box, "Test battles", UIKit.BODY_SIZE, UIKit.MUTED)
 		var can_fight := BattleLauncher.healthy_count(s) > 0 and not in_battle
@@ -106,7 +121,6 @@ func _show_main(status := "") -> void:
 			UIKit.label(_box, "Get a test party to unlock battles.", 11, UIKit.MUTED)
 	UIKit.spacer(_box, 4)
 	UIKit.button(_box, "Close", close)
-	_status = UIKit.label(_box, status, UIKit.BODY_SIZE, UIKit.ACCENT)
 	_focus_first()
 
 
@@ -154,6 +168,46 @@ func _show_custom() -> void:
 	_focus_first()
 
 
+## Pick a party creature, then give it XP; the Learn Move / Grow screens follow.
+func _show_give_xp() -> void:
+	_clear()
+	UIKit.label(_box, "Give XP", UIKit.HEADING_SIZE, UIKit.ACCENT)
+	var pick := _creature_picker()
+	var db := DataRegistry.db
+	var cap: int = db.balance.level_cap
+	UIKit.button(_box, "+1 level", func(): _give_xp(pick.selected, -1))
+	var to16 := UIKit.button(_box, "To level %d" % mini(TARGET_LEVEL, cap), func(): _give_xp(pick.selected, mini(TARGET_LEVEL, cap)))
+	var update := func():
+		to16.disabled = GameState.current.party[pick.selected].level >= mini(TARGET_LEVEL, cap)
+	pick.item_selected.connect(update.unbind(1))
+	update.call()
+	UIKit.button(_box, "Back", _show_main)
+	_focus_first()
+
+
+## Pick a party creature, then the Affinity track to push to the front.
+func _show_set_affinity() -> void:
+	_clear()
+	UIKit.label(_box, "Set Affinity", UIKit.HEADING_SIZE, UIKit.ACCENT)
+	var pick := _creature_picker()
+	var db := DataRegistry.db
+	for a: String in db.ids("affinities"):
+		UIKit.button(_box, db.affinity(a).name, func(): _set_affinity(pick.selected, a))
+	UIKit.button(_box, "Back", _show_main)
+	_focus_first()
+
+
+func _creature_picker() -> OptionButton:
+	var grid := GridContainer.new()
+	grid.columns = 2
+	grid.add_theme_constant_override("h_separation", 12)
+	_box.add_child(grid)
+	var db := DataRegistry.db
+	var names := GameState.current.party.map(
+		func(c: CreatureInstance): return "%s Lv %d" % [c.display_name(db), c.level])
+	return _option_row(grid, "Creature", names, 0)
+
+
 ## The shared "how many?" prompt; back to the main page when cancelled.
 func _ask(format_size: int, intro: String) -> Variant:
 	var n = await FieldCountPrompt.ask(self, format_size, intro)
@@ -177,6 +231,52 @@ func _heal_party() -> void:
 	GameState.autosave()
 	_refresh_world()
 	_show_main("Party healed.")
+
+
+## Raises a party creature to `to_level` (or one level when -1), then runs the
+## progress screens. The menu closes first: the screens can't run in a paused tree.
+func _give_xp(index: int, to_level: int) -> void:
+	var world := Overworld.active
+	if world == null or index >= GameState.current.party.size():
+		return
+	var db := DataRegistry.db
+	var c: CreatureInstance = GameState.current.party[index]
+	if c.level >= db.balance.level_cap:
+		_show_main("%s is at the level cap." % c.display_name(db))
+		return
+	var goal: int = c.level + 1 if to_level < 0 else mini(to_level, db.balance.level_cap)
+	var before := c.level
+	Progression.award_xp(db, c, maxi(1, Stats.xp_for_level(goal) - c.xp))
+	var entry := Progression.progress_entry(db, c, before)
+	close()
+	_refresh_world()
+	if not entry.is_empty():
+		await world.run_progress([entry])
+	GameState.autosave()  # after the screens, so Learn Move / Grow choices are kept
+
+
+## Sets `track` to the growth threshold + 10, and strictly above every other track
+## (so, if another track is higher, to that track's points + 10).
+func _set_affinity(index: int, track: String) -> void:
+	var db := DataRegistry.db
+	var c: CreatureInstance = GameState.current.party[index]
+	var value: int = db.balance.growth_affinity_threshold + 10
+	for a: String in db.ids("affinities"):
+		if a != track:
+			value = maxi(value, int(c.affinity.get(a, 0)) + 10)
+	c.affinity[track] = value
+	GameState.autosave()
+	_show_main("%s: %s is now %d." % [c.display_name(db), db.affinity(track).name, value])
+
+
+func _fill_box() -> void:
+	var db := DataRegistry.db
+	var ids := db.ids("creatures")
+	var level := BattleLauncher.party_level(GameState.current)
+	for i in BOX_FILL:
+		GameState.current.storage.append(CreatureInstance.create(db, ids[_rng.randi() % ids.size()], level))
+	GameState.autosave()
+	_show_main("Added %d creatures to the box." % BOX_FILL)
 
 
 func _start_wild() -> void:
@@ -226,7 +326,9 @@ func _option_row(grid: GridContainer, text: String, choices: Array, selected: in
 	return o
 
 
+## Focus the first button; and let a page taller than the screen scroll (focus follows).
 func _focus_first() -> void:
+	_scroll.custom_minimum_size.y = minf(_box.get_combined_minimum_size().y, MAX_PAGE_HEIGHT)
 	for c in _find_focusable(_box):
 		c.grab_focus.call_deferred()
 		return

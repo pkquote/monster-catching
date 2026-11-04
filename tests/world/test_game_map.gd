@@ -35,3 +35,41 @@ func test_encounter_tiles() -> void:
 	assert_bool(m.is_encounter_tile(Vector2i(2, 2))).is_true()   # tall grass patch
 	assert_bool(m.is_encounter_tile(Vector2i(5, 2))).is_false()
 	m.free()
+
+
+func test_unsafe_at_follows_unsafe_area() -> void:
+	var m := _map("test_b")
+	assert_bool(m.unsafe_at(Vector2i(2, 2))).is_true()
+	assert_bool(m.unsafe_at(Vector2i(3, 3))).is_true()
+	assert_bool(m.unsafe_at(Vector2i(6, 4))).is_false()
+	m.free()
+
+
+func test_unsafe_map_flag() -> void:
+	var m := _map("test_b")
+	m.unsafe = true
+	assert_bool(m.unsafe_at(Vector2i(6, 4))).is_true()
+	m.free()
+
+
+func test_unsafe_area_size_clamps() -> void:
+	var a := UnsafeArea.new()
+	a.size = Vector2i(0, -3)
+	assert_object(a.size).is_equal(Vector2i(1, 1))
+	assert_object(a.size_tiles).is_equal(Vector2i(1, 1))
+	assert_bool(a.is_marker()).is_true()
+	a.free()
+
+
+func test_centre_has_storage_box_and_route_unsafe_area() -> void:
+	var m := _map("town_01_center")
+	var box := m.piece_at(Vector2i(8, 2))
+	assert_object(box).is_instanceof(StorageBox)
+	assert_bool(box.blocks()).is_true()
+	assert_bool(m.unsafe_at(Vector2i(5, 4))).is_false()
+	m.free()
+	var r := _map("route_01")
+	assert_bool(r.unsafe_at(Vector2i(13, 6))).is_true()
+	assert_bool(r.unsafe_at(Vector2i(17, 9))).is_true()
+	assert_bool(r.unsafe_at(Vector2i(18, 10))).is_false()
+	r.free()

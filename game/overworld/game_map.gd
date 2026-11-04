@@ -19,6 +19,8 @@ const MAPS_DIR := "res://game/maps"
 @export var default_encounter := ""
 ## Indoor maps never roll wild encounters, and the camera centres small ones.
 @export var indoor := false
+## Unsafe maps are unsafe everywhere (see unsafe_at); otherwise UnsafeArea pieces mark spots.
+@export var unsafe := false
 
 
 func _ready() -> void:
@@ -141,6 +143,16 @@ func encounter_at(tile: Vector2i) -> String:
 		if p is EncounterArea and p.covers(tile):
 			return (p as EncounterArea).encounter
 	return default_encounter
+
+
+## True when the whole map is unsafe or an UnsafeArea covers `tile`.
+func unsafe_at(tile: Vector2i) -> bool:
+	if unsafe:
+		return true
+	for p in pieces():
+		if p is UnsafeArea and p.covers(tile):
+			return true
+	return false
 
 
 func spawn(id: String) -> Spawn:

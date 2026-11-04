@@ -181,3 +181,13 @@ func test_interact_after_walking_down_into_an_npc() -> void:
 	await get_tree().process_frame
 	assert_bool(world.is_talking()).is_true()
 	await _finish_talk()
+
+
+func test_is_safe_here_follows_unsafe_area() -> void:
+	await world.change_map("test_b", "middle")
+	_stand(Vector2i(2, 2), Vector2i.DOWN)
+	assert_bool(world.is_safe_here()).is_false()
+	_stand(Vector2i(6, 4), Vector2i.DOWN)
+	assert_bool(world.is_safe_here()).is_true()
+	# The marker never catches interaction.
+	assert_object(world.map.piece_at(Vector2i(2, 2))).is_null()

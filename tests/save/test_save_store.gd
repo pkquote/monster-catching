@@ -166,4 +166,44 @@ func test_v2_round_trip_keeps_position() -> void:
 	var back: SaveGame = r.save
 	assert_dict(back.position).is_equal({"map": "test_b", "x": 123.5, "y": 77.0, "facing": "left"})
 	assert_bool(back.story.is_done("test_b/Door1")).is_true()
-	assert_int(SaveGame.SCHEMA).is_equal(2)
+	assert_int(SaveGame.SCHEMA).is_equal(3)
+
+
+func test_v2_save_migrates_to_v3() -> void:
+	var dir := store.root.path_join("1700000000_abcdef")
+	DirAccess.make_dir_recursive_absolute(dir)
+	var mon := {"species": "blob", "level": 9, "xp": 0, "hp": 10, "moves": ["hit"]}
+	var v2 := {"schema": 2, "playthrough_id": "1700000000_abcdef", "kind": "manual", "player_name": "Old",
+		"created_unix": 1700000000, "saved_unix": 1700000000, "location": "Nowhere yet",
+		"party": [mon], "storage": [mon.duplicate()], "inventory": {}, "money": 5,
+		"story": {"flags": {}}, "position": {}}
+	var path := dir.path_join("save_1.json")
+	_write(path, JSON.stringify(v2))
+	var r := store.read(path)
+	assert_bool(r.ok).override_failure_message(str(r.error)).is_true()
+	var s: SaveGame = r.save
+	assert_array(Array(s.party[0].move_pool)).is_equal(["hit"])
+	assert_array(Array(s.storage[0].move_pool)).is_equal(["hit"])
+
+
+## GameState.load_from tops a migrated save's move pool up from the learnset.
+func test_loading_a_v2_save_backfills_the_move_pool() -> void:
+	var old_store := GameState.store
+	GameState.store = store
+	var dir := store.root.path_join("1700000000_abcdef")
+	DirAccess.make_dir_recursive_absolute(dir)
+	var mon := {"species": "tidepup", "level": 9, "xp": 0, "hp": 10, "moves": ["tackle"]}
+	var v2 := {"schema": 2, "playthrough_id": "1700000000_abcdef", "kind": "manual", "player_name": "Old",
+		"created_unix": 1700000000, "saved_unix": 1700000000, "location": "Nowhere yet",
+		"party": [mon], "storage": [], "inventory": {}, "money": 5,
+		"story": {"flags": {}}, "position": {}}
+	var path := dir.path_join("save_1.json")
+	_write(path, JSON.stringify(v2))
+	var err := GameState.load_from(path)
+	var pool: Array = Array(GameState.current.party[0].move_pool) if err == "" else []
+	GameState.close_game()
+	GameState.store = old_store
+	assert_str(err).is_empty()
+	assert_bool(pool.has("drench")).is_true()
+	assert_bool(pool.has("riptide")).is_true()
+	assert_bool(pool.has("tackle")).is_true()

@@ -60,9 +60,14 @@ don't rename collected items or beaten tamers after release.
 | `HealSpot` | `respawn` | Place it on a counter. "Rest your team?" heals everyone, and you wake at `respawn` after losing. |
 | `ShopCounter` | `stock` | Place it on a counter. Opens the shop with these item ids; prices come from the item data. |
 | `MinigameSpot` | `minigame`, `dialogue`, `title` | Accept runs `title`; the script starts the game with `Story.start_minigame("<id>")`. |
+| `StorageBox` | none | Solid terminal. Accept while facing it opens the creature storage (deposit, withdraw, swap). |
+| `UnsafeArea` | `size` | Marks a rectangle where creatures can't be swapped from the Party screen (the Storage option is disabled and says so). Put it over deep grass or wherever a safe swap would feel wrong. |
 | `Sign` | `text` | Accept shows the text. |
 
-Interact pieces (NPCs, items, counters) work from the tile in front of the player, so put a counter
+A whole map can be marked unsafe with the `unsafe` field on the `GameMap` root (for dungeons); then
+`UnsafeArea` pieces aren't needed on it.
+
+Interact pieces (NPCs, items, counters, the storage box) work from the tile in front of the player, so put a counter
 piece on the counter tile and the person behind it.
 
 ## 4. Connect doors

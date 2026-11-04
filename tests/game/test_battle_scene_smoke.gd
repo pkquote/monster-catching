@@ -51,7 +51,7 @@ func test_wild_battle_round_from_menus() -> void:
 
 func test_tamer_battle_hides_run_and_capture_items() -> void:
 	var party := [CreatureInstance.create(db, "tidepup", 10), CreatureInstance.create(db, "voltmoth", 10)]
-	var scene := _scene(BattleSetup.vs_tamer(db, party, "rival_01", 1, {"lure_cage": 2, "salve": 1}))
+	var scene := _scene(BattleSetup.vs_tamer(db, party, "rival_01", 1, {"lure_cage": 2, "salve": 1, "reset_seed": 1}))
 	await _wait_phase(scene, ["command"])
 	assert_bool(scene.menu.labels().has("Run")).is_false()
 	assert_bool(scene.menu.pick_label("Items")).is_true()
@@ -59,6 +59,7 @@ func test_tamer_battle_hides_run_and_capture_items() -> void:
 	var items := Array(scene.menu.labels())
 	assert_bool(items.any(func(l): return l.begins_with("Salve"))).is_true()
 	assert_bool(items.any(func(l): return l.begins_with("Lure Cage"))).is_false()
+	assert_bool(items.any(func(l): return l.begins_with("Reset Seed"))).is_false()
 	# Fielding 1 against the Rival's 2 makes the player the Underdog.
 	assert_str(scene.fields[0].underdog_text).contains("UNDERDOG")
 	remove_child(scene)

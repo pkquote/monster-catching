@@ -2,10 +2,7 @@ class_name BattleSetup
 extends RefCounted
 ## Describes a battle before it starts. Side 0 is always the player.
 
-## Array of Dictionaries:
-## { party: Array[CreatureInstance], max_active: int, field_count: int,
-##   items: Dictionary, ai: String, is_wild: bool, auto_replace: bool }
-var sides: Array = []
+var sides: Array[SideSetup] = []
 var is_wild := false
 ## Tamer id for tamer battles ("" otherwise).
 var tamer_id := ""
@@ -18,15 +15,14 @@ var award_xp := true
 
 func add_side(party: Array, max_active: int, field_count: int = -1, items: Dictionary = {},
 		ai: String = "", auto_replace: bool = false) -> BattleSetup:
-	sides.append({
-		"party": party,
-		"max_active": max_active,
-		"field_count": max_active if field_count < 0 else field_count,
-		"items": items.duplicate(),
-		"ai": ai,
-		"is_wild": false,
-		"auto_replace": auto_replace,
-	})
+	var s := SideSetup.new()
+	s.party = party
+	s.max_active = max_active
+	s.field_count = max_active if field_count < 0 else field_count
+	s.items = items.duplicate()
+	s.ai = ai
+	s.auto_replace = auto_replace
+	sides.append(s)
 	return self
 
 

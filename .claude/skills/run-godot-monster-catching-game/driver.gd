@@ -139,11 +139,15 @@ func _run_battle() -> void:
 	gs.start_new_game("Ana")
 	router.goto("res://game/world/placeholder_world.tscn")
 	await wait_scene("PlaceholderWorld", 120)
+	await key(KEY_F1)  # debug overlay
+	await _frames(5)
+	await shot("b00_debug_menu_empty_party")
 	press("Get test party")
 	await _frames(10)
 	await wait_scene("PlaceholderWorld", 60)
-	await shot("b01_world_with_party")
-	expect(gs.current.party.size() == 3, "test party granted")
+	await _frames(5)
+	await shot("b01_debug_menu_with_party")
+	expect(gs.current.party.size() == 3, "test party granted from the F1 menu")
 
 	# The Rival is always 2v2, so its "how many?" prompt always appears. Cancel it.
 	press("Rival (2v2)")
@@ -160,6 +164,12 @@ func _run_battle() -> void:
 	await wait_scene("BattleScene", 180)
 	await wait_battle(["command"])
 	await shot("b03_wild_command")
+	await key(KEY_F1)  # the overlay works mid-battle, but battles can't start from it
+	await _frames(5)
+	await shot("b03b_debug_menu_in_battle")
+	expect(paused and _find_button("Wild battle (Route 1)").disabled, "F1 in battle pauses and disables test battles")
+	await key(KEY_F1)
+	await _frames(5)
 	await pick_menu("Fight")
 	await shot("b04_moves")
 	await pick_menu("Splash Jab")
@@ -210,9 +220,11 @@ func _run_battle() -> void:
 	# Custom battle panel: set up a 3v1 tamer fight from the world.
 	router.goto(SceneRouter.WORLD)
 	await wait_scene("PlaceholderWorld", 180)
+	await key(KEY_F1)
+	await _frames(5)
 	press("Custom battle...")
 	await _frames(5)
-	var opts := _find_all(current_scene, "OptionButton")
+	var opts := _find_all(root.get_node("DebugMenu"), "OptionButton")
 	opts[0].select(2)  # you field 3
 	opts[0].item_selected.emit(2)
 	opts[2].select(1)  # tamer
@@ -223,6 +235,8 @@ func _run_battle() -> void:
 	await wait_battle(["command"])
 	await _frames(5)
 	await shot("b12_custom_3v1")
+	await _frames(240)  # let the opening messages play so field chips can appear
+	await shot("b13_custom_3v1_fields")
 	expect(current_scene.views.size() == 4 and current_scene.fields[1].underdog_text.begins_with("UNDERDOG"),
 		"custom 3v1 battle puts 4 creatures on the stage and makes the foe the Underdog")
 	_clear(RUN_SAVES)
@@ -263,12 +277,13 @@ func pick_menu(label: String) -> void:
 
 ## The CommandMenu currently waiting for a choice, or null.
 func _find_menu() -> CommandMenu:
-	var stack: Array = [current_scene]
-	while not stack.is_empty():
-		var n: Node = stack.pop_back()
-		if n is CommandMenu and n.is_choosing():
-			return n
-		stack.append_array(n.get_children())
+	for top in _search_roots():
+		var stack: Array = [top]
+		while not stack.is_empty():
+			var n: Node = stack.pop_back()
+			if n is CommandMenu and n.is_choosing():
+				return n
+			stack.append_array(n.get_children())
 	return null
 
 ## Every node of class `cls` under `from`, in tree order.
@@ -325,16 +340,31 @@ func type_text(text: String) -> void:
 			await process_frame
 
 
-## Presses the first Button in the current scene whose text matches.
+## Presses the first Button whose text matches, in the debug overlay if it's open,
+## otherwise in the current scene.
 func press(text: String) -> void:
-	var stack: Array = [current_scene]
-	while not stack.is_empty():
-		var n: Node = stack.pop_back()
-		if n is Button and n.text == text:
-			n.pressed.emit()
-			return
-		stack.append_array(n.get_children())
-	expect(false, "found button '%s'" % text)
+	var b := _find_button(text)
+	if b == null:
+		expect(false, "found button '%s'" % text)
+		return
+	b.pressed.emit()
+
+
+func _find_button(text: String) -> Button:
+	for top in _search_roots():
+		var stack: Array = [top]
+		while not stack.is_empty():
+			var n: Node = stack.pop_back()
+			if n is Button and n.text == text:
+				return n
+			stack.append_array(n.get_children())
+	return null
+
+
+## The debug overlay (an autoload, outside current_scene) first when it's open.
+func _search_roots() -> Array:
+	var dm := root.get_node("DebugMenu")
+	return [dm, current_scene] if dm.is_open() else [current_scene]
 
 
 func expect(ok: bool, what: String) -> void:

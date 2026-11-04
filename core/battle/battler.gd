@@ -1,7 +1,8 @@
 class_name Battler
 extends RefCounted
-## A creature taking part in one battle. Wraps the persistent CreatureInstance
-## (HP and status write straight through to it) and adds battle-only state.
+## A creature taking part in one battle: a working copy of its CreatureInstance
+## plus battle-only state. The original (`source`) is untouched until
+## BattleEngine.commit() writes the copy back.
 
 const STAGE_MIN := -6
 const STAGE_MAX := 6
@@ -9,7 +10,10 @@ const STAGE_MAX := 6
 ## Battle-unique id used in actions and events.
 var bid: int
 var side: int
+## The battle's working copy. HP, energy, XP, Bond... change here.
 var creature: CreatureInstance
+## The creature the side brought (from BattleSetup), written back by commit().
+var source: CreatureInstance
 ## Stat stages, reset when the creature leaves the field.
 var stages := {"patk": 0, "pdef": 0, "satk": 0, "sdef": 0, "spd": 0, "acc": 0, "resolve": 0, "luck": 0}
 var status_turns := 0
@@ -29,7 +33,8 @@ var overworked := false
 func _init(p_bid: int, p_side: int, p_creature: CreatureInstance) -> void:
 	bid = p_bid
 	side = p_side
-	creature = p_creature
+	source = p_creature
+	creature = p_creature.copy()
 
 
 func alive() -> bool:

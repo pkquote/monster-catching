@@ -25,6 +25,7 @@ DataRegistry="*res://game/autoload/data_registry.gd"
 Settings="*res://game/autoload/settings.gd"
 GameState="*res://game/autoload/game_state.gd"
 SceneRouter="*res://game/autoload/scene_router.gd"
+DebugMenu="*res://game/debug/debug_menu.gd"
 
 [display]
 

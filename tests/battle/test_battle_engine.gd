@@ -175,11 +175,17 @@ func test_knockout_awards_xp_and_striker() -> void:
 	assert_int(e.result().winner).is_equal(0)
 
 
-func test_hp_and_status_persist_on_instances() -> void:
+func test_battle_works_on_copies_until_commit() -> void:
 	var mine := FixtureDB.make(db, "blob")
-	var e := FixtureDB.engine(db, [mine], [FixtureDB.make(db, "tank", 10, ["hit"])])
+	var foe := FixtureDB.make(db, "tank", 10, ["hit"])
+	var e := FixtureDB.engine(db, [mine], [foe])
 	e.resolve_round([BattleAction.pass_turn(_bid(e, 0)), BattleAction.use_move(_bid(e, 1), "hit", _bid(e, 0))])
-	assert_int(mine.hp).is_less(mine.max_hp(db))
+	assert_int(e.battler(_bid(e, 0)).hp()).is_less(mine.max_hp(db))
+	assert_int(mine.hp).is_equal(mine.max_hp(db))
+	assert_int(foe.energy).is_equal(foe.max_energy(db))
+	e.commit(0)
+	assert_int(mine.hp).is_equal(e.battler(_bid(e, 0)).hp())
+	assert_int(foe.energy).is_equal(foe.max_energy(db))  # side 1 was not committed
 
 
 func test_same_seed_same_battle() -> void:

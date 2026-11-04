@@ -45,9 +45,10 @@ Expected tail: `[driver] ALL CHECKS PASSED`. Screenshots (`01_splash_credit.png`
 `%APPDATA%/Godot/app_userdata/Monster Catching Game/run_shots/`. The driver prints the
 absolute path.
 
-Battle tour: new game → Get test party → Rival's "how many?" prompt (cancel) → wild battle
-(attack, throw a Lure Cage, fight to the end) → results → world (autosave) → a 1-vs-2 Rival
-battle showing Underdog → the Custom battle panel set to a 3v1 tamer fight. It checks 7 expectations. It takes about 35 s, and fights are random
+Battle tour: new game → F1 debug menu → Get test party → Rival's "how many?" prompt (cancel) →
+wild battle (attack, F1 mid-battle, throw a Lure Cage, fight to the end) → results → world
+(autosave) → a 1-vs-2 Rival battle showing Underdog → F1 → Custom battle set to a 3v1 tamer
+fight. It checks 8 expectations. It takes about 40 s, and fights are random
 (the wild pack and whether the cage catches).
 
 ```bash
@@ -63,7 +64,7 @@ timeout 60 "$GODOT" --path . --script res://.claude/skills/run-godot-monster-cat
 | option | meaning |
 |---|---|
 | `--mode=frontend` | default; the tour above |
-| `--mode=battle` | the battle tour above (`b01_…` to `b12_…` screenshots) |
+| `--mode=battle` | the battle tour above (`b00_…` to `b13_…` screenshots) |
 | `--mode=scene` | open `--scene` (default: main scene), wait `--frames` (default 60), screenshot |
 | `--out=<dir>` | screenshot folder; `user://` paths allowed (default `user://run_shots`) |
 
@@ -88,7 +89,7 @@ bash scripts/check.sh
 ```
 
 This validates the JSON content, compiles the dialogue, runs every gdUnit4 suite and regenerates
-`documentation/compendium.md`. Expected: `All checks passed.` with 16 `Statistics:` lines, all
+`documentation/compendium.md`. Expected: `All checks passed.` with 18 `Statistics:` lines, all
 `PASSED`.
 
 ## Gotchas
@@ -110,6 +111,10 @@ This validates the JSON content, compiles the dialogue, runs every gdUnit4 suite
   as a `--script` path, and the project's `class_name` types (`SaveStore` etc.) resolve normally.
 - **The Godot editor can stay open** while you run the driver and tests. It regenerates `.uid`
   files on its own; that's expected.
+- **The debug tools are an F1 overlay (autoload `DebugMenu`), not part of any scene.** Open it with
+  `key(KEY_F1)`. `press()` and `pick_menu()` search the overlay first when it's open, then
+  `current_scene`; a search of `current_scene` alone never finds its buttons. The overlay pauses
+  the tree while open, so battle playback timers stop until it closes.
 - **Battle menus are `CommandMenu`s, not plain buttons.** Drive them with `pick_menu()`, which
   finds the menu that's currently choosing. Wait for `scene.phase` with `wait_battle()`: the menu
   only accepts picks once `menu.is_choosing()` is true. Playback between phases runs on timers.

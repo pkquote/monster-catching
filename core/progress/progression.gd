@@ -11,7 +11,7 @@ static func award_xp(db: Database, c: CreatureInstance, amount: int, bid: int = 
 	if amount <= 0 or c.level >= db.balance.level_cap:
 		return events
 	c.xp += amount
-	events.append({"type": "xp_gain", "bid": bid, "amount": amount})
+	events.append({"type": BattleEvents.XP_GAIN, "bid": bid, "amount": amount})
 	while c.level < db.balance.level_cap and c.xp >= Stats.xp_for_level(c.level + 1):
 		var old_max := c.max_hp(db)
 		var old_energy := c.max_energy(db)
@@ -20,16 +20,16 @@ static func award_xp(db: Database, c: CreatureInstance, amount: int, bid: int = 
 		if c.hp > 0:
 			c.hp += c.max_hp(db) - old_max
 		c.energy += c.max_energy(db) - old_energy
-		events.append({"type": "level_up", "bid": bid, "level": c.level,
+		events.append({"type": BattleEvents.LEVEL_UP, "bid": bid, "level": c.level,
 			"training_points": training_points_available(db, c)})
 		for l in c.species_def(db).learnset:
 			if l.level != c.level or c.moves.has(l.move):
 				continue
 			if c.moves.size() < db.balance.max_moves:
 				c.moves.append(l.move)
-				events.append({"type": "move_learned", "bid": bid, "move": l.move})
+				events.append({"type": BattleEvents.MOVE_LEARNED, "bid": bid, "move": l.move})
 			else:
-				events.append({"type": "move_offered", "bid": bid, "move": l.move})
+				events.append({"type": BattleEvents.MOVE_OFFERED, "bid": bid, "move": l.move})
 	return events
 
 

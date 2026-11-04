@@ -80,6 +80,8 @@ func test_energy_persists_on_the_instance() -> void:
 	var mine := FixtureDB.make(db, "blob", 10, ["hit"])
 	var e := FixtureDB.engine(db, [mine], [FixtureDB.make(db, "tank")])
 	e.resolve_round([BattleAction.use_move(_me(e).bid, "hit", _foe(e).bid)])
+	assert_int(_me(e).energy()).is_equal(mine.max_energy(db) - 2)
+	e.commit(0)
 	assert_int(mine.energy).is_equal(mine.max_energy(db) - 2)
 
 
@@ -197,19 +199,21 @@ func test_win_and_knockout_raise_bond() -> void:
 func test_fainting_lowers_bond() -> void:
 	var mine := FixtureDB.make(db, "blob", 10, ["hit"])
 	var e := FixtureDB.engine(db, [mine], [FixtureDB.make(db, "tank", 30, ["hit"])])
-	mine.hp = 1
-	e.resolve_round([BattleAction.pass_turn(_me(e).bid), BattleAction.use_move(_foe(e).bid, "hit", _me(e).bid)])
+	var me := _me(e)
+	me.creature.hp = 1
+	e.resolve_round([BattleAction.pass_turn(me.bid), BattleAction.use_move(_foe(e).bid, "hit", me.bid)])
 	# Sent out at full HP and only passed, so no overwork: just -4 for fainting.
-	assert_int(mine.bond).is_equal(-4)
+	assert_int(me.creature.bond).is_equal(-4)
+	assert_int(mine.bond).is_equal(0)
 
 
 func test_overwork_lowers_bond_once_per_battle() -> void:
 	var mine := FixtureDB.make(db, "blob", 10, ["hit"])
 	mine.hp = 2
 	var e := FixtureDB.engine(db, [mine], [FixtureDB.make(db, "tank")])
-	assert_int(mine.bond).is_equal(-2)
+	assert_int(_me(e).creature.bond).is_equal(-2)
 	_act(e, "hit")
-	assert_int(mine.bond).is_equal(-2)
+	assert_int(_me(e).creature.bond).is_equal(-2)
 
 
 func test_item_healing_raises_bond() -> void:

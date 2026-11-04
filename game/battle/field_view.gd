@@ -1,6 +1,7 @@
 class_name FieldView
 extends HBoxContainer
-## One side's field-state chips ("Soaked ×2 · 3") plus its Underdog badge.
+## One side's field-state chips ("Soaked ×2 · 3") plus its Underdog badge, after a
+## "Your field:" / "Foe field:" tag (shown only when there's something to show).
 ## Keeps its own mirror of the states so playback can show them change event by event.
 
 var side := 0
@@ -51,6 +52,15 @@ func newest_color() -> Color:
 func _rebuild() -> void:
 	for c in get_children():
 		c.queue_free()
+	# The foe's chips sit in the top-left corner, away from its creatures, so say whose they are.
+	if underdog_text != "" or not states.is_empty():
+		var tag := Label.new()
+		tag.text = "Foe field:" if side == 1 else "Your field:"
+		tag.add_theme_font_size_override("font_size", 9)
+		tag.add_theme_color_override("font_color", UIKit.TEXT)
+		tag.add_theme_color_override("font_outline_color", Color(0, 0, 0))
+		tag.add_theme_constant_override("outline_size", 3)
+		add_child(tag)
 	if underdog_text != "":
 		add_child(_chip(underdog_text, UIKit.ACCENT, Color(0, 0, 0)))
 	for s in states:

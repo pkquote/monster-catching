@@ -26,11 +26,17 @@ while not engine.is_over():
         engine.replace(0, chosen_bench_bid)  # optional: leaving a slot empty keeps you outnumbered
 
 var result := engine.result()  # { winner, reason, captured, rounds, affinity }
+engine.commit(0)               # write the player's creatures back (BattleLauncher does this)
 ```
 
 - Side 0 is always the player. Battlers are identified by a battle-unique `bid`.
-- HP, status, XP, level, moves and Affinity are written straight to each `CreatureInstance`,
-  so the party is already up to date when the battle ends.
+- The battle works on **copies** of the creatures in the setup. HP, energy, status, XP, level,
+  moves, Bond and Affinity change on the copies (`engine.battler(bid).creature`); the originals
+  (`battler.source`) are untouched until `engine.commit(side)` writes the copies back. A battle
+  that's abandoned is simply never committed, and nothing outside the battle changes while it runs.
+  Captured creatures are not written back; `result().captured` holds them.
+- Each side of a `BattleSetup` is a typed `SideSetup` (`party`, `max_active`, `field_count`,
+  `items`, `ai`, `is_wild`, `auto_replace`).
 - `BattleSetup.wild(party, pack, field_count)` and `BattleSetup.vs_tamer(db, party, tamer_id, field_count)`
   let the player field fewer creatures than the format allows, which triggers Underdog.
 
@@ -164,7 +170,26 @@ the creature has reached, then the branch matching its dominant Affinity if that
 
 Every AI picks only moves it can afford, falls back on Scrap, and considers Rest below 20% energy.
 
+## Code layout
+
+`BattleEngine` is the public face: the battle screen, the AI and effect ops call only it. It owns the
+battle state, targeting, the mutations effect ops use (`deal_damage`, `heal`, `inflict_status`...)
+and the round loop, and hands the rest to three parts (each extends `BattlePart`, which holds the
+engine weakly so the engine can be freed):
+
+| Part | File | Owns |
+|---|---|---|
+| `engine.actions` | `action_runner.gd` | turn order; running moves (energy, skipped turns, Bond misbehaviour), items, swaps, Rest, fleeing |
+| `engine.field_rules` | `field_rules.gd` | applying, stacking, pushing out, expiring and cashing in field states; reactions |
+| `engine.rewards` | `battle_rewards.gd` | XP from knockouts, Bond changes, Affinity points and the per-battle Affinity log |
+
 ## Events
+
+Event names are constants in `BattleEvents` (`core/battle/battle_events.gd`); emit with those, not
+string literals. In debug builds `emit()` reports unknown types, and `tests/battle/test_battle_events.gd`
+checks that real battles only send known types and that `BattleText` describes each type or lists it
+in `SILENT`. To add an event: add the constant (and to `ALL`), emit it, add a row here, and handle it
+in `BattleText` (and `BattlePlayback` if it changes what's on screen).
 
 | Event | Key fields |
 |---|---|

@@ -78,6 +78,27 @@ func heal_full(db: Database) -> void:
 	status = ""
 
 
+## An independent copy (battles work on copies; see BattleEngine.commit).
+func copy() -> CreatureInstance:
+	return CreatureInstance.from_dict(to_dict())
+
+
+## Overwrites this creature's state with `other`'s.
+func copy_from(other: CreatureInstance) -> void:
+	var d := other.to_dict()
+	species = d.species
+	nickname = d.nickname
+	level = d.level
+	xp = d.xp
+	hp = d.hp
+	energy = d.energy
+	bond = d.bond
+	moves = PackedStringArray(d.moves)
+	affinity = d.affinity
+	training = d.training
+	status = d.status
+
+
 func to_dict() -> Dictionary:
 	return {
 		"species": species, "nickname": nickname, "level": level, "xp": xp, "hp": hp,

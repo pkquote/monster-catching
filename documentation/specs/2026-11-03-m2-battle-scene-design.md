@@ -14,7 +14,10 @@ catching, fleeing, Bond misbehaviour, XP and level-ups.
 
 ## 2. Getting into a battle (until M3)
 
-- The placeholder world gets a **Test battles** panel:
+- Test battles live in the **debug menu** (`game/debug/debug_menu.gd`, autoload `DebugMenu`): press
+  **F1** on any screen in a debug build. It pauses the game while open, needs a loaded game for its
+  party and battle tools, and can't start a battle from inside one. It's outside the placeholder world
+  so it keeps working once M3 replaces that screen. Test battles:
   - **Wild encounter**: rolls a pack from `route_01_grass` (1–2 creatures).
   - **Scout Ana** (1v1 tamer).
   - **Rival** (2v2 tamer).
@@ -23,8 +26,8 @@ catching, fleeing, Bond misbehaviour, XP and level-ups.
     and the foes' level (defaults to your party's average). Foes are random species. Wild foes
     can be caught and fled from; a tamer ("Sparring Partner") uses the tactician AI and has no
     bench, items or prize money. Built by `BattleLauncher.custom_setup`.
-- New games still start with an empty party (starter choice comes with M3). The world offers
-  **Get test party** (clearly labeled as debug). It adds Tidepup (starter Bond), Emberkit and
+- New games still start with an empty party (starter choice comes with M3). The debug menu offers
+  **Get test party** (and **Heal party**). It adds Tidepup (starter Bond), Emberkit and
   Voltmoth at level 8, and a bag (Lure Cage ×5, Tide Net ×3, Snare Vine ×3, Salve ×3, Tonic ×2),
   all saved to the playthrough.
 - Before a battle starts, the player chooses **how many creatures to field** (1 up to the format,
@@ -90,9 +93,11 @@ free. Caught creatures join the party, or storage if the party is full (`balance
   - XP gained per creature, and level-ups with new moves.
   - Bond changes and Affinity gains.
   - Money from tamers (`reward_money`).
-- **The engine mutates the save's `CreatureInstance`s directly**, so HP, energy, status, XP and
-  Bond are already up to date. The scene writes back the item bag, catches and money, then returns
-  to the world, which autosaves.
+- **The engine battles on copies of the party.** When the battle ends,
+  `BattleLauncher.apply_results` commits the copies back into the save (HP, energy, status, XP,
+  Bond, Affinity), then writes the item bag, catches and money, and the scene returns to the world,
+  which autosaves. Until then the save's creatures are untouched, so an abandoned battle (or a
+  future "retry") leaves no half-applied changes.
 - **Defeat (placeholder until M3):** the party is fully healed and you return to the world.
 
 ## 7. Code structure

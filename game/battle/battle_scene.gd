@@ -407,7 +407,13 @@ func _build_ui() -> void:
 	for side in 2:
 		var f := FieldView.new()
 		f.setup(side, db)
-		f.position = Vector2(360, 214) if side == 0 else Vector2(8, 6)
+		# Yours along the bottom-right edge of the stage (growing leftwards), the foe's top-left.
+		if side == 0:
+			f.position = Vector2(232, 214)
+			f.size = Vector2(400, 18)
+			f.alignment = BoxContainer.ALIGNMENT_END
+		else:
+			f.position = Vector2(8, 6)
 		add_child(f)
 		fields.append(f)
 	_banner = UIKit.label(self, "", UIKit.TITLE_SIZE, UIKit.ACCENT)

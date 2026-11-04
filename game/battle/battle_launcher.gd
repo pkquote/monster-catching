@@ -85,10 +85,12 @@ static func party_level(save: SaveGame) -> int:
 	return roundi(float(total) / save.party.size())
 
 
-## Writes the battle's outcome into the save. The engine already updated each
-## party CreatureInstance (HP, energy, XP, Bond...). Returns a summary for the UI:
+## Writes the battle's outcome into the save: the party's battle copies (HP, energy,
+## XP, Bond...), the bag, catches and money. Call once, after the battle ends.
+## Returns a summary for the UI:
 ## { outcome, captured: Array[String names], to_storage: int, money: int }
 static func apply_results(db: Database, save: SaveGame, engine: BattleEngine) -> Dictionary:
+	engine.commit(0)
 	var res := engine.result()
 	var summary := {"outcome": "", "captured": [], "to_storage": 0, "money": 0}
 	save.inventory = {}

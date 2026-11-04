@@ -30,7 +30,9 @@ Battle engine reference (API, round order, formulas, events, AI):
 ## Running
 
 Press F5 in the editor (or run the project). The game boots to a splash screen, then the title
-menu: Resume, New Game, Load Game, Settings, Quit. Player data lives in Godot's user folder
+menu: Resume, New Game, Load Game, Settings, Quit. Until the overworld exists (M3), the world screen
+has debug tools: **Get test party**, **Heal party**, and test battles (wild Route 1, Scout Ana 1v1,
+Rival 2v2, and a **Custom battle** panel for any format up to 3v3, such as 1v3 or 3v1). Player data lives in Godot's user folder
 (`%APPDATA%/Godot/app_userdata/Monster Catching Game/` on Windows):
 
 - `saves/<playthrough>/autosave.json` and `save_<timestamp>.json`, plus `saves/last.json` (the Resume target)

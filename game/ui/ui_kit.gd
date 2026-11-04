@@ -70,6 +70,20 @@ static func button(parent: Node, text: String, on_press: Callable) -> Button:
 	return b
 
 
+## A solid rounded panel (dialogs, overlays, results).
+static func panel(parent: Node, padding: int = 10) -> PanelContainer:
+	var p := PanelContainer.new()
+	var style := StyleBoxFlat.new()
+	style.bg_color = PANEL
+	style.border_color = MUTED.darkened(0.3)
+	style.set_border_width_all(1)
+	style.set_corner_radius_all(6)
+	style.set_content_margin_all(padding)
+	p.add_theme_stylebox_override("panel", style)
+	parent.add_child(p)
+	return p
+
+
 static func spacer(parent: Node, height: int) -> void:
 	var c := Control.new()
 	c.custom_minimum_size = Vector2(0, height)

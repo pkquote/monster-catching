@@ -324,7 +324,7 @@ them to the engine (audio buses, window, input map). Game actions are mirrored i
 | **M0 Foundation** | Project settings (32x32 pixel, stretch), folder layout, gdUnit4 + Dialogue Manager installed, JSON loader, typed defs, Database, validator + headless tool, starter data, export filter |
 | **M1 Battle engine** | Headless N-vs-M engine: speed order, types, damage, statuses, field states + reactions, Underdog, basic AI, catching, XP + Affinity awards; full tests; CLI battle simulator |
 | **M1.5 Front end** | Splash, title menu, new game (name entry), save browser, settings (audio, display, gameplay, controls), placeholder world; save store with unlimited saves, per-playthrough autosave and Resume |
-| **M2 Battle scene** | Diagonal stage, placeholder sprites, action menus, event playback, catch animation |
+| **M2 Battle scene** | Diagonal stage, placeholder sprites, action menus, event playback, catch animation, results; test battles from the placeholder world. Detailed design: [M2 battle scene design](2026-11-03-m2-battle-scene-design.md) |
 | **M3 Overworld + story** | One town + one route, movement, NPCs, Dialogue Manager conversations, one cutscene, rival battle, wild encounters |
 | **M4 Progression + menus** | Level-ups, one species with growth branches, party + storage menus, training-point and respec UI |
 

@@ -9,6 +9,9 @@ var sides: Array = []
 var is_wild := false
 ## Tamer id for tamer battles ("" otherwise).
 var tamer_id := ""
+## Name shown for a tamer-style foe that isn't in the data (debug battles).
+## Ignored when tamer_id is set.
+var foe_name := ""
 ## Side 0 earns XP from knockouts. Off for simulations and exhibition battles.
 var award_xp := true
 

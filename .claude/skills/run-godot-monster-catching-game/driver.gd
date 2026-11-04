@@ -30,10 +30,13 @@ func _initialize() -> void:
 			_opts[kv[0]] = kv[1]
 	_out = ProjectSettings.globalize_path(_opts.out)
 	DirAccess.make_dir_recursive_absolute(_out)
-	if _opts.mode == "scene":
-		_run_scene()
-	else:
-		_run_frontend()
+	match _opts.mode:
+		"scene":
+			_run_scene()
+		"battle":
+			_run_battle()
+		_:
+			_run_frontend()
 
 
 # --- Modes ---------------------------------------------------------------------------
@@ -125,7 +128,158 @@ func _run_frontend() -> void:
 	_finish()
 
 
+## Battle tour: new game -> test party -> wild battle from the world (attack, throw a
+## cage, finish) -> results -> world; then a 1-vs-2 Rival battle (Underdog).
+func _run_battle() -> void:
+	await process_frame
+	var gs := root.get_node("GameState")
+	var router := root.get_node("SceneRouter")
+	gs.store = SaveStore.new(RUN_SAVES)
+	_clear(RUN_SAVES)
+	gs.start_new_game("Ana")
+	router.goto("res://game/world/placeholder_world.tscn")
+	await wait_scene("PlaceholderWorld", 120)
+	press("Get test party")
+	await _frames(10)
+	await wait_scene("PlaceholderWorld", 60)
+	await shot("b01_world_with_party")
+	expect(gs.current.party.size() == 3, "test party granted")
+
+	# The Rival is always 2v2, so its "how many?" prompt always appears. Cancel it.
+	press("Rival (2v2)")
+	await _frames(5)
+	await shot("b02_field_count")
+	expect(_find_menu() != null, "field-count prompt appears for a 2v2 tamer")
+	await key(KEY_X)  # Cancel
+	await _frames(5)
+	expect(_find_menu() == null, "cancelling the prompt closes it")
+
+	press("Wild battle (Route 1)")
+	await _frames(5)
+	await pick_menu("1 creature")  # no-op when the pack is a single creature
+	await wait_scene("BattleScene", 180)
+	await wait_battle(["command"])
+	await shot("b03_wild_command")
+	await pick_menu("Fight")
+	await shot("b04_moves")
+	await pick_menu("Splash Jab")
+	await pick_menu("")  # first target, if asked
+	await pick_menu("Yes, go!")
+	await _frames(20)
+	await shot("b05_playback")
+	var bs := current_scene
+	await wait_battle(["command", "results", "replace"])
+	if bs.phase == "command":
+		await pick_menu("Items")
+		await shot("b06_items")
+		await pick_menu("Lure Cage")
+		await pick_menu("")
+		await pick_menu("Yes, go!")
+		await _frames(30)
+		await shot("b07_capture")
+	# Fight until the battle ends.
+	for round in 30:
+		await wait_battle(["command", "results", "replace"])
+		if bs.phase == "results":
+			break
+		if bs.phase == "replace":
+			await pick_menu("")
+			continue
+		await pick_menu("Fight")
+		await pick_menu("")  # first affordable move
+		await pick_menu("")
+		await pick_menu("Yes, go!")
+	await wait_battle(["results"])
+	await _frames(10)
+	await shot("b08_results")
+	expect(bs.phase == "results", "wild battle reached results (%s)" % bs.summary.get("outcome", "?"))
+	bs.continue_button.pressed.emit()
+	await wait_scene("PlaceholderWorld", 180)
+	await _frames(10)
+	await shot("b09_world_after")
+	expect(gs.store.list().any(func(e): return e.kind == SaveGame.KIND_AUTO), "world autosaved after battle")
+
+	var setup := BattleLauncher.tamer_setup(root.get_node("DataRegistry").db, gs.current, "rival_01", 1)
+	router.goto("res://game/battle/battle_scene.tscn", {"setup": setup, "seed": 11})
+	await wait_scene("BattleScene", 180)
+	await wait_battle(["command"])
+	await _frames(5)
+	await shot("b10_rival_underdog")
+	expect(current_scene.fields[0].underdog_text.begins_with("UNDERDOG"), "fielding 1 vs 2 shows Underdog")
+
+	# Custom battle panel: set up a 3v1 tamer fight from the world.
+	router.goto(SceneRouter.WORLD)
+	await wait_scene("PlaceholderWorld", 180)
+	press("Custom battle...")
+	await _frames(5)
+	var opts := _find_all(current_scene, "OptionButton")
+	opts[0].select(2)  # you field 3
+	opts[0].item_selected.emit(2)
+	opts[2].select(1)  # tamer
+	await _frames(3)
+	await shot("b11_custom_panel")
+	press("Start")
+	await wait_scene("BattleScene", 180)
+	await wait_battle(["command"])
+	await _frames(5)
+	await shot("b12_custom_3v1")
+	expect(current_scene.views.size() == 4 and current_scene.fields[1].underdog_text.begins_with("UNDERDOG"),
+		"custom 3v1 battle puts 4 creatures on the stage and makes the foe the Underdog")
+	_clear(RUN_SAVES)
+	_finish()
+
+
 # --- Helpers (reuse these when adding new tours) ------------------------------------
+
+## Waits until the battle scene is in one of `phases` (and its menu is ready when choosing).
+func wait_battle(phases: Array, max_frames := 2400) -> void:
+	for i in max_frames:
+		var s := current_scene
+		if s != null and s.get("phase") in phases:
+			if s.phase in ["command", "replace"] and not s.menu.is_choosing():
+				await process_frame
+				continue
+			return
+		await process_frame
+	expect(false, "battle reached %s (at %s)" % [phases, current_scene.get("phase")])
+
+
+## Picks a CommandMenu option whose label starts with `label` ("" = first enabled one),
+## in the current scene. Does nothing if no menu is choosing.
+func pick_menu(label: String) -> void:
+	await _frames(2)
+	var n := _find_menu()
+	if n == null:
+		return
+	if label == "":
+		for b in n._grid.get_children():
+			if b is Button and not b.disabled:
+				b.pressed.emit()
+				break
+	else:
+		n.pick_label(label)
+	await _frames(2)
+
+
+## The CommandMenu currently waiting for a choice, or null.
+func _find_menu() -> CommandMenu:
+	var stack: Array = [current_scene]
+	while not stack.is_empty():
+		var n: Node = stack.pop_back()
+		if n is CommandMenu and n.is_choosing():
+			return n
+		stack.append_array(n.get_children())
+	return null
+
+## Every node of class `cls` under `from`, in tree order.
+func _find_all(from: Node, cls: String) -> Array:
+	var out: Array = []
+	for c in from.get_children():
+		if c.is_class(cls):
+			out.append(c)
+		out.append_array(_find_all(c, cls))
+	return out
+
 
 func _frames(n: int) -> void:
 	for i in n:

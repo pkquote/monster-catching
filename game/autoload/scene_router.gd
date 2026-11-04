@@ -8,6 +8,7 @@ const NEW_GAME := "res://game/menus/new_game.tscn"
 const LOAD_GAME := "res://game/menus/load_menu.tscn"
 const SETTINGS := "res://game/menus/settings_menu.tscn"
 const WORLD := "res://game/world/placeholder_world.tscn"
+const BATTLE := "res://game/battle/battle_scene.tscn"
 
 const FADE_TIME := 0.2
 

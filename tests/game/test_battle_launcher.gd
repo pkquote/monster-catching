@@ -1,0 +1,120 @@
+extends GdUnitTestSuite
+## Building battles from a save and writing results back.
+
+var real: Database
+var db: Database
+var rng := RandomNumberGenerator.new()
+
+
+func before() -> void:
+	real = DataLoader.load_database("res://data").db
+	db = FixtureDB.build()
+
+
+func _save() -> SaveGame:
+	rng.seed = 3
+	return SaveGame.new_game("Ana", 1000, rng)
+
+
+func test_test_party_is_granted_once() -> void:
+	var s := _save()
+	assert_bool(BattleLauncher.grant_test_party(real, s)).is_true()
+	assert_int(s.party.size()).is_equal(BattleLauncher.TEST_PARTY.size())
+	assert_int(s.party[0].bond).is_equal(real.balance.bond_cfg.starter)
+	assert_int(s.inventory.lure_cage).is_equal(5)
+	assert_bool(BattleLauncher.grant_test_party(real, s)).is_false()
+	assert_int(s.party.size()).is_equal(BattleLauncher.TEST_PARTY.size())
+
+
+func test_max_fieldable_counts_healthy_creatures() -> void:
+	var s := _save()
+	BattleLauncher.grant_test_party(real, s)
+	assert_int(BattleLauncher.max_fieldable(s, 2)).is_equal(2)
+	s.party[0].hp = 0
+	s.party[1].hp = 0
+	assert_int(BattleLauncher.max_fieldable(s, 2)).is_equal(1)
+
+
+func test_wild_pack_respects_the_table() -> void:
+	var enc := real.encounter("route_01_grass")
+	for i in 20:
+		var pack := BattleLauncher.roll_wild_pack(real, "route_01_grass", rng)
+		assert_int(pack.size()).is_between(enc.pack_min, enc.pack_max)
+		for c: CreatureInstance in pack:
+			assert_bool(enc.table.any(func(row): return row.species == c.species)).is_true()
+
+
+func test_tamer_setup_uses_format_and_bag() -> void:
+	var s := _save()
+	BattleLauncher.grant_test_party(real, s)
+	var setup := BattleLauncher.tamer_setup(real, s, "rival_01", 1)
+	assert_int(setup.sides[0].field_count).is_equal(1)
+	assert_int(setup.sides[1].max_active).is_equal(2)
+	assert_int(setup.sides[0].items.salve).is_equal(3)
+
+
+func test_results_write_back_items_catches_and_money() -> void:
+	var s := _save()
+	s.party = [FixtureDB.make(db, "blob", 10, ["hit"])]
+	s.inventory = {"master_cage": 1, "potion": 2}
+	var setup := BattleLauncher.wild_setup(s, [FixtureDB.make(db, "fish", 3)], 1)
+	var e := BattleEngine.new(db, RandomNumberGenerator.new(), setup)
+	e.start()
+	e.resolve_round([BattleAction.use_item(e.sides[0].active()[0].bid, "master_cage", e.sides[1].active()[0].bid)])
+	var summary := BattleLauncher.apply_results(db, s, e)
+	assert_str(summary.outcome).is_equal("captured")
+	assert_array(summary.captured).contains_exactly(["Fish"])
+	assert_int(s.party.size()).is_equal(2)
+	assert_bool(s.inventory.has("master_cage")).is_false()
+	assert_int(s.inventory.potion).is_equal(2)
+
+
+func test_full_party_sends_catches_to_storage() -> void:
+	var s := _save()
+	for i in db.balance.party_size:
+		s.party.append(FixtureDB.make(db, "blob", 10, ["hit"]))
+	s.inventory = {"master_cage": 1}
+	var e := BattleEngine.new(db, RandomNumberGenerator.new(), BattleLauncher.wild_setup(s, [FixtureDB.make(db, "fish", 3)], 1))
+	e.start()
+	e.resolve_round([BattleAction.use_item(e.sides[0].active()[0].bid, "master_cage", e.sides[1].active()[0].bid)])
+	var summary := BattleLauncher.apply_results(db, s, e)
+	assert_int(summary.to_storage).is_equal(1)
+	assert_int(s.storage.size()).is_equal(1)
+
+
+func test_defeat_heals_party_as_placeholder() -> void:
+	var s := _save()
+	s.party = [FixtureDB.make(db, "blob", 2, ["hit"])]
+	var e := BattleEngine.new(db, RandomNumberGenerator.new(), BattleLauncher.wild_setup(s, [FixtureDB.make(db, "tank", 40, ["hit"])], 1))
+	e.start()
+	while not e.is_over():
+		e.resolve_round([BattleAction.pass_turn(e.sides[0].active()[0].bid)] if not e.sides[0].active().is_empty() else [])
+	var summary := BattleLauncher.apply_results(db, s, e)
+	assert_str(summary.outcome).is_equal("lost")
+	assert_int(s.party[0].hp).is_equal(s.party[0].max_hp(db))
+
+
+func test_custom_setup_builds_any_format() -> void:
+	var s := _save()
+	BattleLauncher.grant_test_party(real, s)
+	for f in [[1, 3], [3, 1], [2, 3], [3, 3]]:
+		var setup := BattleLauncher.custom_setup(real, s, f[0], f[1], 12, true, rng)
+		assert_int(setup.sides[0].field_count).is_equal(f[0])
+		assert_int(setup.sides[0].max_active).is_equal(f[0])
+		assert_int(setup.sides[1].party.size()).is_equal(f[1])
+		assert_int(setup.sides[1].field_count).is_equal(f[1])
+		assert_bool(setup.is_wild).is_true()
+		for c: CreatureInstance in setup.sides[1].party:
+			assert_int(c.level).is_equal(12)
+
+
+func test_custom_setup_caps_by_healthy_and_tamer_mode() -> void:
+	var s := _save()
+	BattleLauncher.grant_test_party(real, s)
+	s.party[0].hp = 0
+	var setup := BattleLauncher.custom_setup(real, s, 3, 2, 5, false, rng)
+	assert_int(setup.sides[0].field_count).is_equal(2)
+	assert_bool(setup.is_wild).is_false()
+	assert_str(setup.sides[1].ai).is_equal("tactician")
+	assert_str(setup.foe_name).is_equal("Sparring Partner")
+	assert_int(BattleLauncher.party_level(s)).is_equal(8)

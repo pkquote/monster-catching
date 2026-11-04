@@ -1,0 +1,133 @@
+---
+name: run-godot-monster-catching-game
+description: Run, launch, drive and screenshot the Godot monster-catching game, or run its tests and content checks. Use when asked to start the game, play through the menus or a battle, take screenshots of a screen (splash, title, new game, load, settings, world, battle), verify a UI change in the real window, or run the test suite.
+---
+
+Godot 4.7 game (typed GDScript). Agents drive the real game window with
+`.claude/skills/run-godot-monster-catching-game/driver.gd`, a `SceneTree` script that boots the
+game, sends real keyboard input, presses buttons, checks expectations and saves PNG
+screenshots. **Look at the screenshots** with the Read tool; tests can't catch layout bugs.
+
+All paths are relative to the repo root. Verified on Windows 11 with Godot 4.7.2 (.NET build)
+from the Bash tool (Git Bash). Not yet tried on Linux.
+
+## Prerequisites
+
+Godot **4.7.x**. The project targets 4.7, and its addons need a recent Godot: Dialogue Manager
+4.2.0 requires 4.6+, and gdUnit4 6.2.3 supports 4.5–4.7.
+Use the **console** executable so output reaches the terminal:
+
+```bash
+GODOT="/c/Program Files (x86)/Godot_v4.7.2-stable_mono_win64/Godot_v4.7.2-stable_mono_win64_console.exe"
+```
+
+## Setup
+
+On a fresh clone (no `.godot/` folder), import once so Godot builds the global class list.
+Without it, scripts fail with `Identifier "DataLoader" not declared`:
+
+```bash
+"$GODOT" --headless --path . --import
+```
+
+## Run (agent path)
+
+Front-end tour: splash → title → New Game (types "Ana") → world (autosave + manual save) →
+quit → Load browser → every Settings tab → rebind Accept to K → Resume. It checks 6
+expectations and exits 1 if any fail. It takes about 13 s, and a game window opens while it runs.
+
+```bash
+timeout 120 "$GODOT" --path . --script res://.claude/skills/run-godot-monster-catching-game/driver.gd 2>&1 | grep "\[driver\]"
+```
+
+Expected tail: `[driver] ALL CHECKS PASSED`. Screenshots (`01_splash_credit.png` …
+`15_resumed_world.png`) and `driver.log` go to
+`%APPDATA%/Godot/app_userdata/Monster Catching Game/run_shots/`. The driver prints the
+absolute path.
+
+Battle tour: new game → Get test party → Rival's "how many?" prompt (cancel) → wild battle
+(attack, throw a Lure Cage, fight to the end) → results → world (autosave) → a 1-vs-2 Rival
+battle showing Underdog → the Custom battle panel set to a 3v1 tamer fight. It checks 7 expectations. It takes about 35 s, and fights are random
+(the wild pack and whether the cage catches).
+
+```bash
+timeout 240 "$GODOT" --path . --script res://.claude/skills/run-godot-monster-catching-game/driver.gd -- --mode=battle --out="$TMPDIR/battle_shots" 2>&1 | grep "\[driver\]"
+```
+
+Screenshot a single scene:
+
+```bash
+timeout 60 "$GODOT" --path . --script res://.claude/skills/run-godot-monster-catching-game/driver.gd -- --mode=scene --scene=res://game/menus/settings_menu.tscn --frames=30 --out="$TMPDIR/shots"
+```
+
+| option | meaning |
+|---|---|
+| `--mode=frontend` | default; the tour above |
+| `--mode=battle` | the battle tour above (`b01_…` to `b12_…` screenshots) |
+| `--mode=scene` | open `--scene` (default: main scene), wait `--frames` (default 60), screenshot |
+| `--out=<dir>` | screenshot folder; `user://` paths allowed (default `user://run_shots`) |
+
+To drive a new flow, add a mode to `driver.gd` and reuse its helpers: `wait_scene(name, max_frames)`,
+`key(KEY_X)`, `type_text("abc")`, `press("Button text")`, `shot("name")`, `expect(ok, "what")`,
+and for battles `wait_battle(["command"])` and `pick_menu("Fight")` (`""` picks the first enabled
+option). You can also open a battle directly:
+`router.goto("res://game/battle/battle_scene.tscn", {"setup": BattleSetup, "seed": 11})`.
+For any N-vs-M format (up to 3 per side), build the setup with
+`BattleLauncher.custom_setup(db, save, mine, foes, level, wild, rng)`.
+
+## Run (human path)
+
+```bash
+"$GODOT" --path .   # opens the game at the splash screen; close the window to stop
+```
+
+## Test
+
+```bash
+bash scripts/check.sh
+```
+
+This validates the JSON content, compiles the dialogue, runs every gdUnit4 suite and regenerates
+`documentation/compendium.md`. Expected: `All checks passed.` with 16 `Statistics:` lines, all
+`PASSED`.
+
+## Gotchas
+
+- **Don't use `--headless` for screenshots.** The driver waits on
+  `RenderingServer.frame_post_draw`, which never fires without a renderer, so the run hangs
+  until `timeout` kills it (exit 124, no PNG). Headless is fine for `--import` and the tests.
+- **`--script` replaces the main scene.** The driver has to `change_scene_to_file()` the main
+  scene itself. Autoloads (`GameState`, `SceneRouter`, `Settings`) still load. From a
+  `SceneTree` script, reach them through `root.get_node("GameState")`.
+- **Wait for the fade.** `SceneRouter.goto()` fades out, swaps and fades back in. The new scene
+  exists before input works, so `wait_scene()` also waits for `SceneRouter.is_busy()` to be false.
+- **Typing into a LineEdit needs `unicode`** on the `InputEventKey`; keycodes alone type nothing.
+- **Keep the player's data untouched.** The tour swaps `GameState.store` to `user://run_saves`
+  and deletes it afterwards. It never presses Settings → Back, because Back writes
+  `settings.json`; it calls `reset_bindings()` + `apply_controls()` instead. Keep this
+  isolation when adding flows.
+- **The driver lives in a dot folder Godot doesn't scan**, but `res://.claude/...` still works
+  as a `--script` path, and the project's `class_name` types (`SaveStore` etc.) resolve normally.
+- **The Godot editor can stay open** while you run the driver and tests. It regenerates `.uid`
+  files on its own; that's expected.
+- **Battle menus are `CommandMenu`s, not plain buttons.** Drive them with `pick_menu()`, which
+  finds the menu that's currently choosing. Wait for `scene.phase` with `wait_battle()`: the menu
+  only accepts picks once `menu.is_choosing()` is true. Playback between phases runs on timers.
+- **Random content makes screenshots differ between runs.** The wild pack can be one or two
+  creatures, so the "how many?" prompt doesn't always appear. Screenshot prompts from something
+  deterministic (the Rival is always 2v2) or pass a `seed` when opening a battle directly.
+- **Layout bugs only show in screenshots.** Labels with autowrap inside a `GridContainer`
+  collapsed to one character per line and passed every test; the Controls-tab screenshot was
+  what caught it.
+
+## Troubleshooting
+
+- **`ERROR: .NET Sdk not found. The required version is '8.0.20'.`** The .NET editor build
+  wants the .NET SDK. It's harmless here (GDScript only); ignore it or use the non-.NET Godot.
+- **`Parse Error: Identifier "DataLoader" not declared in the current scope`**: the class cache
+  is missing or stale. Run the `--import` command from Setup (twice if the first run was
+  interrupted).
+- **`Failed to load script "res://addons/dialogue_manager/plugin.gd" with error "Compilation failed"`**:
+  the Dialogue Manager version doesn't match the Godot version. This happened with Dialogue
+  Manager 3.3.3 (built for 4.3) opened in 4.7. Keep the addons matched to the engine (see
+  Prerequisites).

@@ -61,7 +61,7 @@ func blocks() -> bool:
 	return true
 
 
-func on_interact(w: Node) -> void:
+func on_interact(w: Overworld) -> void:
 	face_toward(w.player.feet_tile())
 	w.say(dialogue, title)  # not awaited: a script may change map and free this NPC
 
@@ -80,7 +80,7 @@ func face_toward(t: Vector2i) -> void:
 
 ## One wander decision: maybe step one tile in a random direction, staying within
 ## `wander_tiles` of home, off solid tiles and off the player.
-func wander_tick(w: Node, rng: RandomNumberGenerator) -> void:
+func wander_tick(w: Overworld, rng: RandomNumberGenerator) -> void:
 	if _moving:
 		return
 	var dirs := [Vector2i.UP, Vector2i.DOWN, Vector2i.LEFT, Vector2i.RIGHT, Vector2i.ZERO]

@@ -39,7 +39,7 @@ func after_test() -> void:
 
 
 func test_story_battle_without_defeat_rules() -> void:
-	var won := await world.after_battle({"outcome": "lost"}, false)
+	var won := await world.battles.after_battle(BattleSummary.of("lost"), false)
 	assert_bool(won).is_false()
 	assert_int(GameState.current.party[0].hp).is_greater(0)
 	assert_int(GameState.current.money).is_equal(1000)
@@ -49,7 +49,7 @@ func test_story_battle_without_defeat_rules() -> void:
 func test_loss_with_defeat_rules_respawns() -> void:
 	Settings.data.text_speed = "instant"
 	var result: Array = []
-	var run := func(): result.append(await world.after_battle({"outcome": "lost"}, true))
+	var run := func(): result.append(await world.battles.after_battle(BattleSummary.of("lost"), true))
 	run.call()
 	for i in 100:
 		if not result.is_empty():
@@ -64,9 +64,9 @@ func test_loss_with_defeat_rules_respawns() -> void:
 
 
 func test_win_counts_and_capture_counts() -> void:
-	assert_bool(await world.after_battle({"outcome": "won"}, true)).is_true()
-	assert_bool(await world.after_battle({"outcome": "captured"}, true)).is_true()
-	assert_bool(await world.after_battle({"outcome": "fled"}, true)).is_false()
+	assert_bool(await world.battles.after_battle(BattleSummary.of("won"), true)).is_true()
+	assert_bool(await world.battles.after_battle(BattleSummary.of("captured"), true)).is_true()
+	assert_bool(await world.battles.after_battle(BattleSummary.of("fled"), true)).is_false()
 	assert_str(world.map.map_id()).is_equal("test_b")
 
 
@@ -84,7 +84,7 @@ func test_losing_inside_a_conversation_still_explains() -> void:
 	Settings.data.text_speed = "instant"
 	world.say("res://tests/fixtures/test_talk.dialogue", "hello")  # a tamer's script is running
 	await get_tree().process_frame
-	var run := func(): await world.after_battle({"outcome": "lost"}, true)
+	var run := func(): await world.battles.after_battle(BattleSummary.of("lost"), true)
 	run.call()
 	var shown := ""
 	for i in 60:
@@ -99,7 +99,7 @@ func test_loss_wakes_at_start_when_heal_map_is_gone() -> void:
 	Settings.data.text_speed = "instant"
 	GameState.current.story.last_heal = {"map": "no_such_map", "spawn": "heal"}
 	var result: Array = []
-	var run := func(): result.append(await world.after_battle({"outcome": "lost"}, true))
+	var run := func(): result.append(await world.battles.after_battle(BattleSummary.of("lost"), true))
 	run.call()
 	for i in 100:
 		if not result.is_empty():

@@ -344,8 +344,8 @@ func _give_xp(index: int, to_level: int) -> void:
 	var entry := Progression.progress_entry(db, c, before)
 	close()
 	_refresh_world()
-	if not entry.is_empty():
-		await world.run_progress([entry])
+	if entry != null:
+		await world.battles.run_progress([entry])
 	GameState.autosave()  # after the screens, so Learn Move / Grow choices are kept
 
 
@@ -393,7 +393,7 @@ func _start_tamer(tamer_id: String) -> void:
 func _go(setup: BattleSetup) -> void:
 	close()
 	if Overworld.active != null:
-		Overworld.active.run_battle(setup)
+		Overworld.active.battles.run_battle(setup)
 
 
 # --- Helpers -----------------------------------------------------------------------

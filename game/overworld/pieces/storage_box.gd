@@ -13,7 +13,7 @@ func blocks() -> bool:
 	return true
 
 
-func on_interact(w: Node) -> void:
+func on_interact(w: Overworld) -> void:
 	await w.open_storage()
 
 

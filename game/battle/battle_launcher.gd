@@ -87,20 +87,19 @@ static func party_level(save: SaveGame) -> int:
 
 ## Writes the battle's outcome into the save: the party's battle copies (HP, energy,
 ## XP, Bond...), the bag, catches and money. Call once, after the battle ends.
-## Returns a summary for the UI:
-## { outcome, captured: Array[String names], to_storage: int, money: int,
-## progress: Array of Progression.progress_entry dicts, in party order }
-static func apply_results(db: Database, save: SaveGame, engine: BattleEngine) -> Dictionary:
+## Returns the summary for the results panel and the overworld.
+static func apply_results(db: Database, save: SaveGame, engine: BattleEngine) -> BattleSummary:
 	var levels_before := {}
 	for b in engine.sides[0].battlers:
 		levels_before[b.source] = b.source.level
 	engine.commit(0)
 	var res := engine.result()
-	var summary := {"outcome": "", "captured": [], "to_storage": 0, "money": 0, "progress": []}
+	var summary := BattleSummary.new()
+	summary.tamer_id = engine.setup.tamer_id
 	for c: CreatureInstance in save.party:
 		if levels_before.has(c):
 			var entry := Progression.progress_entry(db, c, levels_before[c])
-			if not entry.is_empty():
+			if entry != null:
 				summary.progress.append(entry)
 	save.inventory = {}
 	for item in engine.sides[0].items:
@@ -112,19 +111,19 @@ static func apply_results(db: Database, save: SaveGame, engine: BattleEngine) ->
 			summary.to_storage += 1
 	match res.reason:
 		"fled":
-			summary.outcome = "fled"
+			summary.outcome = BattleSummary.FLED
 		"round_limit":
-			summary.outcome = "draw"
+			summary.outcome = BattleSummary.DRAW
 		_:
-			summary.outcome = "won" if res.winner == 0 else "lost"
-	if summary.outcome == "won" and not res.captured.is_empty() and engine.setup.is_wild:
-		summary.outcome = "captured"
-	if summary.outcome == "won" and engine.setup.tamer_id != "":
+			summary.outcome = BattleSummary.WON if res.winner == 0 else BattleSummary.LOST
+	if summary.outcome == BattleSummary.WON and not res.captured.is_empty() and engine.setup.is_wild:
+		summary.outcome = BattleSummary.CAPTURED
+	if summary.outcome == BattleSummary.WON and engine.setup.tamer_id != "":
 		summary.money = db.tamer(engine.setup.tamer_id).reward_money
 		save.money += summary.money
 	Log.info(Log.BATTLE, "Results applied", {"outcome": summary.outcome, "money": summary.money,
 		"captured": summary.captured, "to_storage": summary.to_storage,
-		"levelled": summary.progress.map(func(e: Dictionary): return e.creature.species)})
+		"levelled": summary.progress.map(func(e: ProgressEntry): return e.creature.species)})
 	return summary
 
 

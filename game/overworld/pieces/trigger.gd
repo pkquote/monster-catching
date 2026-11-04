@@ -31,7 +31,7 @@ func can_fire() -> bool:
 	return not (once and Story.is_done(save_key()))
 
 
-func on_enter(w: Node) -> void:
+func on_enter(w: Overworld) -> void:
 	if not can_fire():
 		return
 	if once:

@@ -198,7 +198,7 @@ func test_progress_tools_disabled_without_a_world() -> void:
 
 func test_progress_tools_disabled_while_world_is_locked() -> void:
 	var world := await _open_world_with(CreatureInstance.create(DataRegistry.db, "tidepup", 9))
-	world.lock("menu")
+	world.lock(Overworld.LOCK_MENU)
 	DebugMenu.open()
 	var buttons := _labels()
 	for b in ["Give XP...", "Set Affinity...", "Fill box"]:

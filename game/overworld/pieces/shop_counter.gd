@@ -7,7 +7,7 @@ extends Piece
 @export var stock: PackedStringArray = []
 
 
-func on_interact(w: Node) -> void:
+func on_interact(w: Overworld) -> void:
 	w.open_shop(stock)
 
 

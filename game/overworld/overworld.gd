@@ -2,10 +2,11 @@ class_name Overworld
 extends Node2D
 ## The overworld screen (SceneRouter.WORLD): one map at a time, the player, the
 ## camera and the screen fade. Pieces call back into it (change_map, say...).
+## Battles are handled by its BattleFlow child (`battles`).
 ##
 ## Locks: any system that needs the player to stand still takes a named lock
-## (conversation, menu, map change, cutscene). The player moves only when no
-## lock is held.
+## (one of LOCKS: menu, battle, dialogue, map change, cutscene, tamer, progress,
+## minigame). The player moves only when no lock is held.
 
 signal map_changed(map: GameMap)
 
@@ -13,6 +14,17 @@ const FADE_TIME := 0.2
 const VIEW := Vector2(640, 360)
 ## Fallback map when nothing says where to start (no game loaded, debug runs).
 const DEBUG_MAP := "test_a"
+
+## Lock names (see lock()): what is holding the player still.
+const LOCK_MENU := "menu"
+const LOCK_BATTLE := "battle"
+const LOCK_DIALOGUE := "dialogue"
+const LOCK_MAP_CHANGE := "map_change"
+const LOCK_CUTSCENE := "cutscene"
+const LOCK_TAMER := "tamer"
+const LOCK_PROGRESS := "progress"
+const LOCK_MINIGAME := "minigame"
+const LOCKS: PackedStringArray = [LOCK_MENU, LOCK_BATTLE, LOCK_DIALOGUE, LOCK_MAP_CHANGE, LOCK_CUTSCENE, LOCK_TAMER, LOCK_PROGRESS, LOCK_MINIGAME]
 
 ## Tests set this to skip fade waits.
 static var instant := false
@@ -29,8 +41,8 @@ var shop_menu: ShopMenu
 var rng := RandomNumberGenerator.new()
 var roller: EncounterRoller
 var walker: WalkTracker
-## Tests set this to catch wild encounters instead of changing scene: Callable(table_id).
-var wild_override: Callable
+## Tamer challenges, wild encounters, battles and what follows them.
+var battles: BattleFlow
 ## The overworld that's open, if any (Story and the debug menu reach it here).
 static var active: Overworld
 
@@ -40,10 +52,6 @@ var camera_focus: Variant = null
 var _locks: Dictionary = {}
 var _last_location := ""
 var _talking := false
-var _battle_layer: CanvasLayer
-## The tamer whose challenge is running: { tamer_id, key }. A win against them is
-## marked before the battle's autosave.
-var _challenger: Dictionary = {}
 var _fade: ColorRect
 
 
@@ -70,6 +78,8 @@ func _ready() -> void:
 	add_child(pause_menu)
 	shop_menu = ShopMenu.new()
 	add_child(shop_menu)
+	battles = BattleFlow.new(self)
+	add_child(battles)
 	map_changed.connect(_on_map_changed)
 	rng.randomize()
 	roller = EncounterRoller.new(DataRegistry.db.balance, rng)
@@ -135,7 +145,7 @@ func change_map(map_id: String, spawn_id: String) -> void:
 	if not GameMap.exists(map_id):
 		Log.error(Log.WORLD, "change_map: no such map", {"map": map_id})
 		return
-	lock("map_change")
+	lock(LOCK_MAP_CHANGE)
 	await _fade_to(1.0)
 	var facing := player.facing
 	_swap_map(map_id)
@@ -143,7 +153,7 @@ func change_map(map_id: String, spawn_id: String) -> void:
 	Log.info(Log.WORLD, "Map changed", {"map": map_id, "spawn": spawn_id, "tile": player.feet_tile()})
 	map_changed.emit(map)
 	await _fade_to(0.0)
-	unlock("map_change")
+	unlock(LOCK_MAP_CHANGE)
 
 
 ## Loads a map and puts the player at an exact position (resuming a save).
@@ -191,18 +201,18 @@ func _unhandled_input(event: InputEvent) -> void:
 func open_pause_menu() -> void:
 	if is_locked():
 		return
-	lock("menu")
+	lock(LOCK_MENU)
 	await pause_menu.run(self)
 	if is_inside_tree():
-		unlock("menu")
+		unlock(LOCK_MENU)
 
 
 func open_shop(stock: PackedStringArray) -> void:
 	if is_locked():
 		return
-	lock("menu")
+	lock(LOCK_MENU)
 	await shop_menu.run(stock)
-	unlock("menu")
+	unlock(LOCK_MENU)
 
 
 ## The creature box. The Party screen (already under the "menu" lock) runs
@@ -210,15 +220,15 @@ func open_shop(stock: PackedStringArray) -> void:
 func open_storage() -> void:
 	if is_locked():
 		return
-	lock("menu")
+	lock(LOCK_MENU)
 	await StorageScreen.run(self)
-	unlock("menu")
+	unlock(LOCK_MENU)
 
 
 ## The F1 debug menu stays shut during conversations, cutscenes and map changes.
 func blocks_debug_menu() -> bool:
-	return _talking or _locks.has("map_change") or _locks.has("cutscene") or _locks.has("tamer") \
-			or _locks.has("progress")
+	return _talking or _locks.has(LOCK_MAP_CHANGE) or _locks.has(LOCK_CUTSCENE) or _locks.has(LOCK_TAMER) \
+			or _locks.has(LOCK_PROGRESS)
 
 
 ## Accept: runs the piece on the tile the player faces (NPC, item, sign...).
@@ -252,115 +262,7 @@ func _on_tile_entered(tile: Vector2i) -> void:
 		var table := map.encounter_at(tile)
 		if roller.on_grass_tile(table, BattleLauncher.healthy_count(save) > 0):
 			Log.info(Log.WORLD, "Wild encounter", {"table": table, "tile": tile})
-			start_wild(table)
-
-
-# --- Battles -----------------------------------------------------------------------
-
-## A tamer's challenge: (when spotted) "!" and walk up, then its before_title
-## script, which battles. Lives here, not on the tamer: a loss can change map and
-## free the tamer, and its lock must still be released.
-func tamer_challenge(t: Tamer, approach: bool) -> void:
-	var key := t.save_key()
-	var dialogue := t.dialogue
-	var title := t.before_title
-	lock("tamer")
-	_challenger = {"tamer_id": t.tamer_id, "key": key}
-	if approach:
-		await Emote.show_over(t, "!")
-		var next_to: Vector2i = player.feet_tile() - t.facing
-		if is_instance_valid(t) and next_to != t.tile():
-			await t.walk_to(next_to)
-		if is_instance_valid(t):
-			player.place(player.position, -t.facing)
-	Story.forget_last_battle()
-	await say(dialogue, title)
-	if Story.last_battle_won():
-		Story.mark_done(key)
-	_challenger = {}
-	unlock("tamer")
-
-
-## A wild encounter from `table_id`: "how many?", then the battle. Cancelling the
-## prompt counts as running away.
-func start_wild(table_id: String) -> void:
-	if wild_override.is_valid():
-		wild_override.call(table_id)
-		return
-	lock("battle")
-	var db := DataRegistry.db
-	var pack := BattleLauncher.roll_wild_pack(db, table_id, rng)
-	var names := ", ".join(pack.map(func(c: CreatureInstance): return c.display_name(db)))
-	var n = await FieldCountPrompt.ask(self, pack.size(), "A wild %s appeared!" % names)
-	if n == null:
-		roller.start_grace()
-		unlock("battle")
-		return
-	await run_battle(BattleLauncher.wild_setup(GameState.current, pack, n))
-	unlock("battle")
-
-
-## Plays a battle over the paused map and applies the outcome. Returns true for
-## a win (or a catch). With `defeat_rules` false a loss only heals the team
-## (story battles); otherwise the player wakes at the last heal spot.
-func run_battle(setup: BattleSetup, defeat_rules := true) -> bool:
-	lock("battle")
-	var layer := CanvasLayer.new()
-	layer.layer = 70
-	add_child(layer)
-	_battle_layer = layer
-	var scene = load(SceneRouter.BATTLE).instantiate()
-	scene.params = {"setup": setup, "overlay": true, "defeat_rules": defeat_rules}
-	layer.add_child(scene)
-	var summary: Dictionary = await scene.finished
-	summary["tamer_id"] = setup.tamer_id
-	layer.queue_free()
-	_battle_layer = null
-	var won := await after_battle(summary, defeat_rules)
-	unlock("battle")
-	return won
-
-
-func in_battle() -> bool:
-	return _battle_layer != null
-
-
-## Applies a finished battle's outcome on the overworld. Returns true for a win.
-func after_battle(summary: Dictionary, defeat_rules: bool) -> bool:
-	roller.start_grace()
-	var won: bool = summary.get("outcome", "") in ["won", "captured"]
-	if won and _challenger.get("tamer_id", "") != "" and _challenger.tamer_id == summary.get("tamer_id", ""):
-		Story.mark_done(_challenger.key)  # before the autosave that carries the prize
-	if summary.get("outcome", "") == "lost" and GameState.has_game():
-		if defeat_rules:
-			var r := Defeat.apply(DataRegistry.db, GameState.current)
-			if not GameMap.exists(r.map):  # the heal spot's map was removed
-				r.map = new_game_map()
-				r.spawn = SaveGame.NEW_GAME_SPAWN
-			await change_map(r.map, r.spawn)
-			player.place(player.position, Vector2i.DOWN)
-			var lines := [{"speaker": "", "text": "You hurried back to safety..." +
-				(" You dropped %d money." % r.lost_money if r.lost_money > 0 else "")}]
-			if _talking:
-				await dialogue_box.show_lines(lines)  # inside a tamer's / story script
-			else:
-				await say_lines(lines)
-		else:
-			for c: CreatureInstance in GameState.current.party:
-				c.heal_full(DataRegistry.db)
-	await run_progress(summary.get("progress", []))
-	if GameState.has_game():
-		GameState.autosave()
-	return won
-
-
-## Level-up choices (Learn Move, Grow) after a battle, over the map.
-func run_progress(progress: Array) -> void:
-	if progress.is_empty():
-		return
-	lock("progress")
-	await ProgressFlow.run(self, progress)
-	unlock("progress")
+			battles.start_wild(table)
 
 
 # --- Conversations -------------------------------------------------------------------
@@ -376,16 +278,16 @@ func say(dialogue_path: String, title: String, extra: Array = []) -> void:
 		Log.error(Log.STORY, "say: no such dialogue file", {"file": dialogue_path})
 		return
 	_talking = true
-	var had_cutscene := _locks.has("cutscene")
-	lock("dialogue")
+	var had_cutscene := _locks.has(LOCK_CUTSCENE)
+	lock(LOCK_DIALOGUE)
 	Log.info(Log.STORY, "Dialogue started", {"file": dialogue_path, "title": title})
 	await dialogue_box.run(res, title, [self] + extra)
 	Log.info(Log.STORY, "Dialogue ended", {"file": dialogue_path, "title": title})
-	if not had_cutscene and _locks.has("cutscene"):
+	if not had_cutscene and _locks.has(LOCK_CUTSCENE):
 		# A script that locks the player must unlock them; don't freeze the game if it forgot.
 		Log.warn(Log.STORY, "Script ended without Cutscene.unlock_player(); control given back", {"file": dialogue_path, "title": title})
-		unlock("cutscene")
-	unlock("dialogue")
+		unlock(LOCK_CUTSCENE)
+	unlock(LOCK_DIALOGUE)
 	_talking = false
 
 
@@ -394,9 +296,9 @@ func say_lines(lines: Array) -> void:
 	if _talking:
 		return
 	_talking = true
-	lock("dialogue")
+	lock(LOCK_DIALOGUE)
 	await dialogue_box.show_lines(lines)
-	unlock("dialogue")
+	unlock(LOCK_DIALOGUE)
 	_talking = false
 
 
@@ -417,6 +319,8 @@ func refresh_hud() -> void:
 # --- Locks -----------------------------------------------------------------------
 
 func lock(reason: String) -> void:
+	if not reason in LOCKS:
+		Log.error(Log.WORLD, "Unknown lock name; use an Overworld.LOCK_* constant", {"reason": reason})
 	if not _locks.has(reason):
 		Log.debug(Log.WORLD, "Lock taken", {"reason": reason, "held": _locks.keys() + [reason]})
 	_locks[reason] = true
@@ -424,6 +328,8 @@ func lock(reason: String) -> void:
 
 
 func unlock(reason: String) -> void:
+	if not reason in LOCKS:
+		Log.error(Log.WORLD, "Unknown lock name; use an Overworld.LOCK_* constant", {"reason": reason})
 	if _locks.erase(reason):
 		Log.debug(Log.WORLD, "Lock released", {"reason": reason, "held": _locks.keys()})
 	player.locked = not _locks.is_empty()

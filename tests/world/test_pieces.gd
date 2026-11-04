@@ -131,10 +131,10 @@ func test_trigger_flags_and_once() -> void:
 
 func test_accept_while_locked_does_nothing() -> void:
 	_stand(Vector2i(5, 1), Vector2i.RIGHT)
-	world.lock("menu")
+	world.lock(Overworld.LOCK_MENU)
 	world.interact()
 	assert_bool(world.is_talking()).is_false()
-	world.unlock("menu")
+	world.unlock(Overworld.LOCK_MENU)
 
 
 func test_wander_stays_in_range() -> void:

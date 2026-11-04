@@ -10,7 +10,7 @@ const DIALOGUE := "res://dialogue/common/heal.dialogue"
 @export var respawn := "heal"
 
 
-func on_interact(w: Node) -> void:
+func on_interact(w: Overworld) -> void:
 	w.say(DIALOGUE, "heal", [self])
 
 

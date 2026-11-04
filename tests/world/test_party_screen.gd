@@ -102,18 +102,18 @@ func test_ready_to_grow_badge() -> void:
 
 
 func test_menu_key_ignored_in_battle() -> void:
-	world.lock("battle")  # as run_battle does
-	world.set("_battle_layer", CanvasLayer.new())
-	assert_bool(world.in_battle()).is_true()
+	world.lock(Overworld.LOCK_BATTLE)  # as run_battle does
+	world.battles.set("_battle_layer", CanvasLayer.new())
+	assert_bool(world.battles.in_battle()).is_true()
 	var ev := InputEventAction.new()
 	ev.action = "menu"
 	ev.pressed = true
 	world._unhandled_input(ev)
 	await get_tree().process_frame
 	assert_bool(world.pause_menu.is_open()).is_false()
-	world.get("_battle_layer").free()
-	world.set("_battle_layer", null)
-	world.unlock("battle")
+	world.battles.get("_battle_layer").free()
+	world.battles.set("_battle_layer", null)
+	world.unlock(Overworld.LOCK_BATTLE)
 
 
 func _bars(btn: Button) -> Array[ProgressBar]:

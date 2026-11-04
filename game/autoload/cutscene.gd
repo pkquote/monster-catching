@@ -20,14 +20,14 @@ func lock_player() -> void:
 	Log.debug(Log.STORY, "Cutscene lock_player")
 	var w := _world()
 	if w != null:
-		w.lock("cutscene")
+		w.lock(Overworld.LOCK_CUTSCENE)
 
 
 func unlock_player() -> void:
 	Log.debug(Log.STORY, "Cutscene unlock_player")
 	var w := _world()
 	if w != null:
-		w.unlock("cutscene")
+		w.unlock(Overworld.LOCK_CUTSCENE)
 
 
 ## Walks an actor to a spot in straight lines (x first, then y).

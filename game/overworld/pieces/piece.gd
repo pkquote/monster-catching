@@ -38,9 +38,9 @@ func _draw() -> void:
 
 
 ## The overworld this piece's map is in, or null (editor, tests without one).
-func world() -> Node:
+func world() -> Overworld:
 	var m := _map()
-	return m.get_parent() if m != null and m.get_parent() != null and m.get_parent().has_method("change_map") else null
+	return m.get_parent() as Overworld if m != null else null
 
 
 ## Adds a solid body on this piece's tile at runtime (NPCs, item balls, signs).
@@ -94,12 +94,12 @@ func _map() -> GameMap:
 # --- Overridden by piece types --------------------------------------------------
 
 ## Accept pressed while the player faces this piece's tile.
-func on_interact(_world: Node) -> void:
+func on_interact(_world: Overworld) -> void:
 	pass
 
 
 ## The player's feet entered one of this piece's tiles.
-func on_enter(_world: Node) -> void:
+func on_enter(_world: Overworld) -> void:
 	pass
 
 

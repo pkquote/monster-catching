@@ -138,7 +138,7 @@ func start_minigame(id: String, params := {}) -> Dictionary:
 func start_minigame_scene(scene_path: String, params := {}) -> Dictionary:
 	var world := Overworld.active
 	if world != null:
-		world.lock("minigame")
+		world.lock(Overworld.LOCK_MINIGAME)
 	var layer := CanvasLayer.new()
 	layer.layer = 75
 	layer.process_mode = Node.PROCESS_MODE_ALWAYS
@@ -152,7 +152,7 @@ func start_minigame_scene(scene_path: String, params := {}) -> Dictionary:
 	get_tree().paused = false
 	layer.queue_free()
 	if world != null and is_instance_valid(world):
-		world.unlock("minigame")
+		world.unlock(Overworld.LOCK_MINIGAME)
 	_last_minigame = {"won": bool(result.get("won", false)), "score": int(result.get("score", 0))}
 	_last_minigame.merge(result)
 	Log.info(Log.MINIGAME, "Minigame finished", {"scene": scene_path, "won": _last_minigame.won,
@@ -193,7 +193,7 @@ func start_battle(tamer_id: String, defeat_rules := true) -> bool:
 		return false
 	var t := DataRegistry.db.tamer(tamer_id)
 	var n = await FieldCountPrompt.ask(world, t.max_active, "%s fields %d at a time." % [t.name, t.max_active], false)
-	_last_won = await world.run_battle(
+	_last_won = await world.battles.run_battle(
 		BattleLauncher.tamer_setup(DataRegistry.db, GameState.current, tamer_id, n), defeat_rules)
 	return _last_won
 

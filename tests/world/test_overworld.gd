@@ -74,13 +74,13 @@ func test_map_edge_blocks() -> void:
 
 
 func test_lock_freezes_player() -> void:
-	world.lock("test")
+	world.lock(Overworld.LOCK_MENU)
 	assert_bool(world.is_locked()).is_true()
 	assert_bool(world.player.locked).is_true()
-	world.lock("other")
-	world.unlock("test")
+	world.lock(Overworld.LOCK_DIALOGUE)
+	world.unlock(Overworld.LOCK_MENU)
 	assert_bool(world.is_locked()).is_true()
-	world.unlock("other")
+	world.unlock(Overworld.LOCK_DIALOGUE)
 	assert_bool(world.player.locked).is_false()
 
 
@@ -148,3 +148,24 @@ func test_map_change_autosaves_and_sets_location() -> void:
 	await world.change_map("test_b", "from_a")  # same place name: no banner again
 	assert_array(shown).is_equal(["Test Field"])
 	GameState.close_game()
+
+
+func test_every_lock_name_is_a_known_constant() -> void:
+	for name in Overworld.LOCKS:
+		world.lock(name)
+		assert_bool(world.is_locked()).is_true()
+		world.unlock(name)
+	assert_bool(world.is_locked()).is_false()
+	assert_str(Overworld.LOCK_MENU).is_equal("menu")
+
+
+func test_an_unknown_lock_name_is_logged_as_an_error() -> void:
+	var got: Array = []
+	var state := Log.save_state()
+	var sink := func(r: Dictionary) -> void: got.append(r)
+	Log.add_sink(sink)
+	world.lock("menuu")
+	world.unlock("menuu")
+	Log.restore_state(state)
+	var errors := got.filter(func(r): return r.level == Log.Level.ERROR and r.category == Log.WORLD)
+	assert_int(errors.size()).is_equal(2)

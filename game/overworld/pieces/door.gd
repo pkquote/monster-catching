@@ -12,7 +12,7 @@ extends Piece
 @export var target_spawn := ""
 
 
-func on_enter(world: Node) -> void:
+func on_enter(world: Overworld) -> void:
 	world.change_map(target_map, target_spawn)
 
 

@@ -24,19 +24,19 @@ func sees(t: Vector2i, map: GameMap) -> bool:
 
 
 ## "!", walk up to the player, talk, battle. The sequence runs on the overworld
-## (Overworld.tamer_challenge), because losing can change map and free this tamer.
-func challenge(w: Node) -> void:
-	w.tamer_challenge(self, true)
+## (BattleFlow.tamer_challenge), because losing can change map and free this tamer.
+func challenge(w: Overworld) -> void:
+	w.battles.tamer_challenge(self, true)
 
 
-func on_interact(w: Node) -> void:
+func on_interact(w: Overworld) -> void:
 	face_toward(w.player.feet_tile())
 	if beaten():
 		w.say(dialogue, after_title)
 	elif BattleLauncher.healthy_count(GameState.current) == 0:
 		w.say_lines([{"speaker": display_name, "text": "Your team can't fight right now!"}])
 	else:
-		w.tamer_challenge(self, false)
+		w.battles.tamer_challenge(self, false)
 
 
 func marker_color() -> Color:

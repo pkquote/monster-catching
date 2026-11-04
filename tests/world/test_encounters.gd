@@ -23,7 +23,7 @@ func before_test() -> void:
 	await get_tree().process_frame
 	await world.change_map("test_b", "middle")
 	started.clear()
-	world.wild_override = func(table_id: String): started.append(table_id)
+	world.battles.wild_override = func(table_id: String): started.append(table_id)
 	# Every grass tile rolls an encounter, so the tests are deterministic.
 	var always := FixtureDB.build({"overworld": {"walk_speed": 4.0, "run_speed": 7.0, "encounter_rate": 1.0,
 		"encounter_grace_tiles": 4, "walk_energy_tiles": 8, "defeat_money_fraction": 0.1, "sell_fraction": 0.5}})

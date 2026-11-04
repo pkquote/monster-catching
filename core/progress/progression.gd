@@ -143,19 +143,19 @@ static func set_moves(db: Database, c: CreatureInstance, slots: PackedStringArra
 	return ""
 
 
-## Summary of a level gain for the post-battle progress screen, or {} if the
+## Summary of a level gain for the post-battle progress screen, or null if the
 ## creature did not level. offered_moves are pool moves learned in the gained
 ## levels that did not get a slot.
-static func progress_entry(db: Database, c: CreatureInstance, level_before: int) -> Dictionary:
+static func progress_entry(db: Database, c: CreatureInstance, level_before: int) -> ProgressEntry:
 	if c.level <= level_before:
-		return {}
+		return null
 	var offered: Array[String] = []
 	for l in c.species_def(db).learnset:
 		if l.level <= level_before or l.level > c.level:
 			continue
 		if c.move_pool.has(l.move) and not c.moves.has(l.move) and not offered.has(l.move):
 			offered.append(l.move)
-	return {"creature": c, "offered_moves": offered, "growth_due": growth_target(db, c) != ""}
+	return ProgressEntry.new(c, offered, growth_target(db, c) != "")
 
 
 ## Adds every learnset move at or below the creature's level that its pool lacks

@@ -209,7 +209,7 @@ func _run_battle() -> void:
 	await wait_battle(["results"])
 	await _frames(10)
 	await shot("b08_results")
-	expect(bs.phase == "results", "wild battle reached results (%s)" % bs.summary.get("outcome", "?"))
+	expect(bs.phase == "results", "wild battle reached results (%s)" % (bs.summary.outcome if bs.summary != null else "?"))
 	bs.continue_button.pressed.emit()
 	for i in 300:  # the battle closes and the map carries on underneath
 		if _battle() == null and not current_scene.is_locked():

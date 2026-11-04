@@ -49,11 +49,11 @@ func test_menu_opens_saves_and_closes() -> void:
 
 
 func test_menu_does_nothing_while_locked() -> void:
-	world.lock("dialogue")
+	world.lock(Overworld.LOCK_DIALOGUE)
 	world.open_pause_menu()
 	await get_tree().process_frame
 	assert_bool(world.pause_menu.is_open()).is_false()
-	world.unlock("dialogue")
+	world.unlock(Overworld.LOCK_DIALOGUE)
 
 
 func test_party_page_lists_creatures() -> void:
@@ -79,7 +79,7 @@ func test_debug_menu_refuses_during_a_conversation() -> void:
 
 func test_no_test_battles_from_f1_over_a_menu_or_prompt() -> void:
 	Story.give_creature("tidepup", 5)
-	world.lock("battle")  # e.g. the wild "how many?" prompt is up
+	world.lock(Overworld.LOCK_BATTLE)  # e.g. the wild "how many?" prompt is up
 	DebugMenu.open()
 	var found := false
 	var stack: Array = [DebugMenu]
@@ -91,7 +91,7 @@ func test_no_test_battles_from_f1_over_a_menu_or_prompt() -> void:
 		stack.append_array(n.get_children())
 	assert_bool(found).is_true()
 	DebugMenu.close()
-	world.unlock("battle")
+	world.unlock(Overworld.LOCK_BATTLE)
 
 
 ## Waits until the pause menu is offering `label`, then picks it.

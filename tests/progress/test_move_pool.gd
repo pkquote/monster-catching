@@ -143,7 +143,7 @@ func test_progress_entry_reports_offers_and_growth() -> void:
 
 func test_progress_entry_empty_without_level_gain() -> void:
 	var c := CreatureInstance.create(db, "tidepup", 15)
-	assert_dict(Progression.progress_entry(db, c, 15)).is_empty()
+	assert_object(Progression.progress_entry(db, c, 15)).is_null()
 
 
 func test_backfill_skips_a_removed_species() -> void:

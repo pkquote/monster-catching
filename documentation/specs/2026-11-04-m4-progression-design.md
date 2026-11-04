@@ -87,22 +87,22 @@ The box has no size limit; its order is arrival order.
 
 ### 2.5 What a battle reports
 
-`BattleLauncher.apply_results` adds `summary.progress`: an array in party order of
-`{ creature: CreatureInstance, offered_moves: Array[String], growth_due: bool }`, one entry per player
+`BattleLauncher.apply_results` returns a `BattleSummary` (core/battle/battle_summary.gd) whose `progress`
+is an `Array[ProgressEntry]` in party order (`creature`, `offered_moves`, `growth_due`), one entry per player
 creature that gained at least one level in the battle. `growth_due` is true when `growth_target` is not
 empty after the battle. The list is empty when nobody levelled.
 
 ## 3. The after-battle step
 
 `game/progress/progress_flow.gd` (`class_name ProgressFlow`):
-`static func run(world: Overworld, progress: Array) -> void` (awaitable).
+`static func run(parent: Node, progress: Array[ProgressEntry]) -> void` (awaitable).
 
-- `Overworld.after_battle` calls it after any defeat respawn and **before** the autosave, so the save
+- `BattleFlow.after_battle` (`Overworld.battles`) calls it after any defeat respawn and **before** the autosave, so the save
   holds the player's choices. Story battles started from scripts get the same step; its screens draw
   over the conversation box and the script carries on afterwards.
 - For each entry in order: one **Learn Move** screen per offered move, then the **Grow** screen if
   `growth_due`.
-- The overworld holds a `"progress"` lock while it runs.
+- The overworld holds `Overworld.LOCK_PROGRESS` while it runs.
 
 ### 3.1 Learn Move screen (`game/progress/learn_move_screen.gd`)
 

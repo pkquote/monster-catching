@@ -34,14 +34,14 @@ func after_test() -> void:
 
 
 ## A level-14 Tidepup with Tide Beam learned but unequipped (so it is offered).
-func _offered_pup() -> Dictionary:
+func _offered_pup() -> ProgressEntry:
 	var c := Story.give_creature("tidepup", 14)
 	c.moves = PackedStringArray(["tackle", "splash_jab", "drench", "riptide"])
 	return Progression.progress_entry(DataRegistry.db, c, 13)
 
 
 ## A level-16 Tidepup, ready to grow into Torrentusk.
-func _grow_pup() -> Dictionary:
+func _grow_pup() -> ProgressEntry:
 	var c := Story.give_creature("tidepup", 16)
 	return Progression.progress_entry(DataRegistry.db, c, 15)
 
@@ -66,8 +66,8 @@ func _answer(cls: Script, label: String) -> void:
 	fail("no %s screen offering %s" % [cls.get_global_name(), label])
 
 
-func _run_after(summary: Dictionary, done: Array) -> void:
-	done.append(await world.after_battle(summary, true))
+func _run_after(summary: BattleSummary, done: Array) -> void:
+	done.append(await world.battles.after_battle(summary, true))
 
 
 func _wait(done: Array) -> void:
@@ -82,7 +82,7 @@ func test_learn_move_replace() -> void:
 	var c: CreatureInstance = entry.creature
 	assert_array(entry.offered_moves).is_equal(["tide_beam"])
 	var done: Array = []
-	_run_after({"outcome": "won", "progress": [entry]}, done)
+	_run_after(BattleSummary.of("won", [entry]), done)
 	await _answer(LearnMoveScreen, "Replace Tackle")
 	await _wait(done)
 	assert_array(done).is_equal([true])
@@ -96,7 +96,7 @@ func test_learn_move_keep() -> void:
 	var entry := _offered_pup()
 	var c: CreatureInstance = entry.creature
 	var done: Array = []
-	_run_after({"outcome": "won", "progress": [entry]}, done)
+	_run_after(BattleSummary.of("won", [entry]), done)
 	await _answer(LearnMoveScreen, "Keep it for later")
 	await _wait(done)
 	assert_array(Array(c.moves)).is_equal(["tackle", "splash_jab", "drench", "riptide"])
@@ -106,7 +106,7 @@ func test_learn_move_keep() -> void:
 func test_learn_move_copy() -> void:
 	var entry := _offered_pup()
 	var done: Array = []
-	_run_after({"outcome": "won", "progress": [entry]}, done)
+	_run_after(BattleSummary.of("won", [entry]), done)
 	for i in 50:
 		await get_tree().process_frame
 	var s := _screen(LearnMoveScreen) as LearnMoveScreen
@@ -122,7 +122,7 @@ func test_grow_now_changes_species() -> void:
 	var c: CreatureInstance = entry.creature
 	assert_bool(entry.growth_due).is_true()
 	var done: Array = []
-	_run_after({"outcome": "won", "progress": [entry]}, done)
+	_run_after(BattleSummary.of("won", [entry]), done)
 	for i in 50:
 		await get_tree().process_frame
 	var g := _screen(GrowScreen) as GrowScreen
@@ -144,7 +144,7 @@ func test_grow_names_dominant_affinity() -> void:
 	c.affinity["catalyst"] = 100
 	assert_str(Progression.growth_target(DataRegistry.db, c)).is_equal("mistcoil")
 	var done: Array = []
-	_run_after({"outcome": "won", "progress": [entry]}, done)
+	_run_after(BattleSummary.of("won", [entry]), done)
 	for i in 50:
 		await get_tree().process_frame
 	var g := _screen(GrowScreen) as GrowScreen
@@ -158,7 +158,7 @@ func test_grow_not_yet_keeps_ready() -> void:
 	var entry := _grow_pup()
 	var c: CreatureInstance = entry.creature
 	var done: Array = []
-	_run_after({"outcome": "won", "progress": [entry]}, done)
+	_run_after(BattleSummary.of("won", [entry]), done)
 	await _answer(GrowScreen, "Not yet")
 	await _wait(done)
 	assert_str(c.species).is_equal("tidepup")
@@ -168,11 +168,11 @@ func test_grow_not_yet_keeps_ready() -> void:
 func test_not_yet_reoffered_only_after_level_gain() -> void:
 	var entry := _grow_pup()
 	var done: Array = []
-	_run_after({"outcome": "won", "progress": [entry]}, done)
+	_run_after(BattleSummary.of("won", [entry]), done)
 	await _answer(GrowScreen, "Not yet")
 	await _wait(done)
 	var again: Array = []
-	_run_after({"outcome": "won", "progress": []}, again)
+	_run_after(BattleSummary.of("won", []), again)
 	await get_tree().process_frame
 	assert_array(again).is_equal([true])
 	assert_object(_screen(GrowScreen)).is_null()
@@ -188,7 +188,7 @@ func test_grow_screen_skips_when_not_due() -> void:
 func test_autosave_after_choices() -> void:
 	var entry := _offered_pup()
 	var done: Array = []
-	_run_after({"outcome": "won", "progress": [entry]}, done)
+	_run_after(BattleSummary.of("won", [entry]), done)
 	await _answer(LearnMoveScreen, "Replace Tackle")
 	await _wait(done)
 	var r := GameState.store.read(GameState.current_path)
@@ -201,7 +201,7 @@ func test_loss_with_levels_runs_after_respawn() -> void:
 	var c: CreatureInstance = entry.creature
 	c.hp = 0
 	var done: Array = []
-	_run_after({"outcome": "lost", "progress": [entry]}, done)
+	_run_after(BattleSummary.of("lost", [entry]), done)
 	for i in 300:
 		var s := _screen(LearnMoveScreen)
 		if s != null and s.menu.is_choosing():
@@ -220,7 +220,7 @@ func test_loss_with_levels_runs_after_respawn() -> void:
 func test_progress_blocks_debug_menu() -> void:
 	var entry := _offered_pup()
 	var done: Array = []
-	_run_after({"outcome": "won", "progress": [entry]}, done)
+	_run_after(BattleSummary.of("won", [entry]), done)
 	for i in 20:
 		await get_tree().process_frame
 	assert_bool(world.blocks_debug_menu()).is_true()
@@ -234,7 +234,7 @@ func test_progress_blocks_debug_menu() -> void:
 func test_learn_move_screen_fits_the_screen() -> void:
 	var entry := _offered_pup()
 	var done: Array = []
-	_run_after({"outcome": "won", "progress": [entry]}, done)
+	_run_after(BattleSummary.of("won", [entry]), done)
 	await _answer_wait(LearnMoveScreen)
 	var s := _screen(LearnMoveScreen) as LearnMoveScreen
 	await get_tree().process_frame

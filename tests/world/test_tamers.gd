@@ -83,7 +83,7 @@ func test_beaten_tamer_is_in_the_battle_autosave() -> void:
 	var key := _tamer("Watcher").save_key()
 	var saved: Array = []
 	Story.battle_override = func(id: String) -> bool:
-		await world.after_battle({"outcome": "won", "tamer_id": id}, true)
+		await world.battles.after_battle(BattleSummary.of("won", [], id), true)
 		var r := GameState.store.read(GameState.current_path)
 		saved.append((r.save as SaveGame).story.is_done(key))
 		return true

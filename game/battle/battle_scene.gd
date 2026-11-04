@@ -17,7 +17,7 @@ const FORMATION := [
 ]
 
 ## Emitted instead of changing scene when opened as an overlay (params set).
-signal finished(summary: Dictionary)
+signal finished(summary: BattleSummary)
 
 ## Overlay mode: set before adding to the tree. Empty = read SceneRouter.params.
 var params: Dictionary = {}
@@ -33,7 +33,7 @@ var views: Dictionary = {}  # bid -> CreatureView
 var fields: Array[FieldView] = []
 var menu: CommandMenu
 var continue_button: Button
-var summary: Dictionary = {}
+var summary: BattleSummary
 
 var _actors: Control
 var _message: Label
@@ -247,7 +247,7 @@ func _results() -> void:
 	if GameState.has_game():
 		summary = BattleLauncher.apply_results(db, GameState.current, engine)
 	else:
-		summary = {"outcome": "won" if res.winner == 0 else "lost", "captured": [], "to_storage": 0, "money": 0}
+		summary = BattleSummary.of(BattleSummary.WON if res.winner == 0 else BattleSummary.LOST, [], setup.tamer_id)
 	_show_results(res)
 
 
@@ -266,7 +266,8 @@ func _show_results(res: Dictionary) -> void:
 	var col := VBoxContainer.new()
 	col.add_theme_constant_override("separation", 3)
 	_results_panel.add_child(col)
-	var titles := {"won": "Victory!", "captured": "Caught!", "lost": "Defeated...", "fled": "Escaped", "draw": "Draw"}
+	var titles := {BattleSummary.WON: "Victory!", BattleSummary.CAPTURED: "Caught!", BattleSummary.LOST: "Defeated...",
+		BattleSummary.FLED: "Escaped", BattleSummary.DRAW: "Draw"}
 	UIKit.label(col, titles.get(summary.outcome, "Battle over"), UIKit.HEADING_SIZE, UIKit.ACCENT)
 	for line in result_lines(res):
 		UIKit.label(col, line, 11, UIKit.TEXT, true)
@@ -307,11 +308,11 @@ func result_lines(res: Dictionary) -> PackedStringArray:
 			bits.append("%s +%d" % [db.affinity(a).name, aff[a]])
 		if not bits.is_empty():
 			lines.append("%s: %s" % [display_name(b.bid), ", ".join(bits)])
-	for caught in summary.get("captured", []):
+	for caught in summary.captured:
 		lines.append("%s joined your %s." % [caught, "party" if summary.to_storage == 0 else "storage"])
-	if int(summary.get("money", 0)) > 0:
+	if summary.money > 0:
 		lines.append("Received %d money." % summary.money)
-	if summary.outcome == "lost":
+	if summary.outcome == BattleSummary.LOST:
 		lines.append("You hurried back to safety..." if params.get("defeat_rules", true)
 			else "Your team was patched up.")
 	if lines.is_empty():

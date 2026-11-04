@@ -11,7 +11,7 @@ extends Piece
 @export var title := ""
 
 
-func on_interact(w: Node) -> void:
+func on_interact(w: Overworld) -> void:
 	w.say(dialogue, title)
 
 

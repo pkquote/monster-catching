@@ -24,7 +24,7 @@ func blocks() -> bool:
 	return not Story.is_done(save_key())
 
 
-func on_interact(w: Node) -> void:
+func on_interact(w: Overworld) -> void:
 	if Story.is_done(save_key()):
 		return
 	Story.give_item(item, count)

@@ -4,8 +4,8 @@ extends RefCounted
 ## per offered move, then the Grow screen if it is ready.
 
 
-static func run(parent: Node, progress: Array) -> void:
-	for entry: Dictionary in progress:
+static func run(parent: Node, progress: Array[ProgressEntry]) -> void:
+	for entry in progress:
 		var c: CreatureInstance = entry.creature
 		for move in entry.offered_moves:
 			await LearnMoveScreen.run(parent, c, move)

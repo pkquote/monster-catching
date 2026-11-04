@@ -10,7 +10,7 @@ extends Piece
 @export_range(1, 99) var count := 1
 
 
-func on_interact(w: Node) -> void:
+func on_interact(w: Overworld) -> void:
 	if Story.is_done(save_key()):
 		return
 	Story.give_item(item, count)

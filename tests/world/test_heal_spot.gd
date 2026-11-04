@@ -2,35 +2,23 @@ extends GdUnitTestSuite
 ## Resting at the heal centre: full heal, the "rested" Bond change, wake-up point.
 
 var world: Overworld
-var _old_store: SaveStore
-var _old_speed := ""
+var _suite: Dictionary
 
 
 func before() -> void:
-	_old_store = GameState.store
-	GameState.store = SaveStore.new("user://test_heal_saves")
-	_old_speed = Settings.data.text_speed
-	Settings.data.text_speed = "instant"
+	_suite = WorldTest.begin_suite("heal")
 
 
 func after() -> void:
-	GameState.store = _old_store
-	Settings.data.text_speed = _old_speed
+	WorldTest.end_suite(_suite)
 
 
 func before_test() -> void:
-	Overworld.instant = true
-	GameState.start_new_game("Ana")
-	world = load("res://game/overworld/overworld.tscn").instantiate()
-	add_child(world)
-	await get_tree().process_frame
-	await world.change_map("town_01_center", "heal")
+	world = await WorldTest.open(self, "town_01_center", "heal")
 
 
 func after_test() -> void:
-	world.free()
-	Overworld.instant = false
-	GameState.close_game()
+	WorldTest.close(world)
 
 
 func _hurt_creature() -> CreatureInstance:

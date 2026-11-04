@@ -2,35 +2,23 @@ extends GdUnitTestSuite
 ## The after-battle step: Learn Move and Grow screens, run before the autosave.
 
 var world: Overworld
-var _old_store: SaveStore
-var _old_speed := ""
+var _suite: Dictionary
 
 
 func before() -> void:
-	_old_speed = Settings.data.text_speed
-	_old_store = GameState.store
-	GameState.store = SaveStore.new("user://test_progress_flow_saves")
-	Settings.data.text_speed = "instant"
+	_suite = WorldTest.begin_suite("progress_flow")
 
 
 func after() -> void:
-	Settings.data.text_speed = _old_speed
-	GameState.store = _old_store
+	WorldTest.end_suite(_suite)
 
 
 func before_test() -> void:
-	Overworld.instant = true
-	GameState.start_new_game("Ana")
-	world = load("res://game/overworld/overworld.tscn").instantiate()
-	add_child(world)
-	await get_tree().process_frame
-	await world.change_map("test_b", "middle")
+	world = await WorldTest.open(self, "test_b", "middle")
 
 
 func after_test() -> void:
-	world.free()
-	Overworld.instant = false
-	GameState.close_game()
+	WorldTest.close(world)
 
 
 ## A level-14 Tidepup with Tide Beam learned but unequipped (so it is offered).
@@ -47,10 +35,7 @@ func _grow_pup() -> ProgressEntry:
 
 
 func _screen(cls: Script) -> Node:
-	for n in world.get_children():
-		if is_instance_of(n, cls):
-			return n
-	return null
+	return WorldTest.find_screen(world, cls)
 
 
 ## Waits for a screen of `cls` to be choosing, then picks `label`.

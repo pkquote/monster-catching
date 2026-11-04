@@ -6,39 +6,27 @@ const LAB := "res://dialogue/town_01/story.dialogue"
 
 var world: Overworld
 var battles: Array = []
-var _old_store: SaveStore
-var _old_speed := ""
+var _suite: Dictionary
 
 
 func before() -> void:
-	_old_store = GameState.store
-	GameState.store = SaveStore.new("user://test_starter_saves")
-	_old_speed = Settings.data.text_speed
-	Settings.data.text_speed = "instant"
+	_suite = WorldTest.begin_suite("starter")
 
 
 func after() -> void:
-	GameState.store = _old_store
-	Settings.data.text_speed = _old_speed
-	Story.battle_override = Callable()
+	WorldTest.end_suite(_suite)
 
 
 func before_test() -> void:
-	Overworld.instant = true
-	GameState.start_new_game("Ana")
 	battles.clear()
 	Story.battle_override = func(id: String) -> bool:
 		battles.append(id)
 		return true
-	world = load("res://game/overworld/overworld.tscn").instantiate()
-	add_child(world)
-	await get_tree().process_frame
+	world = await WorldTest.open(self)
 
 
 func after_test() -> void:
-	world.free()
-	Overworld.instant = false
-	GameState.close_game()
+	WorldTest.close(world)
 
 
 ## Presses Accept until the conversation ends, picking responses starting with `pick`.

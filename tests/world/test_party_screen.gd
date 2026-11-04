@@ -2,38 +2,27 @@ extends GdUnitTestSuite
 ## The party screen: rows, reordering, the storage gate and the Menu key in battle.
 
 var world: Overworld
-var _old_store: SaveStore
+var _suite: Dictionary
 
 
 func before() -> void:
-	_old_store = GameState.store
-	GameState.store = SaveStore.new("user://test_party_screen_saves")
+	_suite = WorldTest.begin_suite("party_screen", false)
 
 
 func after() -> void:
-	GameState.store = _old_store
+	WorldTest.end_suite(_suite)
 
 
 func before_test() -> void:
-	Overworld.instant = true
-	GameState.start_new_game("Ana")
-	world = load("res://game/overworld/overworld.tscn").instantiate()
-	add_child(world)
-	await get_tree().process_frame
-	await world.change_map("test_b", "middle")
+	world = await WorldTest.open(self, "test_b", "middle")
 
 
 func after_test() -> void:
-	world.free()
-	Overworld.instant = false
-	GameState.close_game()
+	WorldTest.close(world)
 
 
 func _screen() -> PartyScreen:
-	for n in world.get_children():
-		if n is PartyScreen:
-			return n
-	return null
+	return WorldTest.find_screen(world, PartyScreen) as PartyScreen
 
 
 func _open() -> PartyScreen:

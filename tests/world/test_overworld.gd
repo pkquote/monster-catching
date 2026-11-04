@@ -4,29 +4,23 @@ extends GdUnitTestSuite
 const DT := 1.0 / 60.0
 
 var world: Overworld
-var _old_store: SaveStore
+var _suite: Dictionary
 
 
 func before() -> void:
-	_old_store = GameState.store
+	_suite = WorldTest.begin_suite("overworld", false)
 
 
 func after() -> void:
-	GameState.close_game()
-	GameState.store = _old_store
+	WorldTest.end_suite(_suite)
 
 
 func before_test() -> void:
-	Overworld.instant = true
-	GameState.close_game()
-	world = load("res://game/overworld/overworld.tscn").instantiate()
-	add_child(world)
-	await get_tree().process_frame
+	world = await WorldTest.open(self, "", "", WorldTest.NO_GAME)
 
 
 func after_test() -> void:
-	world.free()
-	Overworld.instant = false
+	WorldTest.close(world)
 
 
 ## Walks for `seconds`, stopping early if a door changes the map (real input is

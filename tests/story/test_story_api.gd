@@ -1,35 +1,19 @@
 extends GdUnitTestSuite
 ## The Story autoload: bag, money, creatures and flags on the current game.
 
-const SAVES := "user://test_story_api_saves"
-
-var _old_store: SaveStore
+var _suite: Dictionary
 
 
 func before() -> void:
-	_old_store = GameState.store
+	_suite = WorldTest.begin_suite("story_api", false)
 
 
 func before_test() -> void:
-	GameState.store = SaveStore.new(SAVES)
 	GameState.start_new_game("Ana")
 
 
 func after() -> void:
-	GameState.close_game()
-	GameState.store = _old_store
-	_rm(SAVES)
-
-
-func _rm(dir: String) -> void:
-	var d := DirAccess.open(dir)
-	if d == null:
-		return
-	for sub in d.get_directories():
-		_rm(dir.path_join(sub))
-	for f in d.get_files():
-		DirAccess.remove_absolute(dir.path_join(f))
-	DirAccess.remove_absolute(dir)
+	WorldTest.end_suite(_suite)
 
 
 func test_items_and_money() -> void:

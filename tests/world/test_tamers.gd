@@ -3,38 +3,27 @@ extends GdUnitTestSuite
 
 var world: Overworld
 var battles: Array = []
-var _old_store: SaveStore
-var _old_speed := ""
+var _suite: Dictionary
 
 
 func before() -> void:
-	_old_store = GameState.store
-	GameState.store = SaveStore.new("user://test_tamers_saves")
-	_old_speed = Settings.data.text_speed
-	Settings.data.text_speed = "instant"
+	_suite = WorldTest.begin_suite("tamers")
 
 
 func after() -> void:
-	GameState.store = _old_store
-	Settings.data.text_speed = _old_speed
-	Story.battle_override = Callable()
+	WorldTest.end_suite(_suite)
 
 
 func before_test() -> void:
-	Overworld.instant = true
-	GameState.start_new_game("Ana")
 	battles.clear()
 	Story.battle_override = func(id: String) -> bool:
 		battles.append(id)
 		return true
-	await _open()
-	await world.change_map("test_b", "middle")
+	world = await WorldTest.open(self, "test_b", "middle")
 
 
 func after_test() -> void:
-	world.free()
-	Overworld.instant = false
-	GameState.close_game()
+	WorldTest.close(world)
 
 
 func _open() -> void:

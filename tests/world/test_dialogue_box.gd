@@ -6,32 +6,24 @@ const TALK := "res://tests/fixtures/test_talk.dialogue"
 
 var world: Overworld
 var _old_speed := ""
-var _old_store: SaveStore
+var _suite: Dictionary
 
 
 func before() -> void:
-	_old_speed = Settings.data.text_speed
-	_old_store = GameState.store
-	GameState.store = SaveStore.new("user://test_dialogue_saves")
+	_suite = WorldTest.begin_suite("dialogue", false)
 
 
 func after() -> void:
-	GameState.store = _old_store
+	WorldTest.end_suite(_suite)
 
 
 func before_test() -> void:
-	Overworld.instant = true
-	GameState.start_new_game("Ana")
-	world = load("res://game/overworld/overworld.tscn").instantiate()
-	add_child(world)
-	await get_tree().process_frame
+	world = await WorldTest.open(self)
 
 
 func after_test() -> void:
-	world.free()
-	Overworld.instant = false
 	Settings.data.text_speed = _old_speed
-	GameState.close_game()
+	WorldTest.close(world)
 
 
 ## Presses Accept (or picks the first response) until the conversation ends.

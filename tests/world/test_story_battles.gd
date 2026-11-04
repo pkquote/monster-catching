@@ -2,40 +2,28 @@ extends GdUnitTestSuite
 ## What the overworld does after a battle, and Story.start_battle's test hook.
 
 var world: Overworld
-var _old_store: SaveStore
+var _suite: Dictionary
 
 
-var _old_speed := ""
 
 
 func before() -> void:
-	_old_speed = Settings.data.text_speed
-	_old_store = GameState.store
-	GameState.store = SaveStore.new("user://test_story_battles_saves")
+	_suite = WorldTest.begin_suite("story_battles", false)
 
 
 func after() -> void:
-	Settings.data.text_speed = _old_speed
-	GameState.store = _old_store
-	Story.battle_override = Callable()
+	WorldTest.end_suite(_suite)
 
 
 func before_test() -> void:
-	Overworld.instant = true
-	GameState.start_new_game("Ana")
-	world = load("res://game/overworld/overworld.tscn").instantiate()
-	add_child(world)
-	await get_tree().process_frame
-	await world.change_map("test_b", "middle")
+	world = await WorldTest.open(self, "test_b", "middle")
 	var c := Story.give_creature("tidepup", 5)
 	c.hp = 0
 	GameState.current.money = 1000
 
 
 func after_test() -> void:
-	world.free()
-	Overworld.instant = false
-	GameState.close_game()
+	WorldTest.close(world)
 
 
 func test_story_battle_without_defeat_rules() -> void:

@@ -3,25 +3,19 @@ extends GdUnitTestSuite
 
 var world: Overworld
 var started: Array = []
-var _old_store: SaveStore
+var _suite: Dictionary
 
 
 func before() -> void:
-	_old_store = GameState.store
-	GameState.store = SaveStore.new("user://test_encounters_saves")
+	_suite = WorldTest.begin_suite("encounters", false)
 
 
 func after() -> void:
-	GameState.store = _old_store
+	WorldTest.end_suite(_suite)
 
 
 func before_test() -> void:
-	Overworld.instant = true
-	GameState.start_new_game("Ana")
-	world = load("res://game/overworld/overworld.tscn").instantiate()
-	add_child(world)
-	await get_tree().process_frame
-	await world.change_map("test_b", "middle")
+	world = await WorldTest.open(self, "test_b", "middle")
 	started.clear()
 	world.battles.wild_override = func(table_id: String): started.append(table_id)
 	# Every grass tile rolls an encounter, so the tests are deterministic.
@@ -31,9 +25,7 @@ func before_test() -> void:
 
 
 func after_test() -> void:
-	world.free()
-	Overworld.instant = false
-	GameState.close_game()
+	WorldTest.close(world)
 
 
 func _enter(tile: Vector2i) -> void:

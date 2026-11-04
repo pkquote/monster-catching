@@ -2,25 +2,16 @@ extends GdUnitTestSuite
 ## The F1 debug overlay: opens over any screen, pauses the game, and its party
 ## tools act on the current playthrough. Saves go to a throwaway folder.
 
-const SAVES := "user://test_debug_menu_saves"
-
-var _old_store: SaveStore
+var _suite: Dictionary
 
 
 func before() -> void:
-	_old_store = GameState.store
-	GameState.store = SaveStore.new(SAVES)
+	_suite = WorldTest.begin_suite("debug_menu", false)
 
 
 func after() -> void:
 	DebugMenu.close()
-	GameState.close_game()
-	GameState.store = _old_store
-	var d := DirAccess.open(SAVES)
-	if d != null:
-		for f in d.get_files():
-			DirAccess.remove_absolute(SAVES.path_join(f))
-		DirAccess.remove_absolute(SAVES)
+	WorldTest.end_suite(_suite)
 
 
 func _labels() -> Dictionary:
@@ -47,10 +38,7 @@ func test_without_a_game_only_explains() -> void:
 
 func test_test_party_unlocks_battles() -> void:
 	assert_str(GameState.start_new_game("Ana")).is_empty()
-	Overworld.instant = true
-	var world: Overworld = load("res://game/overworld/overworld.tscn").instantiate()
-	add_child(world)
-	await get_tree().process_frame
+	var world := await WorldTest.open(self, "", "", WorldTest.KEEP_GAME)
 	DebugMenu.open()
 	var buttons := _labels()
 	assert_bool(buttons["Custom battle..."].disabled).is_true()
@@ -66,8 +54,7 @@ func test_test_party_unlocks_battles() -> void:
 	assert_bool(_labels().has("Start")).is_true()
 	DebugMenu.close()
 	assert_bool(DebugMenu.is_open()).is_false()
-	world.free()
-	Overworld.instant = false
+	WorldTest.close(world)
 
 
 # --- M4 progression tools ------------------------------------------------------------
@@ -75,10 +62,7 @@ func test_test_party_unlocks_battles() -> void:
 func _open_world_with(c: CreatureInstance) -> Overworld:
 	assert_str(GameState.start_new_game("Ana")).is_empty()
 	GameState.current.party.append(c)
-	Overworld.instant = true
-	var world: Overworld = load("res://game/overworld/overworld.tscn").instantiate()
-	add_child(world)
-	await get_tree().process_frame
+	var world := await WorldTest.open(self, "", "", WorldTest.KEEP_GAME)
 	return world
 
 
@@ -101,8 +85,7 @@ func test_give_xp_to_16_runs_progress() -> void:
 	assert_object(grow).is_not_null()
 	assert_bool(world.is_locked()).is_true()
 	DebugMenu.close()
-	world.free()
-	Overworld.instant = false
+	WorldTest.close(world)
 
 
 func test_set_affinity_steers_growth() -> void:
@@ -122,8 +105,7 @@ func test_set_affinity_steers_growth() -> void:
 		await get_tree().process_frame
 	assert_str(Progression.growth_target(db, c)).is_equal("mistcoil")
 	DebugMenu.close()
-	world.free()
-	Overworld.instant = false
+	WorldTest.close(world)
 
 
 func test_fill_box_adds_12() -> void:
@@ -137,8 +119,7 @@ func test_fill_box_adds_12() -> void:
 	for b: CreatureInstance in box:
 		assert_int(b.level).is_equal(9)
 	DebugMenu.close()
-	world.free()
-	Overworld.instant = false
+	WorldTest.close(world)
 
 
 func test_give_xp_choices_are_autosaved() -> void:
@@ -163,26 +144,21 @@ func test_give_xp_choices_are_autosaved() -> void:
 	var r := GameState.store.read(GameState.current_path)
 	assert_bool(r.ok).is_true()
 	assert_str(r.save.party[0].species).is_equal("torrentusk")
-	world.free()
-	Overworld.instant = false
+	WorldTest.close(world)
 
 
 func test_progress_tools_disabled_without_a_party() -> void:
 	DebugMenu.close()
 	await get_tree().process_frame
 	assert_str(GameState.start_new_game("Ana")).is_empty()
-	Overworld.instant = true
-	var world: Overworld = load("res://game/overworld/overworld.tscn").instantiate()
-	add_child(world)
-	await get_tree().process_frame
+	var world := await WorldTest.open(self, "", "", WorldTest.KEEP_GAME)
 	DebugMenu.open()
 	var buttons := _labels()
 	for b in ["Give XP...", "Set Affinity..."]:
 		assert_bool(buttons[b].disabled).override_failure_message(b).is_true()
 	assert_bool(buttons["Fill box"].disabled).is_false()
 	DebugMenu.close()
-	world.free()
-	Overworld.instant = false
+	WorldTest.close(world)
 
 
 func test_progress_tools_disabled_without_a_world() -> void:
@@ -204,8 +180,7 @@ func test_progress_tools_disabled_while_world_is_locked() -> void:
 	for b in ["Give XP...", "Set Affinity...", "Fill box"]:
 		assert_bool(buttons[b].disabled).override_failure_message(b).is_true()
 	DebugMenu.close()
-	world.free()
-	Overworld.instant = false
+	WorldTest.close(world)
 
 
 ## The main page lists every tool and the status line: its panel must stay on the 640x360 screen.

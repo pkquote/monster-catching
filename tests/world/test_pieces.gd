@@ -3,35 +3,23 @@ extends GdUnitTestSuite
 ## Uses the pieces placed on the test maps (tools/build_maps.gd).
 
 var world: Overworld
-var _old_store: SaveStore
-var _old_speed := ""
+var _suite: Dictionary
 
 
 func before() -> void:
-	_old_store = GameState.store
-	GameState.store = SaveStore.new("user://test_pieces_saves")
-	_old_speed = Settings.data.text_speed
-	Settings.data.text_speed = "instant"
+	_suite = WorldTest.begin_suite("pieces")
 
 
 func after() -> void:
-	GameState.store = _old_store
-	Settings.data.text_speed = _old_speed
+	WorldTest.end_suite(_suite)
 
 
 func before_test() -> void:
-	Overworld.instant = true
-	GameState.start_new_game("Ana")
-	world = load("res://game/overworld/overworld.tscn").instantiate()
-	add_child(world)
-	await get_tree().process_frame
-	await world.change_map("test_a", "start")
+	world = await WorldTest.open(self, "test_a", "start")
 
 
 func after_test() -> void:
-	world.free()
-	Overworld.instant = false
-	GameState.close_game()
+	WorldTest.close(world)
 
 
 func _stand(tile: Vector2i, facing: Vector2i) -> void:
@@ -40,14 +28,7 @@ func _stand(tile: Vector2i, facing: Vector2i) -> void:
 
 ## Presses Accept / first response until no conversation is running.
 func _finish_talk() -> void:
-	for i in 200:
-		if not world.is_talking():
-			return
-		if world.dialogue_box.menu.is_choosing():
-			world.dialogue_box.menu.pick_label(world.dialogue_box.menu.labels()[0])
-		else:
-			world.dialogue_box.press_accept()
-		await get_tree().process_frame
+	await WorldTest.finish_talk(world)
 
 
 func _walk_onto(tile: Vector2i, from_dir: Vector2i) -> void:

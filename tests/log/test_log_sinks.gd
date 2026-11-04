@@ -15,6 +15,7 @@ func before_test() -> void:
 func after_test() -> void:
 	Log.restore_state(_state)
 	_wipe(DIR)
+	DirAccess.remove_absolute(ProjectSettings.globalize_path(DIR))
 	if FileAccess.file_exists(CFG):
 		DirAccess.remove_absolute(ProjectSettings.globalize_path(CFG))
 
@@ -137,6 +138,7 @@ func test_migration_failure_is_not_logged_as_migrated() -> void:
 	f.store_string(JSON.stringify({"schema": 0}))
 	f.close()
 	var r := SaveStore.new("user://test_log_sinks_saves").read("user://test_log_bad_schema.json")
+	DirAccess.remove_absolute(ProjectSettings.globalize_path("user://test_log_bad_schema.json"))
 	assert_bool(r.ok).is_false()
 	assert_array(got.filter(func(x): return x.message == "Migrated")).is_empty()
 

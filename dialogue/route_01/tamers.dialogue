@@ -1,0 +1,21 @@
+~ ana_before
+Scout Ana: You looked my way! That means we battle!
+$> Story.start_battle("scout_ana")
+if Story.last_battle_won()
+	Scout Ana: Wow. Okay. You're good.
+=> END
+
+~ ana_after
+Scout Ana: I'm going to train twice as hard. Just watch.
+=> END
+
+~ tom_before
+Hiker Tom: Ho there! Nobody passes my rocks without a battle!
+$> Story.start_battle("hiker_tom")
+if Story.last_battle_won()
+	Hiker Tom: Solid as stone, you are.
+=> END
+
+~ tom_after
+Hiker Tom: The deep grass to the north-east hides tougher creatures.
+=> END

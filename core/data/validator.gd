@@ -207,6 +207,13 @@ func _check_cross_rules() -> void:
 			if inputs is Array and not s in inputs:
 				_err("consumes", "'%s' is not one of the inputs" % s)
 
+	for rec in _raw.get_entries("minigames"):
+		var g: Dictionary = rec.entry
+		_file = rec.file
+		_label = "[minigames:%s]" % g.get("id", "?")
+		if g.get("scene") is String and not ResourceLoader.exists(g.scene):
+			_err("scene", "scene file not found: %s" % g.scene)
+
 	for rec in _raw.get_entries("moves"):
 		var m: Dictionary = rec.entry
 		_file = rec.file

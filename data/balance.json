@@ -20,6 +20,15 @@
       "max_per_stat": 30,
       "hp_per_point": 2
     },
+    "overworld": {
+      "walk_speed": 4.0,
+      "run_speed": 7.0,
+      "encounter_rate": 0.1,
+      "encounter_grace_tiles": 4,
+      "walk_energy_tiles": 8,
+      "defeat_money_fraction": 0.1,
+      "sell_fraction": 0.5
+    },
     "bond": {
       "min": -100,
       "max": 100,

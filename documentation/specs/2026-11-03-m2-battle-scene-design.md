@@ -98,7 +98,9 @@ free. Caught creatures join the party, or storage if the party is full (`balance
   Bond, Affinity), then writes the item bag, catches and money, and the scene returns to the world,
   which autosaves. Until then the save's creatures are untouched, so an abandoned battle (or a
   future "retry") leaves no half-applied changes.
-- **Defeat (placeholder until M3):** the party is fully healed and you return to the world.
+- **Defeat:** replaced in M3. The overworld applies the defeat rules (heal, lose some money, wake at
+  the last heal spot); see the [M3 overworld design](2026-11-03-m3-overworld-design.md) §5.4. Since M3,
+  overworld battles open over the paused map (the battle scene's overlay mode) instead of changing scene.
 
 ## 7. Code structure
 

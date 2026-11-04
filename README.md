@@ -11,6 +11,9 @@ Content reference (every creature, move, item, status, field state, reaction, ta
 Battle engine reference (API, round order, formulas, events, AI):
 [documentation/battle-engine.md](documentation/battle-engine.md)
 
+Building maps (painting tiles, placing doors, NPCs, items, tamers, triggers; checking them):
+[documentation/map-building.md](documentation/map-building.md)
+
 ## Layout
 
 | Folder | Contents |
@@ -20,18 +23,22 @@ Battle engine reference (API, round order, formulas, events, AI):
 | `core/battle/` | Headless battle engine, effect ops, AI. |
 | `core/` | All of `core/` is pure game logic. It never touches nodes, scenes, or autoloads. |
 | `core/save/`, `core/settings/` | Save format and file store; settings model and input bindings. |
-| `game/` | Scenes and autoloads that present `core/`: splash, menus, placeholder world, `SceneRouter`, `GameState`, `Settings`. |
+| `core/story/`, `core/world/`, `core/minigames/` | Story state; overworld rules (encounters, sight lines, shop, defeat, map checks); minigame rules. |
+| `game/` | Scenes and autoloads that present `core/`: splash, menus, overworld, battle, `SceneRouter`, `GameState`, `Story`, `Cutscene`, `Settings`, `DebugMenu`. |
+| `game/maps/` | One scene per map (built in the Godot editor; see the map-building guide). |
 | `data/` | All content as JSON (creatures, moves, items, tamers, encounters, ...). |
 | `dialogue/` | Dialogue Manager `.dialogue` files for conversations and cutscenes. |
 | `tests/` | gdUnit4 suites. |
-| `tools/` | Headless scripts: data validator, dialogue checker, compendium generator, battle simulator. |
+| `tools/` | Data validator, dialogue checker, map checker, map builder, tileset generator, compendium generator, battle simulator. |
 | `addons/` | gdUnit4 6.2.3, Dialogue Manager 4.2.0. |
 
 ## Running
 
 Press F5 in the editor (or run the project). The game boots to a splash screen, then the title
-menu: Resume, New Game, Load Game, Settings, Quit. Press **F1** on any screen (debug builds
-only) for the debug tools: **Get test party**, **Heal party**, and test battles (wild Route 1,
+menu: Resume, New Game, Load Game, Settings, Quit. A new game starts at home in Fernmoor Town; walk
+out to meet the professor and pick a starter. Arrow keys / WASD move, Shift runs, Z / Enter talks and
+confirms, C / Tab opens the menu (Party, Bag, Save, Settings, Quit). Press **F1** on any screen (debug
+builds only) for the debug tools: **Get test party**, **Heal party**, and test battles (wild Route 1,
 Scout Ana 1v1, Rival 2v2, and a **Custom battle** panel for any format up to 3v3, such as 1v3 or 3v1). Player data lives in Godot's user folder
 (`%APPDATA%/Godot/app_userdata/Monster Catching Game/` on Windows):
 

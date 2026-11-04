@@ -2,9 +2,12 @@ class_name SaveGame
 extends RefCounted
 ## Everything a save file holds. Pure data; SaveStore handles files.
 
-const SCHEMA := 1
+const SCHEMA := 2
 const KIND_MANUAL := "manual"
 const KIND_AUTO := "auto"
+## Where a new game starts (and where a save with no usable position resumes).
+const NEW_GAME_MAP := "town_01_home"
+const NEW_GAME_SPAWN := "start"
 
 var playthrough_id: String = ""
 var kind: String = KIND_MANUAL
@@ -20,8 +23,11 @@ var storage: Array = []
 ## item id -> count
 var inventory: Dictionary = {}
 var money: int = 0
-## Story flags and counters (see core/story later).
-var flags: Dictionary = {}
+## Flags, counters, one-time pieces and the last heal spot.
+var story := StoryState.new()
+## Exact overworld position: { map, x, y (pixels), facing ("up"|"down"|"left"|"right") }.
+## An empty map means "start at the new-game spawn".
+var position: Dictionary = {}
 
 
 static func new_game(player: String, now_unix: int, rng: RandomNumberGenerator) -> SaveGame:
@@ -48,7 +54,8 @@ func to_dict() -> Dictionary:
 		"storage": storage.map(func(c: CreatureInstance): return c.to_dict()),
 		"inventory": inventory.duplicate(),
 		"money": money,
-		"flags": flags.duplicate(true),
+		"story": story.to_dict(),
+		"position": position.duplicate(),
 	}
 
 
@@ -75,7 +82,11 @@ static func from_dict(d: Dictionary) -> SaveGame:
 	for k in d.get("inventory", {}):
 		s.inventory[k] = int(d.inventory[k])
 	s.money = int(d.get("money", 0))
-	s.flags = d.get("flags", {}).duplicate(true)
+	s.story = StoryState.from_dict(d.get("story", {}) if d.get("story") is Dictionary else {})
+	var pos = d.get("position", {})
+	if pos is Dictionary and pos.get("map") is String and pos.get("map") != "":
+		s.position = {"map": pos.map, "x": float(pos.get("x", 0.0)), "y": float(pos.get("y", 0.0)),
+			"facing": str(pos.get("facing", "down"))}
 	return s
 
 

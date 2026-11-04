@@ -16,10 +16,10 @@ const BATTLE_SPEEDS := [1, 2, 4]
 const WINDOW_SCALES := [2, 3, 4]
 
 ## Rebindable game actions, in the order the Controls tab shows them.
-const ACTIONS := ["move_up", "move_down", "move_left", "move_right", "accept", "cancel", "menu"]
+const ACTIONS := ["move_up", "move_down", "move_left", "move_right", "accept", "cancel", "menu", "run"]
 const ACTION_LABELS := {
 	"move_up": "Move up", "move_down": "Move down", "move_left": "Move left", "move_right": "Move right",
-	"accept": "Accept", "cancel": "Cancel / back", "menu": "Menu",
+	"accept": "Accept", "cancel": "Cancel / back", "menu": "Menu", "run": "Run",
 }
 
 var master_volume := 0.8
@@ -44,6 +44,7 @@ static func default_bindings() -> Dictionary:
 		"accept": {"keyboard": [_key(KEY_Z), _key(KEY_ENTER)], "gamepad": [_jbtn(JOY_BUTTON_A)]},
 		"cancel": {"keyboard": [_key(KEY_X), _key(KEY_ESCAPE)], "gamepad": [_jbtn(JOY_BUTTON_B)]},
 		"menu": {"keyboard": [_key(KEY_C), _key(KEY_TAB)], "gamepad": [_jbtn(JOY_BUTTON_START)]},
+		"run": {"keyboard": [_key(KEY_SHIFT)], "gamepad": [_jbtn(JOY_BUTTON_X)]},
 	}
 
 

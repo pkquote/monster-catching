@@ -25,7 +25,7 @@ func test_round_trip_keeps_everything() -> void:
 	s.location = "Route 1"
 	s.money = 250
 	s.inventory = {"salve": 3}
-	s.flags = {"rival_met": true}
+	s.story.set_flag("rival_met")
 	var c := FixtureDB.make(db, "blob", 7)
 	c.bond = 12
 	s.party.append(c)
@@ -37,7 +37,7 @@ func test_round_trip_keeps_everything() -> void:
 	assert_float(back.playtime_sec).is_equal_approx(3723.5, 0.001)
 	assert_str(back.location).is_equal("Route 1")
 	assert_int(back.inventory.salve).is_equal(3)
-	assert_bool(back.flags.rival_met).is_true()
+	assert_bool(back.story.flag("rival_met")).is_true()
 	assert_int(back.party.size()).is_equal(1)
 	assert_int(back.party[0].bond).is_equal(12)
 	assert_int(back.saved_unix).is_equal(1_700_000_100)
@@ -137,3 +137,33 @@ func _write(path: String, text: String) -> void:
 	var f := FileAccess.open(path, FileAccess.WRITE)
 	f.store_string(text)
 	f.close()
+
+
+func test_v1_save_migrates() -> void:
+	var dir := store.root.path_join("1700000000_abcdef")
+	DirAccess.make_dir_recursive_absolute(dir)
+	var v1 := {"schema": 1, "playthrough_id": "1700000000_abcdef", "kind": "manual", "player_name": "Old",
+		"created_unix": 1700000000, "saved_unix": 1700000000, "location": "Nowhere yet",
+		"party": [], "storage": [], "inventory": {}, "money": 5,
+		"flags": {"debug_test_party_granted": true}}
+	var path := dir.path_join("save_1.json")
+	var f := FileAccess.open(path, FileAccess.WRITE)
+	f.store_string(JSON.stringify(v1))
+	f.close()
+	var r := store.read(path)
+	assert_bool(r.ok).override_failure_message(str(r.error)).is_true()
+	var s: SaveGame = r.save
+	assert_bool(s.story.flag("debug_test_party_granted")).is_true()
+	assert_str(s.position.get("map", "")).is_equal("")
+	assert_int(s.money).is_equal(5)
+
+
+func test_v2_round_trip_keeps_position() -> void:
+	var s := _game()
+	s.position = {"map": "test_b", "x": 123.5, "y": 77.0, "facing": "left"}
+	s.story.mark_done("test_b/Door1")
+	var r := store.read(store.write(s, SaveGame.KIND_MANUAL, 1_700_000_100_000))
+	var back: SaveGame = r.save
+	assert_dict(back.position).is_equal({"map": "test_b", "x": 123.5, "y": 77.0, "facing": "left"})
+	assert_bool(back.story.is_done("test_b/Door1")).is_true()
+	assert_int(SaveGame.SCHEMA).is_equal(2)

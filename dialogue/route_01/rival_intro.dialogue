@@ -1,16 +1,16 @@
 ~ rival_intro
-
 $> Cutscene.lock_player()
-$> Cutscene.move("rival", "rival_stop")
-Rival: You're the new tamer? Let's see what your team can do.
-- Bring it on.
-	$> Story.start_battle("rival_01")
-	if Story.last_battle_won()
-		Rival: ...Not bad. Don't get comfortable.
-	else
-		Rival: Come back when you've actually trained them.
-- Maybe later. [if not Story.flag("rival_met") /]
-	Rival: Figures.
-$> Story.set_flag("rival_met")
+Rival: There you are. I've been training. Have you?
+$> Story.start_battle("rival_01")
+if Story.last_battle_won()
+	$> Story.set_flag("rival_1_done")
+	Rival: ...Tch. The road's closed anyway. Next time, then.
 $> Cutscene.unlock_player()
+=> END
+
+~ rival_waiting
+if Story.flag("rival_1_done")
+	Rival: Don't look so pleased with yourself.
+else
+	Rival: Well? Are we doing this?
 => END

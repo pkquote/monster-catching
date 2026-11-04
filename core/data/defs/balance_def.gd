@@ -24,6 +24,9 @@ var training_cfg: Dictionary
 ## { min, max, starter, disobey_max_chance, penalty_max, lash_out_threshold, lash_out_chance,
 ##   xp_bonus_max, overwork_hp, overwork_energy, changes: { event: int } }
 var bond_cfg: Dictionary
+## { walk_speed, run_speed (tiles/s), encounter_rate, encounter_grace_tiles,
+##   walk_energy_tiles, defeat_money_fraction, sell_fraction }
+var overworld_cfg: Dictionary
 
 
 static func from_dict(d: Dictionary) -> BalanceDef:
@@ -45,6 +48,7 @@ static func from_dict(d: Dictionary) -> BalanceDef:
 	for k in b.training_cfg:
 		b.training_cfg[k] = int(b.training_cfg[k])
 	b.bond_cfg = d.bond.duplicate(true)
+	b.overworld_cfg = d.overworld.duplicate()
 	for k in ["min", "max", "starter", "lash_out_threshold"]:
 		b.bond_cfg[k] = int(b.bond_cfg[k])
 	for k in b.bond_cfg.changes:

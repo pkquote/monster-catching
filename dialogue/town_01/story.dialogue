@@ -1,0 +1,67 @@
+~ intro
+$> Cutscene.lock_player()
+Prof. Alder: Hold on there!
+$> Cutscene.move("prof", "7,7")
+$> Cutscene.face("prof", "player")
+$> Cutscene.face("player", "prof")
+Prof. Alder: So you're the new tamer everyone's been talking about.
+Prof. Alder: Nobody walks into the tall grass without a partner. Come with me to the lab.
+$> Story.set_flag("met_prof")
+$> Cutscene.fade_out()
+$> Cutscene.change_map("town_01_lab", "entry")
+$> Cutscene.fade_in()
+$> Cutscene.unlock_player()
+=> choose
+
+~ too_early
+$> Cutscene.lock_player()
+???: Wait! It's dangerous to go into the grass without a creature!
+$> Cutscene.move("player", "15,3")
+$> Cutscene.unlock_player()
+=> END
+
+~ prof_town
+Prof. Alder: My lab is just here. Come on in.
+=> END
+
+~ prof
+if Story.flag("got_starter")
+	Prof. Alder: Route 1 is north of town. Go and see what's out there!
+	=> END
+=> choose
+
+~ choose
+if Story.flag("got_starter")
+	Prof. Alder: You already have a partner. Go and see what's out there!
+	=> END
+$> Story.set_flag("met_prof")
+Prof. Alder: Three creatures, three temperaments. Which one will be your partner?
+- Tidepup, a calm water pup
+	$> Story.give_creature("tidepup", 5, true)
+- Emberkit, a hot-headed fire kit
+	$> Story.give_creature("emberkit", 5, true)
+- Sprigling, a patient grass sprout
+	$> Story.give_creature("sprigling", 5, true)
+$> Story.give_item("lure_cage", 5)
+$> Story.set_flag("got_starter")
+Prof. Alder: A good match. Take these Lure Cages as well.
+=> rival
+
+~ rival
+Rival: Wait up! I got one too, and I want to try it out.
+$> Story.start_battle("rival_lab", false)
+if Story.last_battle_won()
+	Rival: ...Fine. Beginner's luck.
+else
+	Rival: Ha! Better luck next time.
+	Prof. Alder: I've patched your team up. Don't let it get you down.
+$> Story.set_flag("rival_lab_done")
+Rival: I'll be waiting on Route 1.
+=> END
+
+~ rival_talk
+if Story.flag("got_starter")
+	Rival: Don't keep me waiting.
+else
+	Rival: Hurry up and talk to the professor already.
+=> END

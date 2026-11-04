@@ -32,8 +32,8 @@ Without it, scripts fail with `Identifier "DataLoader" not declared`:
 
 ## Run (agent path)
 
-Front-end tour: splash → title → New Game (types "Ana") → world (autosave + manual save) →
-quit → Load browser → every Settings tab → rebind Accept to K → Resume. It checks 6
+Front-end tour: splash → title → New Game (types "Ana") → overworld (autosave; Menu → Save;
+Menu → Quit to title) → Load browser → every Settings tab → rebind Accept to K → Resume. It checks 6
 expectations and exits 1 if any fail. It takes about 13 s, and a game window opens while it runs.
 
 ```bash
@@ -55,6 +55,18 @@ fight. It checks 8 expectations. It takes about 40 s, and fights are random
 timeout 240 "$GODOT" --path . --script res://.claude/skills/run-godot-monster-catching-game/driver.gd -- --mode=battle --out="$TMPDIR/battle_shots" 2>&1 | grep "\[driver\]"
 ```
 
+Overworld tour (M3): home → walk out the door into town → the professor's cutscene → pick a
+starter in the lab → the lab rival battle → heal centre (rest, buy a Salve) → Route 1: walk up
+the path into Scout Ana's sight line and win → step into tall grass (encounter rate forced to
+100%) and run → Quick Draw → Menu → Save → Quit → Resume at the same tile. It checks 10
+expectations and takes about 70 s. Long walks between buildings use `ow.change_map()`; the
+starter is boosted to level 20 before Route 1 so the scripted fights are won (a loss sends you
+to the heal centre and the tour would wander off).
+
+```bash
+timeout 400 "$GODOT" --path . --script res://.claude/skills/run-godot-monster-catching-game/driver.gd -- --mode=overworld --out="$TMPDIR/ow_shots" 2>&1 | grep "\[driver\]"
+```
+
 Screenshot a single scene:
 
 ```bash
@@ -65,13 +77,16 @@ timeout 60 "$GODOT" --path . --script res://.claude/skills/run-godot-monster-cat
 |---|---|
 | `--mode=frontend` | default; the tour above |
 | `--mode=battle` | the battle tour above (`b00_…` to `b13_…` screenshots) |
+| `--mode=overworld` | the overworld tour above (`o01_…` to `o16_…` screenshots) |
 | `--mode=scene` | open `--scene` (default: main scene), wait `--frames` (default 60), screenshot |
 | `--out=<dir>` | screenshot folder; `user://` paths allowed (default `user://run_shots`) |
 
 To drive a new flow, add a mode to `driver.gd` and reuse its helpers: `wait_scene(name, max_frames)`,
 `key(KEY_X)`, `type_text("abc")`, `press("Button text")`, `shot("name")`, `expect(ok, "what")`,
-and for battles `wait_battle(["command"])` and `pick_menu("Fight")` (`""` picks the first enabled
-option). You can also open a battle directly:
+for battles `wait_battle(["command"])`, `fight_to_end()` and `pick_menu("Fight")` (`""` picks the
+first enabled option), and for the overworld `hold(KEY_W, frames)` (real movement),
+`talk_until(func(): ...)` (presses Accept through conversations) and `_battle()` (the battle node,
+whether it's the scene or an overlay on the map). You can also open a battle directly:
 `router.goto("res://game/battle/battle_scene.tscn", {"setup": BattleSetup, "seed": 11})`.
 For any N-vs-M format (up to 3 per side), build the setup with
 `BattleLauncher.custom_setup(db, save, mine, foes, level, wild, rng)`.
@@ -89,7 +104,7 @@ bash scripts/check.sh
 ```
 
 This validates the JSON content, compiles the dialogue, runs every gdUnit4 suite and regenerates
-`documentation/compendium.md`. Expected: `All checks passed.` with 18 `Statistics:` lines, all
+`documentation/compendium.md`. Expected: `All checks passed.` with 43 `Statistics:` lines, all
 `PASSED`.
 
 ## Gotchas
@@ -115,6 +130,18 @@ This validates the JSON content, compiles the dialogue, runs every gdUnit4 suite
   `key(KEY_F1)`. `press()` and `pick_menu()` search the overlay first when it's open, then
   `current_scene`; a search of `current_scene` alone never finds its buttons. The overlay pauses
   the tree while open, so battle playback timers stop until it closes.
+- **Overworld battles are overlays, not scenes.** Wild, tamer and debug battles open the battle
+  scene over the paused map (`current_scene` stays `Overworld`). Use `_battle()` to find it and
+  wait for `_battle() == null` afterwards; `wait_scene("BattleScene")` only works for battles
+  opened directly with `router.goto(...)`.
+- **Hold keys for movement.** `key()` taps for one frame; walking needs `hold(KEY_W, frames)`
+  (4 tiles a second, so 8 frames per tile). Movement is locked during conversations, menus and
+  fades, so a key held through a door doesn't carry on walking on the other side.
+- **Map tools run as scenes, not `--script`.** Piece scripts use autoloads (`Story`), which don't
+  compile under `--script` (the piece's Inspector settings are silently dropped). So it's
+  `godot --headless --path . res://tools/build_maps.tscn` and `res://tools/check_maps.tscn`. The
+  driver itself can't name `Overworld` or `SceneRouter.WORLD`; it uses untyped variables and
+  `router.WORLD`.
 - **Battle menus are `CommandMenu`s, not plain buttons.** Drive them with `pick_menu()`, which
   finds the menu that's currently choosing. Wait for `scene.phase` with `wait_battle()`: the menu
   only accepts picks once `menu.is_choosing()` is true. Playback between phases runs on timers.

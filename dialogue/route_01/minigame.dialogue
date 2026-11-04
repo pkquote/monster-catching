@@ -1,0 +1,16 @@
+~ quick_draw
+Sharpshooter: Fancy a game of Quick Draw? Hit Accept the moment you see the "!". Win three of five.
+- Let's play
+	$> Story.start_minigame("quick_draw")
+	if Story.last_minigame_won()
+		if Story.flag("quick_draw_won")
+			Sharpshooter: Fast as ever!
+		else
+			$> Story.give_item("tonic")
+			$> Story.set_flag("quick_draw_won")
+			Sharpshooter: Not bad at all! Here, take this Tonic.
+	else
+		Sharpshooter: Too slow! Try again any time.
+- Not now
+	Sharpshooter: Suit yourself.
+=> END

@@ -1,0 +1,106 @@
+[gd_scene format=4]
+
+[ext_resource type="Script" path="res://game/overworld/game_map.gd" id="1_vkwwk"]
+[ext_resource type="TileSet" path="res://game/maps/tiles/placeholder_tileset.tres" id="2_qveoi"]
+[ext_resource type="PackedScene" path="res://game/overworld/pieces/spawn.tscn" id="3_13non"]
+[ext_resource type="Script" path="res://game/overworld/pieces/spawn.gd" id="4_hmkei"]
+[ext_resource type="PackedScene" path="res://game/overworld/pieces/door.tscn" id="5_hedis"]
+[ext_resource type="Script" path="res://game/overworld/pieces/door.gd" id="6_4jhk5"]
+[ext_resource type="PackedScene" path="res://game/overworld/pieces/sign.tscn" id="7_mnx2s"]
+[ext_resource type="Script" path="res://game/overworld/pieces/sign.gd" id="8_tf0bs"]
+[ext_resource type="PackedScene" path="res://game/overworld/pieces/npc.tscn" id="9_ryr7w"]
+[ext_resource type="Script" path="res://game/overworld/pieces/npc.gd" id="10_sqmxp"]
+[ext_resource type="PackedScene" path="res://game/overworld/pieces/tamer.tscn" id="11_hffik"]
+[ext_resource type="Script" path="res://game/overworld/pieces/tamer.gd" id="12_oi0pt"]
+[ext_resource type="PackedScene" path="res://game/overworld/pieces/encounter_area.tscn" id="13_ldko5"]
+[ext_resource type="Script" path="res://game/overworld/pieces/encounter_area.gd" id="14_4e1kr"]
+[ext_resource type="PackedScene" path="res://game/overworld/pieces/trigger.tscn" id="15_tcoa3"]
+[ext_resource type="Script" path="res://game/overworld/pieces/trigger.gd" id="16_23mog"]
+
+[node name="TestB" type="Node2D" unique_id=553736138]
+script = ExtResource("1_vkwwk")
+display_name = "Test Field"
+default_encounter = "route_01_grass"
+
+[node name="Ground" type="TileMapLayer" parent="." unique_id=154044766]
+tile_map_data = PackedByteArray("AAAAAAAAAAAAAAAAAAABAAAAAAAAAAAAAAACAAAAAAAAAAAAAAADAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAFAAAAAAAAAAAAAAAGAAAAAAAAAAAAAAAHAAAAAAAAAAAAAAAIAAAAAAAAAAAAAAAJAAAAAAAAAAAAAAAKAAAAAAAAAAAAAAALAAAAAAAAAAAAAAAAAAEAAAAAAAAAAAABAAEAAAAAAAAAAAACAAEAAAAAAAAAAAADAAEAAAAAAAAAAAAEAAEAAAAAAAAAAAAFAAEAAAAAAAAAAAAGAAEAAAAAAAAAAAAHAAEAAAAAAAAAAAAIAAEAAAAAAAAAAAAJAAEAAAAAAAAAAAAKAAEAAAAAAAAAAAALAAEAAAAAAAAAAAAAAAIAAAAAAAAAAAABAAIAAAAAAAAAAAACAAIAAAABAAAAAAADAAIAAAABAAAAAAAEAAIAAAAAAAAAAAAFAAIAAAAAAAAAAAAGAAIAAAAAAAAAAAAHAAIAAAAAAAAAAAAIAAIAAAAAAAAAAAAJAAIAAAAAAAAAAAAKAAIAAAAAAAAAAAALAAIAAAAAAAAAAAAAAAMAAAAAAAAAAAABAAMAAAAAAAAAAAACAAMAAAABAAAAAAADAAMAAAABAAAAAAAEAAMAAAAAAAAAAAAFAAMAAAAAAAAAAAAGAAMAAAAAAAAAAAAHAAMAAAAAAAAAAAAIAAMAAAAAAAAAAAAJAAMAAAAAAAAAAAAKAAMAAAAAAAAAAAALAAMAAAAAAAAAAAAAAAQAAAAAAAAAAAABAAQAAAAAAAAAAAACAAQAAAAAAAAAAAADAAQAAAAAAAAAAAAEAAQAAAAAAAAAAAAFAAQAAAAAAAAAAAAGAAQAAAAAAAAAAAAHAAQAAAAAAAAAAAAIAAQAAAAAAAAAAAAJAAQAAAAAAAAAAAAKAAQAAAAAAAAAAAALAAQAAAAAAAAAAAAAAAUAAAAAAAAAAAABAAUAAAAAAAAAAAACAAUAAAAAAAAAAAADAAUAAAAAAAAAAAAEAAUAAAAAAAAAAAAFAAUAAAAAAAAAAAAGAAUAAAAAAAAAAAAHAAUAAAAAAAAAAAAIAAUAAAAAAAAAAAAJAAUAAAAAAAAAAAAKAAUAAAAAAAAAAAALAAUAAAAAAAAAAAAAAAYAAAAAAAAAAAABAAYAAAAAAAAAAAACAAYAAAAAAAAAAAADAAYAAAAAAAAAAAAEAAYAAAAAAAAAAAAFAAYAAAAAAAAAAAAGAAYAAAABAAAAAAAHAAYAAAABAAAAAAAIAAYAAAAAAAAAAAAJAAYAAAAAAAAAAAAKAAYAAAAAAAAAAAALAAYAAAAAAAAAAAAAAAcAAAAAAAAAAAABAAcAAAAAAAAAAAACAAcAAAAAAAAAAAADAAcAAAAAAAAAAAAEAAcAAAAHAAAAAAAFAAcAAAAAAAAAAAAGAAcAAAAAAAAAAAAHAAcAAAAAAAAAAAAIAAcAAAAAAAAAAAAJAAcAAAAAAAAAAAAKAAcAAAAAAAAAAAALAAcAAAAAAAAAAAA=")
+tile_set = ExtResource("2_qveoi")
+
+[node name="Decor" type="TileMapLayer" parent="." unique_id=1501155663]
+tile_map_data = PackedByteArray("AAAAAAAAAAAMAAAAAAABAAAAAAAMAAAAAAACAAAAAAAMAAAAAAADAAAAAAAMAAAAAAAEAAAAAAAMAAAAAAAFAAAAAAAMAAAAAAAGAAAAAAAMAAAAAAAHAAAAAAAMAAAAAAAIAAAAAAAMAAAAAAAJAAAAAAAMAAAAAAAKAAAAAAAMAAAAAAALAAAAAAAMAAAAAAAAAAEAAAAMAAAAAAALAAEAAAAMAAAAAAAAAAIAAAAMAAAAAAALAAIAAAAMAAAAAAAAAAMAAAAMAAAAAAALAAMAAAAMAAAAAAAAAAQAAAAMAAAAAAALAAQAAAAMAAAAAAAAAAUAAAAMAAAAAAALAAUAAAAMAAAAAAAAAAYAAAAMAAAAAAALAAYAAAAMAAAAAAAAAAcAAAAMAAAAAAABAAcAAAAMAAAAAAACAAcAAAAMAAAAAAADAAcAAAAMAAAAAAAFAAcAAAAMAAAAAAAGAAcAAAAMAAAAAAAHAAcAAAAMAAAAAAAIAAcAAAAMAAAAAAAJAAcAAAAMAAAAAAAKAAcAAAAMAAAAAAALAAcAAAAMAAAAAAA=")
+tile_set = ExtResource("2_qveoi")
+
+[node name="Entities" type="Node2D" parent="." unique_id=798534188]
+y_sort_enabled = true
+
+[node name="FromA" type="Node2D" parent="Entities" unique_id=999972642 instance=ExtResource("3_13non")]
+position = Vector2(144, 240)
+script = ExtResource("4_hmkei")
+id = "from_a"
+
+[node name="Middle" type="Node2D" parent="Entities" unique_id=1028432026 instance=ExtResource("3_13non")]
+position = Vector2(208, 144)
+script = ExtResource("4_hmkei")
+id = "middle"
+
+[node name="Door1" type="Node2D" parent="Entities" unique_id=207968933 instance=ExtResource("5_hedis")]
+position = Vector2(144, 240)
+script = ExtResource("6_4jhk5")
+target_map = "test_a"
+target_spawn = "from_b"
+
+[node name="Sign1" type="Node2D" parent="Entities" unique_id=1288109137 instance=ExtResource("7_mnx2s")]
+position = Vector2(208, 80)
+script = ExtResource("8_tf0bs")
+text = "Test field. Mind the grass."
+
+[node name="Walker" type="Node2D" parent="Entities" unique_id=1203806213 instance=ExtResource("9_ryr7w")]
+position = Vector2(336, 208)
+script = ExtResource("10_sqmxp")
+actor_id = "walker"
+display_name = "Walker"
+dialogue = "res://tests/fixtures/test_talk.dialogue"
+title = "hello"
+wander_tiles = 2
+
+[node name="Watcher" type="Node2D" parent="Entities" unique_id=1020702840 instance=ExtResource("11_hffik")]
+position = Vector2(336, 144)
+script = ExtResource("12_oi0pt")
+tamer_id = "scout_ana"
+before_title = "battle"
+after_title = "bye"
+actor_id = "watcher"
+display_name = "Watcher"
+dialogue = "res://tests/fixtures/test_talk.dialogue"
+start_facing = "left"
+
+[node name="Guard" type="Node2D" parent="Entities" unique_id=197966741 instance=ExtResource("11_hffik")]
+position = Vector2(336, 80)
+script = ExtResource("12_oi0pt")
+tamer_id = "scout_ana"
+sight = 6
+before_title = "battle"
+after_title = "bye"
+actor_id = "guard"
+display_name = "Guard"
+dialogue = "res://tests/fixtures/test_talk.dialogue"
+start_facing = "left"
+
+[node name="DeepGrass" type="Node2D" parent="Entities" unique_id=536277959 instance=ExtResource("13_ldko5")]
+position = Vector2(80, 80)
+script = ExtResource("14_4e1kr")
+encounter = "route_01_deep_grass"
+size = Vector2i(2, 2)
+
+[node name="Gate" type="Node2D" parent="Entities" unique_id=1841486026 instance=ExtResource("15_tcoa3")]
+position = Vector2(272, 176)
+script = ExtResource("16_23mog")
+dialogue = "res://tests/fixtures/test_talk.dialogue"
+title = "sets_flag"
+once = true
+blocks_flag = "gate_off"
+size = Vector2i(2, 1)
+
+[node name="Above" type="TileMapLayer" parent="." unique_id=1212008547]
+z_index = 10
+tile_set = ExtResource("2_qveoi")

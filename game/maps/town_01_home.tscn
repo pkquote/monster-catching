@@ -1,0 +1,54 @@
+[gd_scene format=4]
+
+[ext_resource type="Script" path="res://game/overworld/game_map.gd" id="1_ure8g"]
+[ext_resource type="TileSet" path="res://game/maps/tiles/placeholder_tileset.tres" id="2_myt4e"]
+[ext_resource type="PackedScene" path="res://game/overworld/pieces/spawn.tscn" id="3_wh5jg"]
+[ext_resource type="Script" path="res://game/overworld/pieces/spawn.gd" id="4_sh4vj"]
+[ext_resource type="PackedScene" path="res://game/overworld/pieces/door.tscn" id="5_57owp"]
+[ext_resource type="Script" path="res://game/overworld/pieces/door.gd" id="6_0sqxb"]
+[ext_resource type="PackedScene" path="res://game/overworld/pieces/npc.tscn" id="7_pf5mg"]
+[ext_resource type="Script" path="res://game/overworld/pieces/npc.gd" id="8_06vkp"]
+
+[node name="Town01Home" type="Node2D" unique_id=1656008220]
+script = ExtResource("1_ure8g")
+display_name = "Fernmoor Town"
+indoor = true
+
+[node name="Ground" type="TileMapLayer" parent="." unique_id=90509922]
+tile_map_data = PackedByteArray("AAAAAAAAAAAFAAAAAAABAAAAAAAFAAAAAAACAAAAAAAFAAAAAAADAAAAAAAFAAAAAAAEAAAAAAAFAAAAAAAFAAAAAAAFAAAAAAAGAAAAAAAFAAAAAAAHAAAAAAAFAAAAAAAIAAAAAAAFAAAAAAAAAAEAAAAFAAAAAAABAAEAAAAJAAAAAAACAAEAAAAJAAAAAAADAAEAAAAIAAAAAAAEAAEAAAAIAAAAAAAFAAEAAAAIAAAAAAAGAAEAAAALAAAAAAAHAAEAAAAIAAAAAAAIAAEAAAAFAAAAAAAAAAIAAAAFAAAAAAABAAIAAAAIAAAAAAACAAIAAAAIAAAAAAADAAIAAAAIAAAAAAAEAAIAAAAIAAAAAAAFAAIAAAAIAAAAAAAGAAIAAAAIAAAAAAAHAAIAAAAIAAAAAAAIAAIAAAAFAAAAAAAAAAMAAAAFAAAAAAABAAMAAAAIAAAAAAACAAMAAAAIAAAAAAADAAMAAAAIAAAAAAAEAAMAAAAIAAAAAAAFAAMAAAAIAAAAAAAGAAMAAAAIAAAAAAAHAAMAAAAIAAAAAAAIAAMAAAAFAAAAAAAAAAQAAAAFAAAAAAABAAQAAAAIAAAAAAACAAQAAAAIAAAAAAADAAQAAAAIAAAAAAAEAAQAAAAIAAAAAAAFAAQAAAAIAAAAAAAGAAQAAAAIAAAAAAAHAAQAAAAIAAAAAAAIAAQAAAAFAAAAAAAAAAUAAAAFAAAAAAABAAUAAAAIAAAAAAACAAUAAAAIAAAAAAADAAUAAAAIAAAAAAAEAAUAAAAIAAAAAAAFAAUAAAAIAAAAAAAGAAUAAAAIAAAAAAAHAAUAAAAIAAAAAAAIAAUAAAAFAAAAAAAAAAYAAAAFAAAAAAABAAYAAAAFAAAAAAACAAYAAAAFAAAAAAADAAYAAAAFAAAAAAAEAAYAAAAHAAAAAAAFAAYAAAAFAAAAAAAGAAYAAAAFAAAAAAAHAAYAAAAFAAAAAAAIAAYAAAAFAAAAAAA=")
+tile_set = ExtResource("2_myt4e")
+
+[node name="Decor" type="TileMapLayer" parent="." unique_id=664342905]
+tile_set = ExtResource("2_myt4e")
+
+[node name="Entities" type="Node2D" parent="." unique_id=1201656476]
+y_sort_enabled = true
+
+[node name="Start" type="Node2D" parent="Entities" unique_id=1900318198 instance=ExtResource("3_wh5jg")]
+position = Vector2(80, 80)
+script = ExtResource("4_sh4vj")
+id = "start"
+
+[node name="FromTown" type="Node2D" parent="Entities" unique_id=847770225 instance=ExtResource("3_wh5jg")]
+position = Vector2(144, 176)
+script = ExtResource("4_sh4vj")
+id = "from_town"
+
+[node name="Door" type="Node2D" parent="Entities" unique_id=628340480 instance=ExtResource("5_57owp")]
+position = Vector2(144, 208)
+script = ExtResource("6_0sqxb")
+target_map = "town_01"
+target_spawn = "from_home"
+
+[node name="Mum" type="Node2D" parent="Entities" unique_id=1189290655 instance=ExtResource("7_pf5mg")]
+position = Vector2(208, 112)
+script = ExtResource("8_06vkp")
+actor_id = "mum"
+display_name = "Mum"
+dialogue = "res://dialogue/town_01/npcs.dialogue"
+title = "mum"
+start_facing = "left"
+
+[node name="Above" type="TileMapLayer" parent="." unique_id=608847047]
+z_index = 10
+tile_set = ExtResource("2_myt4e")

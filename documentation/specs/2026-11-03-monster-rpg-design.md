@@ -1,7 +1,7 @@
 # Monster-Catching RPG — Design Spec
 
 Date: 2026-11-03
-Status: Approved for implementation (M0 → M1 first)
+Status: Approved. M0–M3 implemented; M4 (progression + menus) next.
 
 ## 1. Intent
 
@@ -262,7 +262,7 @@ It also scans `dialogue/*.dialogue` for `start_battle("<id>")` and checks the ta
 - Written in Dialogue Manager `.dialogue` files under `res://dialogue/`.
 - `Story` autoload: wraps `core/story/StoryState` (flags, counters), exposes `flag()`, `set_flag()`, `start_battle(tamer_id)` (awaitable), `last_battle_won()`.
 - `Cutscene` autoload: awaitable actor/camera commands (`lock_player`, `move`, `face`, `pan_camera`, `fade`, `wait`).
-- NPC data lists conversations as `[{ "if": "<flag expr>", "file": "...", "title": "..." }]`; the first matching entry runs.
+- NPCs point at one dialogue file and title; branching on story state happens inside the dialogue (`if Story.flag("...")`). See the [M3 overworld design](2026-11-03-m3-overworld-design.md).
 - Triggers: interact, area enter, map enter, battle result.
 - The battle engine has no knowledge of dialogue.
 
@@ -325,7 +325,7 @@ them to the engine (audio buses, window, input map). Game actions are mirrored i
 | **M1 Battle engine** | Headless N-vs-M engine: speed order, types, damage, statuses, field states + reactions, Underdog, basic AI, catching, XP + Affinity awards; full tests; CLI battle simulator |
 | **M1.5 Front end** | Splash, title menu, new game (name entry), save browser, settings (audio, display, gameplay, controls), placeholder world; save store with unlimited saves, per-playthrough autosave and Resume |
 | **M2 Battle scene** | Diagonal stage, placeholder sprites, action menus, event playback, catch animation, results; test battles from the placeholder world. Detailed design: [M2 battle scene design](2026-11-03-m2-battle-scene-design.md) |
-| **M3 Overworld + story** | One town + one route, movement, NPCs, Dialogue Manager conversations, one cutscene, rival battle, wild encounters |
+| **M3 Overworld + story** | One town + interiors + one route, editor-built maps with placeable pieces, 8-way movement, NPCs, Dialogue Manager conversations, starter cutscene, items and hidden items, tamers with line of sight, heal spot + shop, pause menu, defeat rules, minigame hook. Detailed design: [M3 overworld design](2026-11-03-m3-overworld-design.md) |
 | **M4 Progression + menus** | Level-ups, one species with growth branches, party + storage menus, training-point and respec UI |
 
 Starter content: ~8 creatures, ~20 moves, 5 field states, 4 reactions, 3 capture items, 2 tamers, 1 encounter table (placeholders).

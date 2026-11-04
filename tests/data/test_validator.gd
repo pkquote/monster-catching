@@ -151,3 +151,12 @@ func test_dialogue_battle_references() -> void:
 	var raw := _base()
 	raw.dialogue_files["res://dialogue/x.dialogue"] = "do await Story.start_battle(\"ghost_tamer\")"
 	assert_str(_errors_for(raw)).contains("unknown tamer id 'ghost_tamer'")
+
+
+func test_minigame_scene_must_exist() -> void:
+	var raw := _base()
+	raw.add_entry("minigames", {"id": "qd", "name": "Quick Draw", "scene": "res://nowhere/missing.tscn"})
+	assert_str(_errors_for(raw)).contains("scene file not found")
+	raw = _base()
+	raw.add_entry("minigames", {"id": "qd", "name": "Quick Draw", "scene": "res://game/overworld/overworld.tscn"})
+	assert_array(Array(DataValidator.validate(raw))).is_empty()

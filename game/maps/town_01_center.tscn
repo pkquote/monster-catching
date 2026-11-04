@@ -1,0 +1,74 @@
+[gd_scene format=4]
+
+[ext_resource type="Script" path="res://game/overworld/game_map.gd" id="1_kw4of"]
+[ext_resource type="TileSet" path="res://game/maps/tiles/placeholder_tileset.tres" id="2_2ymci"]
+[ext_resource type="PackedScene" path="res://game/overworld/pieces/spawn.tscn" id="3_xduo7"]
+[ext_resource type="Script" path="res://game/overworld/pieces/spawn.gd" id="4_fb4es"]
+[ext_resource type="PackedScene" path="res://game/overworld/pieces/door.tscn" id="5_nnshl"]
+[ext_resource type="Script" path="res://game/overworld/pieces/door.gd" id="6_5iold"]
+[ext_resource type="PackedScene" path="res://game/overworld/pieces/heal_spot.tscn" id="7_qifju"]
+[ext_resource type="Script" path="res://game/overworld/pieces/heal_spot.gd" id="8_6kye2"]
+[ext_resource type="PackedScene" path="res://game/overworld/pieces/npc.tscn" id="9_gqw12"]
+[ext_resource type="Script" path="res://game/overworld/pieces/npc.gd" id="10_21cva"]
+[ext_resource type="PackedScene" path="res://game/overworld/pieces/shop_counter.tscn" id="11_c41ry"]
+[ext_resource type="Script" path="res://game/overworld/pieces/shop_counter.gd" id="12_ekw8h"]
+
+[node name="Town01Center" type="Node2D" unique_id=1446602248]
+script = ExtResource("1_kw4of")
+display_name = "Fernmoor Town"
+indoor = true
+
+[node name="Ground" type="TileMapLayer" parent="." unique_id=777422165]
+tile_map_data = PackedByteArray("AAAAAAAAAAAFAAAAAAABAAAAAAAFAAAAAAACAAAAAAAFAAAAAAADAAAAAAAFAAAAAAAEAAAAAAAFAAAAAAAFAAAAAAAFAAAAAAAGAAAAAAAFAAAAAAAHAAAAAAAFAAAAAAAIAAAAAAAFAAAAAAAJAAAAAAAFAAAAAAAKAAAAAAAFAAAAAAAAAAEAAAAFAAAAAAABAAEAAAAIAAAAAAACAAEAAAAIAAAAAAADAAEAAAAIAAAAAAAEAAEAAAAIAAAAAAAFAAEAAAAIAAAAAAAGAAEAAAAIAAAAAAAHAAEAAAAIAAAAAAAIAAEAAAAIAAAAAAAJAAEAAAAIAAAAAAAKAAEAAAAFAAAAAAAAAAIAAAAFAAAAAAABAAIAAAAKAAAAAAACAAIAAAAKAAAAAAADAAIAAAAKAAAAAAAEAAIAAAAKAAAAAAAFAAIAAAAKAAAAAAAGAAIAAAAKAAAAAAAHAAIAAAAKAAAAAAAIAAIAAAAKAAAAAAAJAAIAAAAKAAAAAAAKAAIAAAAFAAAAAAAAAAMAAAAFAAAAAAABAAMAAAAIAAAAAAACAAMAAAAIAAAAAAADAAMAAAAIAAAAAAAEAAMAAAAIAAAAAAAFAAMAAAAIAAAAAAAGAAMAAAAIAAAAAAAHAAMAAAAIAAAAAAAIAAMAAAAIAAAAAAAJAAMAAAAIAAAAAAAKAAMAAAAFAAAAAAAAAAQAAAAFAAAAAAABAAQAAAAIAAAAAAACAAQAAAAIAAAAAAADAAQAAAAJAAAAAAAEAAQAAAAJAAAAAAAFAAQAAAAJAAAAAAAGAAQAAAAJAAAAAAAHAAQAAAAJAAAAAAAIAAQAAAAIAAAAAAAJAAQAAAAIAAAAAAAKAAQAAAAFAAAAAAAAAAUAAAAFAAAAAAABAAUAAAAIAAAAAAACAAUAAAAIAAAAAAADAAUAAAAJAAAAAAAEAAUAAAAJAAAAAAAFAAUAAAAJAAAAAAAGAAUAAAAJAAAAAAAHAAUAAAAJAAAAAAAIAAUAAAAIAAAAAAAJAAUAAAAIAAAAAAAKAAUAAAAFAAAAAAAAAAYAAAAFAAAAAAABAAYAAAAIAAAAAAACAAYAAAAIAAAAAAADAAYAAAAIAAAAAAAEAAYAAAAIAAAAAAAFAAYAAAAIAAAAAAAGAAYAAAAIAAAAAAAHAAYAAAAIAAAAAAAIAAYAAAAIAAAAAAAJAAYAAAAIAAAAAAAKAAYAAAAFAAAAAAAAAAcAAAAFAAAAAAABAAcAAAAFAAAAAAACAAcAAAAFAAAAAAADAAcAAAAFAAAAAAAEAAcAAAAFAAAAAAAFAAcAAAAHAAAAAAAGAAcAAAAFAAAAAAAHAAcAAAAFAAAAAAAIAAcAAAAFAAAAAAAJAAcAAAAFAAAAAAAKAAcAAAAFAAAAAAA=")
+tile_set = ExtResource("2_2ymci")
+
+[node name="Decor" type="TileMapLayer" parent="." unique_id=1779938871]
+tile_set = ExtResource("2_2ymci")
+
+[node name="Entities" type="Node2D" parent="." unique_id=1947677186]
+y_sort_enabled = true
+
+[node name="Entry" type="Node2D" parent="Entities" unique_id=1026714821 instance=ExtResource("3_xduo7")]
+position = Vector2(176, 208)
+script = ExtResource("4_fb4es")
+id = "entry"
+
+[node name="Heal" type="Node2D" parent="Entities" unique_id=1940796123 instance=ExtResource("3_xduo7")]
+position = Vector2(112, 112)
+script = ExtResource("4_fb4es")
+id = "heal"
+
+[node name="Door" type="Node2D" parent="Entities" unique_id=1137221301 instance=ExtResource("5_nnshl")]
+position = Vector2(176, 240)
+script = ExtResource("6_5iold")
+target_map = "town_01"
+target_spawn = "from_center"
+
+[node name="HealCounter" type="Node2D" parent="Entities" unique_id=533441024 instance=ExtResource("7_qifju")]
+position = Vector2(112, 80)
+script = ExtResource("8_6kye2")
+
+[node name="Nurse" type="Node2D" parent="Entities" unique_id=907433245 instance=ExtResource("9_gqw12")]
+position = Vector2(112, 48)
+script = ExtResource("10_21cva")
+actor_id = "nurse"
+display_name = "Nurse"
+dialogue = "res://dialogue/town_01/npcs.dialogue"
+title = "nurse"
+
+[node name="ShopCounter" type="Node2D" parent="Entities" unique_id=804940319 instance=ExtResource("11_c41ry")]
+position = Vector2(240, 80)
+script = ExtResource("12_ekw8h")
+stock = PackedStringArray("lure_cage", "tide_net", "snare_vine", "salve", "tonic")
+
+[node name="Clerk" type="Node2D" parent="Entities" unique_id=652076238 instance=ExtResource("9_gqw12")]
+position = Vector2(240, 48)
+script = ExtResource("10_21cva")
+actor_id = "clerk"
+display_name = "Clerk"
+dialogue = "res://dialogue/town_01/npcs.dialogue"
+title = "clerk"
+
+[node name="Above" type="TileMapLayer" parent="." unique_id=1082093654]
+z_index = 10
+tile_set = ExtResource("2_2ymci")

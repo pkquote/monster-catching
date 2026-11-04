@@ -12,6 +12,9 @@ signal hovered(hint: Variant)
 
 const COLUMNS := 3
 
+## Fixed button width; 0 = the default (196 in 3 columns, 300 otherwise).
+var button_width := 0
+
 var _title: Label
 var _grid: GridContainer
 var _allow_cancel := false
@@ -38,7 +41,8 @@ func choose(title: String, options: Array, allow_cancel := true, columns := COLU
 		var b := Button.new()
 		b.text = o.label
 		b.disabled = o.get("disabled", false)
-		b.custom_minimum_size = Vector2(196 if columns >= 3 else 300, 22)
+		var w := button_width if button_width > 0 else (196 if columns >= 3 else 300)
+		b.custom_minimum_size = Vector2(w, 22)
 		b.clip_text = true
 		b.alignment = HORIZONTAL_ALIGNMENT_LEFT
 		b.add_theme_font_size_override("font_size", 11)

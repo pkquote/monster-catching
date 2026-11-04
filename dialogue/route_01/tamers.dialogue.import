@@ -1,0 +1,16 @@
+[remap]
+
+importer="dialogue_manager"
+importer_version=18
+type="Resource"
+uid="uid://cwtq55jwo1v6b"
+path="res://.godot/imported/tamers.dialogue-121c6c4fdf18ae2f3a7c6fc795bad863.tres"
+
+[deps]
+
+source_file="res://dialogue/route_01/tamers.dialogue"
+dest_files=["res://.godot/imported/tamers.dialogue-121c6c4fdf18ae2f3a7c6fc795bad863.tres"]
+
+[params]
+
+defaults=true

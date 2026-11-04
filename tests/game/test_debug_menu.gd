@@ -47,6 +47,10 @@ func test_without_a_game_only_explains() -> void:
 
 func test_test_party_unlocks_battles() -> void:
 	assert_str(GameState.start_new_game("Ana")).is_empty()
+	Overworld.instant = true
+	var world: Overworld = load("res://game/overworld/overworld.tscn").instantiate()
+	add_child(world)
+	await get_tree().process_frame
 	DebugMenu.open()
 	var buttons := _labels()
 	assert_bool(buttons["Custom battle..."].disabled).is_true()
@@ -62,3 +66,5 @@ func test_test_party_unlocks_battles() -> void:
 	assert_bool(_labels().has("Start")).is_true()
 	DebugMenu.close()
 	assert_bool(DebugMenu.is_open()).is_false()
+	world.free()
+	Overworld.instant = false

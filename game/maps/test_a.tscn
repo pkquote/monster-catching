@@ -1,0 +1,67 @@
+[gd_scene format=4]
+
+[ext_resource type="Script" path="res://game/overworld/game_map.gd" id="1_u3tpj"]
+[ext_resource type="TileSet" path="res://game/maps/tiles/placeholder_tileset.tres" id="2_3o8ex"]
+[ext_resource type="PackedScene" path="res://game/overworld/pieces/spawn.tscn" id="3_crtk7"]
+[ext_resource type="Script" path="res://game/overworld/pieces/spawn.gd" id="4_np2sv"]
+[ext_resource type="PackedScene" path="res://game/overworld/pieces/door.tscn" id="5_fwwpk"]
+[ext_resource type="Script" path="res://game/overworld/pieces/door.gd" id="6_kx4ys"]
+[ext_resource type="PackedScene" path="res://game/overworld/pieces/npc.tscn" id="7_r6pjy"]
+[ext_resource type="Script" path="res://game/overworld/pieces/npc.gd" id="8_s12of"]
+[ext_resource type="PackedScene" path="res://game/overworld/pieces/item_pickup.tscn" id="9_iufgp"]
+[ext_resource type="Script" path="res://game/overworld/pieces/item_pickup.gd" id="10_hquss"]
+[ext_resource type="PackedScene" path="res://game/overworld/pieces/hidden_item.tscn" id="11_nwscn"]
+[ext_resource type="Script" path="res://game/overworld/pieces/hidden_item.gd" id="12_eoa5q"]
+
+[node name="TestA" type="Node2D" unique_id=1482990853]
+script = ExtResource("1_u3tpj")
+display_name = "Test Room"
+indoor = true
+
+[node name="Ground" type="TileMapLayer" parent="." unique_id=272455601]
+tile_map_data = PackedByteArray("AAAAAAAAAAAFAAAAAAABAAAAAAAFAAAAAAACAAAAAAAFAAAAAAADAAAAAAAFAAAAAAAEAAAAAAAFAAAAAAAFAAAAAAAFAAAAAAAGAAAAAAAFAAAAAAAHAAAAAAAFAAAAAAAAAAEAAAAFAAAAAAABAAEAAAAIAAAAAAACAAEAAAAIAAAAAAADAAEAAAAIAAAAAAAEAAEAAAAIAAAAAAAFAAEAAAAIAAAAAAAGAAEAAAAIAAAAAAAHAAEAAAAFAAAAAAAAAAIAAAAFAAAAAAABAAIAAAAIAAAAAAACAAIAAAAIAAAAAAADAAIAAAAIAAAAAAAEAAIAAAAIAAAAAAAFAAIAAAAIAAAAAAAGAAIAAAAIAAAAAAAHAAIAAAAFAAAAAAAAAAMAAAAFAAAAAAABAAMAAAAIAAAAAAACAAMAAAAIAAAAAAADAAMAAAAIAAAAAAAEAAMAAAAIAAAAAAAFAAMAAAAIAAAAAAAGAAMAAAAIAAAAAAAHAAMAAAAFAAAAAAAAAAQAAAAFAAAAAAABAAQAAAAIAAAAAAACAAQAAAAIAAAAAAADAAQAAAAIAAAAAAAEAAQAAAAIAAAAAAAFAAQAAAAIAAAAAAAGAAQAAAAIAAAAAAAHAAQAAAAFAAAAAAAAAAUAAAAFAAAAAAABAAUAAAAFAAAAAAACAAUAAAAFAAAAAAADAAUAAAAFAAAAAAAEAAUAAAAHAAAAAAAFAAUAAAAFAAAAAAAGAAUAAAAFAAAAAAAHAAUAAAAFAAAAAAA=")
+tile_set = ExtResource("2_3o8ex")
+
+[node name="Decor" type="TileMapLayer" parent="." unique_id=1133941923]
+tile_set = ExtResource("2_3o8ex")
+
+[node name="Entities" type="Node2D" parent="." unique_id=1347400126]
+y_sort_enabled = true
+
+[node name="Start" type="Node2D" parent="Entities" unique_id=1731926539 instance=ExtResource("3_crtk7")]
+position = Vector2(80, 80)
+script = ExtResource("4_np2sv")
+id = "start"
+
+[node name="FromB" type="Node2D" parent="Entities" unique_id=739340106 instance=ExtResource("3_crtk7")]
+position = Vector2(144, 144)
+script = ExtResource("4_np2sv")
+id = "from_b"
+
+[node name="Door1" type="Node2D" parent="Entities" unique_id=283493720 instance=ExtResource("5_fwwpk")]
+position = Vector2(144, 176)
+script = ExtResource("6_kx4ys")
+target_map = "test_b"
+target_spawn = "from_a"
+
+[node name="Guide" type="Node2D" parent="Entities" unique_id=398525194 instance=ExtResource("7_r6pjy")]
+position = Vector2(208, 48)
+script = ExtResource("8_s12of")
+actor_id = "guide"
+display_name = "Guide"
+dialogue = "res://tests/fixtures/test_talk.dialogue"
+title = "hello"
+
+[node name="Salve1" type="Node2D" parent="Entities" unique_id=993591019 instance=ExtResource("9_iufgp")]
+position = Vector2(48, 144)
+script = ExtResource("10_hquss")
+item = "salve"
+
+[node name="Hidden1" type="Node2D" parent="Entities" unique_id=973403700 instance=ExtResource("11_nwscn")]
+position = Vector2(208, 144)
+script = ExtResource("12_eoa5q")
+item = "tonic"
+
+[node name="Above" type="TileMapLayer" parent="." unique_id=211427558]
+z_index = 10
+tile_set = ExtResource("2_3o8ex")

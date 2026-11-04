@@ -1,4 +1,11 @@
 extends GdUnitTestSuite
+
+
+func test_run_action_is_bindable() -> void:
+	assert_bool(GameSettings.ACTIONS.has("run")).is_true()
+	assert_bool(GameSettings.ACTION_LABELS.has("run")).is_true()
+	assert_bool(GameSettings.default_bindings().run.keyboard.is_empty()).is_false()
+	assert_bool(GameSettings.default_bindings().run.gamepad.is_empty()).is_false()
 ## Settings defaults, validation and bindings.
 
 

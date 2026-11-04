@@ -1,0 +1,24 @@
+~ hello
+Guide: Hello there.
+Guide: Want a flag?
+- Yes please
+	$> Story.set_flag("talked")
+	Guide: Done.
+- No thanks
+	Guide: Okay.
+=> END
+
+~ sets_flag
+$> Story.set_flag("talked")
+Guide: Flag set.
+=> END
+
+~ battle
+Watcher: You walked into my sight!
+$> Story.start_battle("scout_ana")
+Watcher: Good fight.
+=> END
+
+~ bye
+Watcher: You beat me fair.
+=> END

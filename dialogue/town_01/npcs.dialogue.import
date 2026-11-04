@@ -1,0 +1,16 @@
+[remap]
+
+importer="dialogue_manager"
+importer_version=18
+type="Resource"
+uid="uid://bwy0wgmg0y3pm"
+path="res://.godot/imported/npcs.dialogue-8113fdbc7cbd96f76aa16af5a5fdd60f.tres"
+
+[deps]
+
+source_file="res://dialogue/town_01/npcs.dialogue"
+dest_files=["res://.godot/imported/npcs.dialogue-8113fdbc7cbd96f76aa16af5a5fdd60f.tres"]
+
+[params]
+
+defaults=true

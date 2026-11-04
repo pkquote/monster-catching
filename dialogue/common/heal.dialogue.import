@@ -1,0 +1,16 @@
+[remap]
+
+importer="dialogue_manager"
+importer_version=18
+type="Resource"
+uid="uid://tclnedauumj2"
+path="res://.godot/imported/heal.dialogue-3419e26071f45fa4b72a3eb185c6102c.tres"
+
+[deps]
+
+source_file="res://dialogue/common/heal.dialogue"
+dest_files=["res://.godot/imported/heal.dialogue-3419e26071f45fa4b72a3eb185c6102c.tres"]
+
+[params]
+
+defaults=true

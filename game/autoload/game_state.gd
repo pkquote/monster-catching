@@ -74,9 +74,16 @@ func close_game() -> void:
 	current_path = ""
 
 
+## Set by the overworld while it's open: writes the player's exact position into
+## `current` so every save (auto or manual) resumes where the player stands.
+var position_provider: Callable
+
+
 func _write(kind: String) -> String:
 	if current == null:
 		return ""
+	if position_provider.is_valid():
+		position_provider.call()
 	var path := store.write(current, kind, now_ms())
 	if path != "":
 		current_path = path

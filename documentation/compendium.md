@@ -13,8 +13,8 @@
 | [Reactions](#reactions) | 8 |
 | [Types](#types) | 14 |
 | [Affinities](#affinities) | 4 |
-| [Tamers](#tamers) | 2 |
-| [Encounters](#encounters) | 1 |
+| [Tamers](#tamers) | 4 |
+| [Encounters](#encounters) | 2 |
 
 ## Types
 
@@ -569,6 +569,15 @@ Grouped by type. Physical moves use P.Atk vs P.Def; special moves use S.Atk vs S
 
 NPC opponents. *Max active* is how many creatures they field at once.
 
+### Hiker Tom
+
+`hiker_tom` · Max active **1** · AI `basic` · Reward 250
+
+| Creature | Lv | Moves |
+|---|---|---|
+| Pebblet | 6 | Pebble Toss, Brace *(latest learnset)* |
+| Sprigling | 6 | Vine Lash, Seed Carpet *(latest learnset)* |
+
 ### Rival
 
 `rival_01` · Max active **2** · AI `tactician` · Reward 500
@@ -579,6 +588,14 @@ NPC opponents. *Max active* is how many creatures they field at once.
 | Frostling | 7 | Frost Nip, Rime Veil *(latest learnset)* |
 
 **Items:** Salve x1
+
+### Rival
+
+`rival_lab` · Max active **1** · AI `basic` · Reward 100
+
+| Creature | Lv | Moves |
+|---|---|---|
+| Sprigling | 5 | Vine Lash, Seed Carpet *(latest learnset)* |
 
 ### Scout Ana
 
@@ -592,6 +609,16 @@ NPC opponents. *Max active* is how many creatures they field at once.
 ## Encounters
 
 Wild encounter tables. Chance is per creature in the pack.
+
+### Route 1 deep grass
+
+`route_01_deep_grass` · Pack size 1–2
+
+| Creature | Chance | Levels |
+|---|---|---|
+| Frostling | 40% | 5–8 |
+| Voltmoth | 30% | 5–8 |
+| Pebblet | 30% | 5–8 |
 
 ### Route 1 tall grass
 

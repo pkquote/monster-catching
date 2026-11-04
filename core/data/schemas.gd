@@ -45,6 +45,7 @@ const CATEGORIES := {
 	"field_states": "file",
 	"reactions": "file",
 	"affinities": "file",
+	"minigames": "file",
 	"balance": "single",
 }
 
@@ -226,6 +227,11 @@ const ENTRY := {
 		"name": {"t": "string"},
 		"description": {"t": "string", "opt": true},
 	},
+	"minigames": {
+		"id": {"t": "id"},
+		"name": {"t": "string"},
+		"scene": {"t": "string"},
+	},
 	"balance": {
 		"level_cap": {"t": "int", "min": 1, "max": 100},
 		"party_size": {"t": "int", "min": 1, "max": 6},
@@ -276,6 +282,15 @@ const ENTRY := {
 				"value": {"t": "int", "min": -100, "max": 100}},
 		}},
 		"round_limit": {"t": "int", "min": 1, "max": 1000},
+		"overworld": {"t": "dict", "fields": {
+			"walk_speed": {"t": "number", "min": 0.5, "max": 20.0},
+			"run_speed": {"t": "number", "min": 0.5, "max": 30.0},
+			"encounter_rate": {"t": "number", "min": 0.0, "max": 1.0},
+			"encounter_grace_tiles": {"t": "int", "min": 0, "max": 100},
+			"walk_energy_tiles": {"t": "int", "min": 1, "max": 1000},
+			"defeat_money_fraction": {"t": "number", "min": 0.0, "max": 1.0},
+			"sell_fraction": {"t": "number", "min": 0.0, "max": 1.0},
+		}},
 		"xp": {"t": "dict", "fields": {
 			"divisor": {"t": "number", "min": 1.0, "max": 100.0},
 			"tamer_mult": {"t": "number", "min": 1.0, "max": 5.0},

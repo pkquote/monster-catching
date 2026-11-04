@@ -1,0 +1,10 @@
+{
+  "schema": 1,
+  "entries": [
+    {
+      "id": "quick_draw",
+      "name": "Quick Draw",
+      "scene": "res://game/minigames/quick_draw/quick_draw.tscn"
+    }
+  ]
+}

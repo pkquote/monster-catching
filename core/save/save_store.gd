@@ -14,9 +14,21 @@ const LAST_FILE := "last.json"
 
 ## schema -> Callable(Dictionary) -> Dictionary that upgrades a save by one version.
 ## Add an entry here whenever SaveGame.SCHEMA goes up.
-const MIGRATIONS := {}
+static func migrations() -> Dictionary:
+	return {1: _v1_to_v2}
 
 var root: String
+
+
+## Schema 1 -> 2 (M3): top-level `flags` move into `story`; no position yet, so the
+## save resumes at the new-game spawn.
+static func _v1_to_v2(d: Dictionary) -> Dictionary:
+	var out := d.duplicate(true)
+	out["story"] = {"flags": out.get("flags", {})}
+	out.erase("flags")
+	out["position"] = {}
+	out["schema"] = 2
+	return out
 
 
 func _init(p_root: String = "user://saves") -> void:
@@ -103,9 +115,10 @@ func read(path: String) -> Dictionary:
 	if v > SaveGame.SCHEMA:
 		return _fail("made by a newer version of the game (schema %d)" % v)
 	while v < SaveGame.SCHEMA:
-		if not MIGRATIONS.has(v):
+		var steps := migrations()
+		if not steps.has(v):
 			return _fail("no upgrade path from schema %d" % v)
-		d = MIGRATIONS[v].call(d)
+		d = steps[v].call(d)
 		v += 1
 	var save := SaveGame.from_dict(d)
 	if save == null:

@@ -1,0 +1,21 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://game/overworld/game_map.gd" id="1_3yp6l"]
+[ext_resource type="TileSet" path="res://game/maps/tiles/placeholder_tileset.tres" id="2_y04ld"]
+
+[node name="NewMap" type="Node2D" unique_id=2022986461]
+script = ExtResource("1_3yp6l")
+display_name = "New map"
+
+[node name="Ground" type="TileMapLayer" parent="." unique_id=2082501732]
+tile_set = ExtResource("2_y04ld")
+
+[node name="Decor" type="TileMapLayer" parent="." unique_id=444874339]
+tile_set = ExtResource("2_y04ld")
+
+[node name="Entities" type="Node2D" parent="." unique_id=351075748]
+y_sort_enabled = true
+
+[node name="Above" type="TileMapLayer" parent="." unique_id=994612127]
+z_index = 10
+tile_set = ExtResource("2_y04ld")

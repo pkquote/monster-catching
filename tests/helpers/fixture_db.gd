@@ -31,6 +31,7 @@ static func balance() -> Dictionary:
 		"underdog": {"bonus_actions_per_ratio": 1.0, "spread_reduction_per_ratio": 0.2, "spread_reduction_cap": 0.5,
 			"stat_bonus_per_ratio": 0.15, "stat_bonus_cap": 0.4, "xp_bonus_per_ratio": 0.5},
 		"catch": {"hp_weight": 0.8, "status_mult": 1.5},
+		"overworld": {"walk_speed": 4.0, "run_speed": 7.0, "encounter_rate": 0.10, "encounter_grace_tiles": 4, "walk_energy_tiles": 8, "defeat_money_fraction": 0.10, "sell_fraction": 0.5},
 		"xp": {"divisor": 5, "tamer_mult": 1.5},
 		"affinity_awards": {
 			"hit_dealt": {"affinity": "striker", "points": 1},

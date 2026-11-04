@@ -23,6 +23,10 @@ echo "== Dialogue"
 	&& echo "Dialogue OK" \
 	|| { "$GODOT" --headless --path . --script res://tools/check_dialogue.gd 2>&1 | grep "\.dialogue:"; exit 1; }
 
+echo "== Maps"
+"$GODOT" --headless --path . res://tools/check_maps.tscn 2>&1 | grep -E "Maps OK|^warning|^test_|^[a-z0-9_]+/|^[a-z0-9_]+:" || true
+"$GODOT" --headless --path . res://tools/check_maps.tscn >/dev/null 2>&1
+
 echo "== Tests"
 "$GODOT" --headless --path . -s res://addons/gdUnit4/bin/GdUnitCmdTool.gd \
 	--add res://tests --ignoreHeadlessMode -c 2>&1 \

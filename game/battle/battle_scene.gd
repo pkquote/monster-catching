@@ -2,7 +2,9 @@ extends Control
 ## The battle screen. Owns a BattleEngine, collects the player's choices, plays
 ## back the engine's events, and writes the outcome into the save at the end.
 ##
-## Open it with SceneRouter.goto(SceneRouter.BATTLE, {"setup": BattleSetup}).
+## Open it with SceneRouter.goto(SceneRouter.BATTLE, {"setup": BattleSetup}), or as an
+## overlay: instance it, set `params` before adding it, and await `finished` (the
+## overworld does this so a map and any running conversation survive the battle).
 ## Optional params: "seed" (int), "return_to" (scene path, default the world).
 
 const STAGE_H := 236
@@ -14,6 +16,11 @@ const FORMATION := [
 		3: [Vector2(290, 105), Vector2(390, 58), Vector2(470, 10)]},
 ]
 
+## Emitted instead of changing scene when opened as an overlay (params set).
+signal finished(summary: Dictionary)
+
+## Overlay mode: set before adding to the tree. Empty = read SceneRouter.params.
+var params: Dictionary = {}
 var db: Database
 var engine: BattleEngine
 var setup: BattleSetup
@@ -37,7 +44,9 @@ var _results_panel: Control
 
 func _ready() -> void:
 	db = DataRegistry.db
-	setup = SceneRouter.params.get("setup")
+	if params.is_empty():
+		params = SceneRouter.params
+	setup = params.get("setup")
 	if setup == null:
 		SceneRouter.goto.call_deferred(SceneRouter.WORLD)
 		return
@@ -46,8 +55,8 @@ func _ready() -> void:
 	elif not setup.is_wild:
 		tamer_name = setup.foe_name if setup.foe_name != "" else "Foe"
 	var rng := RandomNumberGenerator.new()
-	if SceneRouter.params.has("seed"):
-		rng.seed = int(SceneRouter.params.seed)
+	if params.has("seed"):
+		rng.seed = int(params.seed)
 	else:
 		rng.randomize()
 	engine = BattleEngine.new(db, rng, setup)
@@ -303,7 +312,8 @@ func result_lines(res: Dictionary) -> PackedStringArray:
 	if int(summary.get("money", 0)) > 0:
 		lines.append("Received %d money." % summary.money)
 	if summary.outcome == "lost":
-		lines.append("Your team was patched up so you can keep testing.")
+		lines.append("You hurried back to safety..." if params.get("defeat_rules", true)
+			else "Your team was patched up.")
 	if lines.is_empty():
 		lines.append("Nothing gained this time.")
 	return lines
@@ -311,7 +321,10 @@ func result_lines(res: Dictionary) -> PackedStringArray:
 
 func _leave() -> void:
 	phase = "done"
-	SceneRouter.goto(SceneRouter.params.get("return_to", SceneRouter.WORLD))
+	if params.get("overlay", false):
+		finished.emit(summary)
+	else:
+		SceneRouter.goto(params.get("return_to", SceneRouter.WORLD))
 
 
 # --- View management (used by BattlePlayback) ---------------------------------------

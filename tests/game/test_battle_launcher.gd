@@ -82,7 +82,7 @@ func test_full_party_sends_catches_to_storage() -> void:
 	assert_int(s.storage.size()).is_equal(1)
 
 
-func test_defeat_heals_party_as_placeholder() -> void:
+func test_loss_no_longer_heals() -> void:
 	var s := _save()
 	s.party = [FixtureDB.make(db, "blob", 2, ["hit"])]
 	var e := BattleEngine.new(db, RandomNumberGenerator.new(), BattleLauncher.wild_setup(s, [FixtureDB.make(db, "tank", 40, ["hit"])], 1))
@@ -91,7 +91,7 @@ func test_defeat_heals_party_as_placeholder() -> void:
 		e.resolve_round([BattleAction.pass_turn(e.sides[0].active()[0].bid)] if not e.sides[0].active().is_empty() else [])
 	var summary := BattleLauncher.apply_results(db, s, e)
 	assert_str(summary.outcome).is_equal("lost")
-	assert_int(s.party[0].hp).is_equal(s.party[0].max_hp(db))
+	assert_int(s.party[0].hp).is_equal(0)  # the overworld applies the defeat rules (Defeat)
 
 
 func test_custom_setup_builds_any_format() -> void:

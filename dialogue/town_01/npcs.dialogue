@@ -1,0 +1,22 @@
+~ mum
+if Story.flag("got_starter")
+	Mum: Your partner looks happy. Come home and rest whenever you need to.
+else
+	Mum: Off you go! The professor wanted to see you.
+=> END
+
+~ kid
+Kid: The tall grass is where the wild ones hide. I'm not allowed in yet.
+=> END
+
+~ elder
+Elder: Creatures you treat well fight better for you. Mark my words.
+=> END
+
+~ nurse
+Nurse: Rest your team at the counter whenever you like.
+=> END
+
+~ clerk
+Clerk: Cages, nets, salves. Step up to the counter to buy.
+=> END

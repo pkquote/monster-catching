@@ -38,7 +38,7 @@ func _unhandled_input(event: InputEvent) -> void:
 
 
 func open() -> void:
-	if is_open():
+	if is_open() or (Overworld.active != null and Overworld.active.blocks_debug_menu()):
 		return
 	_restore_focus = get_viewport().gui_get_focus_owner()
 	get_tree().paused = true
@@ -90,7 +90,7 @@ func _show_main(status := "") -> void:
 		var s := GameState.current
 		var in_battle := _in_battle()
 		var first := UIKit.button(_box, "Get test party", _grant_test_party)
-		first.disabled = s.flags.get(BattleLauncher.TEST_FLAG, false) or in_battle
+		first.disabled = s.story.flag(BattleLauncher.TEST_FLAG) or in_battle
 		UIKit.button(_box, "Heal party", _heal_party).disabled = s.party.is_empty() or in_battle
 		UIKit.spacer(_box, 4)
 		UIKit.label(_box, "Test battles", UIKit.BODY_SIZE, UIKit.MUTED)
@@ -101,7 +101,7 @@ func _show_main(status := "") -> void:
 			UIKit.button(_box, t[1], func(): _start_tamer(tamer_id)).disabled = not can_fight
 		UIKit.button(_box, "Custom battle...", _show_custom).disabled = not can_fight
 		if in_battle:
-			UIKit.label(_box, "Finish this battle to use these.", 11, UIKit.MUTED)
+			UIKit.label(_box, "Finish the battle or close the menu to use these.", 11, UIKit.MUTED)
 		elif s.party.is_empty():
 			UIKit.label(_box, "Get a test party to unlock battles.", 11, UIKit.MUTED)
 	UIKit.spacer(_box, 4)
@@ -154,22 +154,9 @@ func _show_custom() -> void:
 	_focus_first()
 
 
-## Asks how many creatures to field (skipped when there's only one choice).
-## Returns the count, or null if cancelled (back to the main page).
-func _ask_field_count(format_size: int, intro: String) -> Variant:
-	var most := BattleLauncher.max_fieldable(GameState.current, format_size)
-	if most <= 1:
-		return 1
-	_clear()
-	UIKit.label(_box, intro, UIKit.BODY_SIZE, UIKit.TEXT, true)
-	UIKit.label(_box, "Send out how many? Fewer than the foe makes you the Underdog.", 11, UIKit.MUTED, true)
-	var menu := CommandMenu.new()
-	_box.add_child(menu)
-	var options: Array = []
-	for i in range(most, 0, -1):
-		var note := "" if i >= format_size else "  (Underdog)"
-		options.append({"label": "%d creature%s%s" % [i, "" if i == 1 else "s", note], "value": i})
-	var n = await menu.choose("", options, true, 1)
+## The shared "how many?" prompt; back to the main page when cancelled.
+func _ask(format_size: int, intro: String) -> Variant:
+	var n = await FieldCountPrompt.ask(self, format_size, intro)
 	if n == null and is_open():
 		_show_main()
 	return n
@@ -196,39 +183,37 @@ func _start_wild() -> void:
 	var db := DataRegistry.db
 	var pack := BattleLauncher.roll_wild_pack(db, WILD_ENCOUNTER, _rng)
 	var names := ", ".join(pack.map(func(c: CreatureInstance): return "%s Lv %d" % [c.display_name(db), c.level]))
-	var n = await _ask_field_count(pack.size(), "Wild %s!" % names)
+	var n = await _ask(pack.size(), "Wild %s!" % names)
 	if n != null:
 		_go(BattleLauncher.wild_setup(GameState.current, pack, n))
 
 
 func _start_tamer(tamer_id: String) -> void:
 	var t := DataRegistry.db.tamer(tamer_id)
-	var n = await _ask_field_count(t.max_active, "%s fields %d at a time." % [t.name, t.max_active])
+	var n = await _ask(t.max_active, "%s fields %d at a time." % [t.name, t.max_active])
 	if n != null:
 		_go(BattleLauncher.tamer_setup(DataRegistry.db, GameState.current, tamer_id, n))
 
 
-## Starts a battle that returns to the screen the menu was opened on.
+## Starts a battle over the overworld (debug battles use the normal defeat rules).
 func _go(setup: BattleSetup) -> void:
-	var back := get_tree().current_scene.scene_file_path
 	close()
-	if back == SceneRouter.WORLD:
-		GameState.leave_world()
-	SceneRouter.goto(SceneRouter.BATTLE, {"setup": setup, "return_to": back})
+	if Overworld.active != null:
+		Overworld.active.run_battle(setup)
 
 
 # --- Helpers -----------------------------------------------------------------------
 
+## Battles (and the party tools) only make sense on the overworld, outside a battle.
 func _in_battle() -> bool:
-	var scene := get_tree().current_scene
-	return scene != null and scene.scene_file_path == SceneRouter.BATTLE
+	return Overworld.active == null or Overworld.active.is_locked()
 
 
-## Screens that show the party pick up changes by rebuilding.
+## Lets the current screen redraw anything that shows the party or bag.
 func _refresh_world() -> void:
 	var scene := get_tree().current_scene
-	if scene != null and scene.scene_file_path == SceneRouter.WORLD:
-		get_tree().reload_current_scene()
+	if scene != null and scene.has_method("refresh_hud"):
+		scene.refresh_hud()
 
 
 func _option_row(grid: GridContainer, text: String, choices: Array, selected: int) -> OptionButton:

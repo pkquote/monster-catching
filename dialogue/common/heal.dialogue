@@ -1,0 +1,8 @@
+~ heal
+Nurse: Welcome! Would you like to rest your team?
+- Yes, please
+	$> rest_here()
+	Nurse: Your team is rested. Take care out there!
+- No, thanks
+	Nurse: Come back any time.
+=> END

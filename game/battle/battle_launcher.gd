@@ -13,16 +13,16 @@ const MAX_SIDE := 3
 ## Debug helper until starters exist (M3): a small party and bag, once per playthrough.
 ## Returns false if this playthrough already got it.
 static func grant_test_party(db: Database, save: SaveGame) -> bool:
-	if save.flags.get(TEST_FLAG, false):
+	if save.story.flag(TEST_FLAG):
 		return false
 	for entry in TEST_PARTY:
 		var c := CreatureInstance.create(db, entry[0], entry[1])
 		if save.party.is_empty():
 			Progression.make_starter(db, c)
-		_add_to_party(db, save, c)
+		add_to_party(db, save, c)
 	for item in TEST_BAG:
 		save.inventory[item] = int(save.inventory.get(item, 0)) + TEST_BAG[item]
-	save.flags[TEST_FLAG] = true
+	save.story.set_flag(TEST_FLAG)
 	return true
 
 
@@ -99,7 +99,7 @@ static func apply_results(db: Database, save: SaveGame, engine: BattleEngine) ->
 			save.inventory[item] = int(engine.sides[0].items[item])
 	for c: CreatureInstance in res.captured:
 		summary.captured.append(c.display_name(db))
-		if not _add_to_party(db, save, c):
+		if not add_to_party(db, save, c):
 			summary.to_storage += 1
 	match res.reason:
 		"fled":
@@ -113,15 +113,11 @@ static func apply_results(db: Database, save: SaveGame, engine: BattleEngine) ->
 	if summary.outcome == "won" and engine.setup.tamer_id != "":
 		summary.money = db.tamer(engine.setup.tamer_id).reward_money
 		save.money += summary.money
-	if summary.outcome == "lost":
-		# Placeholder until M3 defines defeat: patch the party up and carry on.
-		for c: CreatureInstance in save.party:
-			c.heal_full(db)
 	return summary
 
 
 ## Adds to the party, or to storage when the party is full. Returns true for party.
-static func _add_to_party(db: Database, save: SaveGame, c: CreatureInstance) -> bool:
+static func add_to_party(db: Database, save: SaveGame, c: CreatureInstance) -> bool:
 	if save.party.size() < db.balance.party_size:
 		save.party.append(c)
 		return true

@@ -1,0 +1,44 @@
+extends GdUnitTestSuite
+## Wild encounter rolls per grass tile: rate, grace tiles, no table, no fighters.
+
+var db: Database
+var rng := RandomNumberGenerator.new()
+
+
+func before() -> void:
+	db = FixtureDB.build()
+
+
+func before_test() -> void:
+	rng.seed = 99
+
+
+func test_rate_over_many_rolls() -> void:
+	var r := EncounterRoller.new(db.balance, rng)
+	var hits := 0
+	for i in 10000:
+		if r.on_grass_tile("route_01_grass", true):
+			hits += 1
+	assert_float(hits / 10000.0).is_equal_approx(0.10, 0.015)
+
+
+func test_no_table_never_rolls() -> void:
+	var r := EncounterRoller.new(db.balance, rng)
+	for i in 500:
+		assert_bool(r.on_grass_tile("", true)).is_false()
+
+
+func test_no_healthy_creatures_never_rolls() -> void:
+	var r := EncounterRoller.new(db.balance, rng)
+	for i in 500:
+		assert_bool(r.on_grass_tile("route_01_grass", false)).is_false()
+
+
+func test_grace_tiles_after_a_battle() -> void:
+	var always := FixtureDB.build({"overworld": {"walk_speed": 4.0, "run_speed": 7.0, "encounter_rate": 1.0,
+		"encounter_grace_tiles": 4, "walk_energy_tiles": 8, "defeat_money_fraction": 0.1, "sell_fraction": 0.5}})
+	var r := EncounterRoller.new(always.balance, rng)
+	r.start_grace()
+	for i in 4:
+		assert_bool(r.on_grass_tile("route_01_grass", true)).is_false()
+	assert_bool(r.on_grass_tile("route_01_grass", true)).is_true()

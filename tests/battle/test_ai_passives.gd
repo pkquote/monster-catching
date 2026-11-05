@@ -18,19 +18,38 @@ func before() -> void:
 		{"id": "rester", "effects": [{"op": "rest_bonus", "fraction": 0.25}]},
 		{"id": "scorcher", "triggers": [{"on": "hit", "contact": true,
 			"effects": [{"op": "apply_status", "status": "burn"}]}]},
+		{"id": "low_scorcher", "triggers": [{"on": "hit", "contact": true, "when": {"hp_below": 0.5},
+			"effects": [{"op": "apply_status", "status": "burn"}]}]},
 		{"id": "sulker", "triggers": [{"on": "hit",
 			"effects": [{"op": "stat_stage", "stat": "patk", "stages": -1}]}]},
 	]:
 		p.merge({"name": str(p.id).capitalize(), "description": "Test passive."})
 		r.add_entry("passives", p)
+	var burn := [{"op": "apply_status", "status": "burn"}]
+	var drop := [{"op": "stat_stage", "stat": "patk", "stages": -1}]
+	for it in [
+		{"id": "burn_charm", "held": {"triggers": [{"on": "hit", "contact": true, "effects": burn}]}},
+		{"id": "burn_berry", "held": {"use": "consumed",
+			"triggers": [{"on": "hit", "contact": true, "effects": burn}]}},
+		{"id": "burn_spiky", "held": {"use": "per_battle",
+			"triggers": [{"on": "hit", "contact": true, "effects": burn}]}},
+		{"id": "sulk_charm", "held": {"triggers": [{"on": "hit", "effects": drop}]}},
+		{"id": "low_burn_charm", "held": {"triggers": [{"on": "hit", "contact": true,
+			"when": {"hp_below": 0.5}, "effects": burn}]}},
+	]:
+		it.merge({"name": str(it.id).capitalize(), "description": "Test held item.", "category": "held",
+			"price": 10})
+		r.add_entry("items", it)
 	var errors := DataValidator.validate(r)
 	assert(errors.is_empty(), "Test passives invalid:\n" + "\n".join(errors))
 	db = Database.from_raw(r)
 
 
-func _make(species: String, passive: String, moves: Array = ["hit"], level := 10) -> CreatureInstance:
+func _make(species: String, passive: String, moves: Array = ["hit"], level := 10,
+		held := "") -> CreatureInstance:
 	var c := FixtureDB.make(db, species, level, moves)
 	c.passive = passive
+	c.held_item = held
 	return c
 
 
@@ -141,3 +160,74 @@ func test_no_retaliation_cost_when_the_hit_knocks_out() -> void:
 func test_choices_are_unchanged_without_passives() -> void:
 	var e := FixtureDB.engine(db, [_make("fish", "", ["hit", "splash"])], [_make("flame", "")])
 	assert_str(BattleAI.choose(e, e.sides[0].active()[0].bid, "tactician").move).is_equal("splash")
+
+
+# --- Held-item hit triggers ---
+
+func _held_foe(held: String, passive := "", attacker_passive := "") -> BattleEngine:
+	return FixtureDB.engine(db, [_make("blob", attacker_passive, ["hit"])],
+		[_make("tank", passive, ["hit"], 10, held)])
+
+
+func test_retaliation_prices_a_held_item_hit_trigger() -> void:
+	var plain := _held_foe("")
+	var charm := _held_foe("burn_charm")
+	assert_float(_score(charm, "hit", "tactician")).is_less(_score(plain, "hit", "tactician"))
+	assert_float(_score(charm, "hit", "aggressive")).is_equal(_score(plain, "hit", "aggressive"))
+
+
+func test_retaliation_cancelled_by_attackers_protection_for_items() -> void:
+	# Unprotected, the item costs something; with only the attacker's passive added, it costs nothing.
+	var open_plain := _held_foe("")
+	var open_charm := _held_foe("burn_charm")
+	assert_float(_score(open_charm, "hit", "tactician")).is_less(_score(open_plain, "hit", "tactician"))
+	var pure_plain := _held_foe("", "", "pure")
+	var pure_charm := _held_foe("burn_charm", "", "pure")
+	assert_float(_score(pure_charm, "hit", "tactician")).is_equal(_score(pure_plain, "hit", "tactician"))
+	var sulk_open_plain := _held_foe("")
+	var sulk_open := _held_foe("sulk_charm")
+	assert_float(_score(sulk_open, "hit", "tactician")).is_less(_score(sulk_open_plain, "hit", "tactician"))
+	var sulk_plain := _held_foe("", "", "grip")
+	var sulk := _held_foe("sulk_charm", "", "grip")
+	assert_float(_score(sulk, "hit", "tactician")).is_equal(_score(sulk_plain, "hit", "tactician"))
+
+
+func test_spent_per_battle_item_adds_no_retaliation() -> void:
+	var plain := _held_foe("")
+	var fresh := _held_foe("burn_spiky")
+	var spent := _held_foe("burn_spiky")
+	spent.sides[1].active()[0].held_spent = true
+	assert_float(_score(fresh, "hit", "tactician")).is_less(_score(plain, "hit", "tactician"))
+	assert_float(_score(spent, "hit", "tactician")).is_equal(_score(plain, "hit", "tactician"))
+
+
+func test_consumed_item_costs_the_same_as_a_permanent_one_for_this_hit() -> void:
+	var plain := _held_foe("")
+	var perm := _held_foe("burn_charm")
+	var eaten := _held_foe("burn_berry")
+	var base := _score(plain, "hit", "tactician")
+	assert_float(_score(perm, "hit", "tactician")).is_less(base)
+	assert_float(_score(eaten, "hit", "tactician")).is_equal(_score(perm, "hit", "tactician"))
+
+
+func test_trigger_when_gates_the_estimate() -> void:
+	var plain := _held_foe("")
+	var gated := _held_foe("low_burn_charm")
+	assert_float(_score(gated, "hit", "tactician")).is_equal(_score(plain, "hit", "tactician"))
+	var low := _held_foe("low_burn_charm")
+	low.sides[1].active()[0].creature.hp = low.sides[1].active()[0].creature.max_hp(db) / 4
+	var low_plain := _held_foe("")
+	low_plain.sides[1].active()[0].creature.hp = low_plain.sides[1].active()[0].creature.max_hp(db) / 4
+	assert_float(_score(low, "hit", "tactician")).is_less(_score(low_plain, "hit", "tactician"))
+
+
+func test_passive_trigger_when_gates_the_estimate() -> void:
+	var plain := _held_foe("")
+	var gated := _held_foe("", "low_scorcher")
+	assert_float(_score(gated, "hit", "tactician")).is_equal(_score(plain, "hit", "tactician"))
+	var low := _held_foe("", "low_scorcher")
+	var low_plain := _held_foe("")
+	for e in [low, low_plain]:
+		var f: Battler = e.sides[1].active()[0]
+		f.creature.hp = f.creature.max_hp(db) / 4
+	assert_float(_score(low, "hit", "tactician")).is_less(_score(low_plain, "hit", "tactician"))

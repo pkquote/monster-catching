@@ -20,6 +20,7 @@ func before_test() -> void:
 
 
 func after_test() -> void:
+	DataRegistry.db._tables["items"].erase("test_charm")
 	DebugMenu.close()
 	WorldTest.close(world)
 
@@ -154,3 +155,33 @@ func test_bag_reset_seed_one_point_is_singular() -> void:
 	assert_str(world.pause_menu.page_text()).is_equal("Return 1 point from Tidepup?")
 	await _pick("Yes")
 	assert_str(world.pause_menu.page_text()).is_equal("Tidepup's 1 point came back.")
+
+
+func test_bag_held_item_points_to_the_summary() -> void:
+	DataRegistry.db._tables["items"]["test_charm"] = ItemDef.from_dict({"id": "test_charm", "name": "Test Charm",
+		"description": "Raises Physical Attack.", "category": "held", "price": 10, "held": {"effects": []}})
+	Story.give_creature("tidepup", 5)
+	GameState.current.inventory["test_charm"] = 1
+	world.open_pause_menu()
+	await get_tree().process_frame
+	await _pick("Bag")
+	await _pick("Test Charm ×1")
+	var text := world.pause_menu.page_text()
+	assert_str(text).contains("Raises Physical Attack.")
+	assert_str(text).contains("Give it from the Summary.")
+	assert_str(text).not_contains("on who?")
+	assert_int(int(GameState.current.inventory["test_charm"])).is_equal(1)
+
+
+func test_bag_unknown_item_shows_a_page_with_back() -> void:
+	Story.give_creature("tidepup", 5)
+	GameState.current.inventory["ghost"] = 1
+	world.open_pause_menu()
+	await get_tree().process_frame
+	await _pick("Bag")
+	await _pick("ghost ×1")
+	assert_str(world.pause_menu.page_text()).contains("ghost")
+	assert_str(world.pause_menu.page_text()).contains("Unknown item.")
+	assert_bool(world.pause_menu.menu.labels().has("Back")).is_true()
+	await _pick("Back")
+	assert_int(int(GameState.current.inventory["ghost"])).is_equal(1)

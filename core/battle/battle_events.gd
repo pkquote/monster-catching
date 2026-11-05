@@ -63,6 +63,8 @@ const PASSIVE_UNLOCKED := "passive_unlocked"
 # Creature passives
 ## A passive visibly acts: a trigger fires, a hit is absorbed. { bid, passive }
 const PASSIVE_TRIGGERED := "passive_triggered"
+## A held item was used up and is gone from its holder. { bid, item }
+const ITEM_CONSUMED := "item_consumed"
 
 const ALL := [
 	BATTLE_START, ROUND_START, BATTLE_END, SEND_OUT, SWAP_OUT, REPLACEMENT_NEEDED, UNDERDOG, FLED,
@@ -72,5 +74,5 @@ const ALL := [
 	FIELD_APPLIED, FIELD_REMOVED, REACTION,
 	CAPTURE_ATTEMPT, CAPTURE_FAILED, CAPTURED,
 	BOND, LASHED_OUT, DISOBEYED, XP_GAIN, LEVEL_UP, MOVE_LEARNED, MOVE_OFFERED,
-	PASSIVE_UNLOCKED, PASSIVE_TRIGGERED,
+	PASSIVE_UNLOCKED, PASSIVE_TRIGGERED, ITEM_CONSUMED,
 ]

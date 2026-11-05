@@ -79,7 +79,16 @@ func test_tamer_party_can_fix_a_passive() -> void:
 	rng.seed = 3
 	var setup := BattleSetup.vs_tamer(db, player, "rival_01", -1, {}, rng)
 	assert_str(setup.sides[1].party[0].passive).is_equal("lightning_rod")
-	tamer.party[0].erase("passive")
+	tamer.party[0]["passive"] = ""
+
+
+func test_tamer_party_can_hold_an_item() -> void:
+	var tamer := db.tamer("rival_01")
+	tamer.party[0]["held_item"] = "some_item"
+	var player := [CreatureInstance.create(db, "emberkit", 5)]
+	var setup := BattleSetup.vs_tamer(db, player, "rival_01")
+	assert_str(setup.sides[1].party[0].held_item).is_equal("some_item")
+	tamer.party[0]["held_item"] = ""
 
 
 func test_unlock_once_at_threshold() -> void:
@@ -188,6 +197,29 @@ func test_unlock_event_emitted() -> void:
 	assert_int(found[0].bid).is_equal(e.sides[0].active()[0].bid)
 
 
+func test_passive_trigger_with_a_failing_when_does_not_fire() -> void:
+	var r := FixtureDB.raw()
+	r.add_entry("passives", {"id": "grit", "name": "Grit", "description": "Test passive.",
+		"triggers": [{"on": "hit", "when": {"hp_below": 0.5},
+			"effects": [{"op": "stat_stage", "stat": "patk", "stages": -1}]}]})
+	var errors := DataValidator.validate(r)
+	assert(errors.is_empty(), "Test passive invalid:\n" + "\n".join(errors))
+	var fx := Database.from_raw(r)
+	var holder := FixtureDB.make(fx, "tank", 20, ["hit"])
+	holder.passive = "grit"
+	var e := FixtureDB.engine(fx, [FixtureDB.make(fx, "blob", 20, ["hit"])], [holder])
+	var me: Battler = e.sides[0].active()[0]
+	var foe: Battler = e.sides[1].active()[0]
+	var events := e.resolve_round([BattleAction.use_move(me.bid, "hit", foe.bid), BattleAction.pass_turn(foe.bid)])
+	assert_array(FixtureDB.events_of(events, BattleEvents.PASSIVE_TRIGGERED)).is_empty()
+	assert_int(me.stages.patk).is_equal(0)
+	# Hurt enough, the same trigger fires.
+	foe.creature.hp = foe.creature.max_hp(fx) / 4
+	events = e.resolve_round([BattleAction.use_move(me.bid, "hit", foe.bid), BattleAction.pass_turn(foe.bid)])
+	assert_int(FixtureDB.events_of(events, BattleEvents.PASSIVE_TRIGGERED).size()).is_equal(1)
+	assert_int(me.stages.patk).is_equal(-1)
+
+
 func test_foe_unlock_is_silent() -> void:
 	var fx := FixtureDB.build()
 	fx.creature("blob").affinity_passives = {"striker": "steady"}
@@ -234,6 +266,40 @@ func test_field_mult_uses_lead_active_passive_only() -> void:
 	undertow.affinity_passive = "finisher"
 	undertow.active_passive = Passives.SLOT_AFFINITY
 	assert_float(Passives.field_mult(db, _party([undertow, plain]), "encounter_rate")).is_equal(1.0)
+
+
+func _held_db() -> Database:
+	var r := FixtureDB.raw()
+	r.add_entry("passives", {"id": "lure", "name": "Lure", "description": "Test passive.",
+		"field": [{"op": "encounter_rate", "mult": 2.0}]})
+	r.add_entry("items", {"id": "calm_charm", "name": "Calm Charm", "description": "Test held item.",
+		"category": "held", "price": 10,
+		"held": {"field": [{"op": "encounter_rate", "mult": 0.5}, {"op": "xp_mult", "mult": 1.5}]}})
+	var errors := DataValidator.validate(r)
+	assert(errors.is_empty(), "Test data invalid:\n" + "\n".join(errors))
+	return Database.from_raw(r)
+
+
+func test_field_mult_includes_the_leads_held_item() -> void:
+	var hdb := _held_db()
+	var lead := CreatureInstance.create(hdb, "blob", 5)
+	var other := CreatureInstance.create(hdb, "blob", 5)
+	lead.held_item = "calm_charm"
+	assert_float(Passives.field_mult(hdb, _party([lead, other]), "encounter_rate")).is_equal_approx(0.5, 0.0001)
+	assert_float(Passives.field_mult(hdb, _party([lead, other]), "xp_mult")).is_equal_approx(1.5, 0.0001)
+	assert_float(Passives.field_mult(hdb, _party([lead, other]), "bond_gain")).is_equal(1.0)
+	# Together with the lead's passive.
+	lead.passive = "lure"
+	assert_float(Passives.field_mult(hdb, _party([lead, other]), "encounter_rate")).is_equal_approx(1.0, 0.0001)
+	# A fainted lead still counts.
+	lead.hp = 0
+	assert_float(Passives.field_mult(hdb, _party([lead, other]), "xp_mult")).is_equal_approx(1.5, 0.0001)
+	# A non-lead's item is ignored.
+	assert_float(Passives.field_mult(hdb, _party([other, lead]), "xp_mult")).is_equal(1.0)
+	# An unknown item id and no lead.
+	lead.held_item = "gone"
+	assert_float(Passives.field_mult(hdb, _party([lead, other]), "xp_mult")).is_equal(1.0)
+	assert_float(Passives.field_mult(hdb, SaveGame.new(), "xp_mult")).is_equal(1.0)
 
 
 func test_field_mult_empty_party_is_one() -> void:

@@ -178,6 +178,24 @@ const WHEN := {
 	"side": {"t": "enum", "values": ["own", "enemy"], "opt": true},
 }
 
+## A passive's (or held item's) list of triggers; each may carry a `when` condition.
+const TRIGGERS := {"t": "array", "opt": true, "of": {"t": "dict", "fields": {
+	"on": {"t": "enum", "values": TRIGGER_ON},
+	"chance": {"t": "int", "opt": true, "min": 1, "max": 100},
+	"contact": {"t": "bool", "opt": true},
+	"when": {"t": "dict", "fields": WHEN, "opt": true},
+	"effects": {"t": "effects", "trigger": true},
+}}}
+
+## A held item's behaviour: a passive plus how it is spent.
+const HELD := {
+	"use": {"t": "enum", "values": ["permanent", "consumed", "per_battle"], "opt": true},
+	"scope": {"t": "enum", "values": ["self", "allies"], "opt": true},
+	"effects": {"t": "effects", "when": true, "opt": true},
+	"triggers": TRIGGERS,
+	"field": {"t": "effects", "opt": true},
+}
+
 const ENTRY := {
 	"creatures": {
 		"id": {"t": "id"},
@@ -209,12 +227,7 @@ const ENTRY := {
 		"description": {"t": "string", "opt": true},
 		"scope": {"t": "enum", "values": ["self", "allies"], "opt": true},
 		"effects": {"t": "effects", "when": true, "opt": true},
-		"triggers": {"t": "array", "opt": true, "of": {"t": "dict", "fields": {
-			"on": {"t": "enum", "values": TRIGGER_ON},
-			"chance": {"t": "int", "opt": true, "min": 1, "max": 100},
-			"contact": {"t": "bool", "opt": true},
-			"effects": {"t": "effects", "trigger": true},
-		}}},
+		"triggers": TRIGGERS,
 		"field": {"t": "effects", "opt": true},
 	},
 	"moves": {
@@ -235,10 +248,11 @@ const ENTRY := {
 		"id": {"t": "id"},
 		"name": {"t": "string"},
 		"description": {"t": "string", "opt": true},
-		"category": {"t": "enum", "values": ["capture", "heal", "battle", "key", "training"]},
+		"category": {"t": "enum", "values": ["capture", "heal", "battle", "key", "training", "held"]},
 		"price": {"t": "int", "min": 0},
 		"target": {"t": "enum", "values": TARGETS, "opt": true},
 		"effects": {"t": "effects", "opt": true},
+		"held": {"t": "dict", "fields": HELD, "opt": true},
 	},
 	"tamers": {
 		"id": {"t": "id"},
@@ -251,6 +265,7 @@ const ENTRY := {
 			"level": {"t": "int", "min": 1, "max": 100},
 			"moves": {"t": "array", "opt": true, "min": 1, "max": 4, "of": {"t": "ref", "cat": "moves"}},
 			"passive": {"t": "ref", "cat": "passives", "opt": true},
+			"held_item": {"t": "ref", "cat": "items", "opt": true},
 		}}},
 		"items": {"t": "array", "opt": true, "of": {"t": "dict", "fields": {
 			"item": {"t": "ref", "cat": "items"},

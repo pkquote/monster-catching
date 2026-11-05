@@ -55,6 +55,7 @@ static func vs_tamer(db: Database, player_party: Array, tamer_id_: String,
 		var c := CreatureInstance.create(db, p.species, p.level, p.moves, rng)
 		if not p.passive.is_empty():
 			c.passive = p.passive
+		c.held_item = p.held_item
 		party.append(c)
 	var bag := {}
 	for it in t.items:

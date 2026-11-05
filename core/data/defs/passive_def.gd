@@ -8,7 +8,7 @@ var description: String
 var scope: String
 ## Always-on effects; each may carry a `when` condition.
 var effects: Array
-## Array of { on, chance, contact, effects }.
+## Array of { on, chance, contact, when, effects }.
 var triggers: Array
 ## Overworld effects (encounter_rate, xp_mult, bond_gain).
 var field: Array
@@ -27,6 +27,7 @@ static func from_dict(d: Dictionary) -> PassiveDef:
 			"on": t.on,
 			"chance": int(t.get("chance", 100)),
 			"contact": t.get("contact", false),
+			"when": t.get("when", {}).duplicate(true),
 			"effects": t.effects.duplicate(true),
 		})
 	p.field = d.get("field", []).duplicate(true)

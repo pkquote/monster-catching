@@ -164,7 +164,7 @@ static func maps() -> Array:
 				{"type": "npc", "name": "Nurse", "at": [3, 1], "props": {"actor_id": "nurse", "display_name": "Nurse",
 					"dialogue": NPCS, "title": "nurse"}},
 				{"type": "shop_counter", "name": "ShopCounter", "at": [7, 2], "props": {"stock":
-					PackedStringArray(["lure_cage", "tide_net", "snare_vine", "salve", "tonic", "reset_seed"])}},
+					PackedStringArray(["lure_cage", "tide_net", "snare_vine", "salve", "tonic", "reset_seed", "tide_charm", "oran_berry", "rough_bark", "scout_lens", "guard_banner"])}},
 				{"type": "storage_box", "name": "StorageBox", "at": [8, 2]},
 				{"type": "npc", "name": "Clerk", "at": [7, 1], "props": {"actor_id": "clerk", "display_name": "Clerk",
 					"dialogue": NPCS, "title": "clerk"}},

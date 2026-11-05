@@ -55,7 +55,12 @@ func _bag() -> void:
 			break
 		var it := db.item(item_id)
 		if not FieldItems.can_use(db, item_id):
-			page("%s\n%s" % [it.name, it.description])
+			var text := "%s\nUnknown item." % item_id
+			if it != null:
+				text = "%s\n%s" % [it.name, it.description]
+			if it != null and it.category == "held":
+				text += "\nGive it from the Summary."
+			page(text)
 			await menu.choose("", [{"label": "Back", "value": null}], true, 1)
 			continue
 		var is_seed: bool = it.category == "training"

@@ -1,6 +1,6 @@
 # Handoff: godot-monster-catching-game
 
-Date: 2026-11-04. Branch: `master`. Last commit: `283a19e` ("Show stat growth vs training; cap level at 99"). The working tree holds the uncommitted stat-growth-rates work (see "Stat growth rates" below) on top of it.
+Date: 2026-11-05. Branch: `master`. Last commit: `1cc00e9` ("Add per-species stat growth rates"). The held-items work (see "Held items" below) is uncommitted on top of it.
 
 ## Read this first: standing rules
 - **Never commit, stage or stash.** The user writes every commit. Leave changes in the working tree.
@@ -32,7 +32,7 @@ Godot 4.7.2 (.NET build, but GDScript only) monster-catching RPG.
 - Godot console: `/c/Program Files (x86)/Godot_v4.7.2-stable_mono_win64/Godot_v4.7.2-stable_mono_win64_console.exe`
 - Full check: `bash scripts/check.sh`. It covers data validation, dialogue check, map check, all 58 test suites and compendium generation, and must end with "All checks passed." It passed on 2026-11-04 against the committed passives work.
 - The `.claude/skills/run-godot-monster-catching-game/` skill launches and drives the real game.
-  - Tours: `--mode=frontend|battle|overworld|progress|passives`, each in `tours/*.gd`.
+  - Tours: `--mode=frontend|battle|overworld|progress|passives|held`, each in `tours/*.gd`.
   - In tour files, `d` is untyped, so values derived from it use `=`, not `:=`.
 - Godot test runs share save files, so don't run two test or Godot processes at once.
 
@@ -71,6 +71,14 @@ Godot 4.7.2 (.NET build, but GDScript only) monster-catching RPG.
 - Level cap is 99; `CreatureInstance.grown(db, stat)` is the level-derived growth (max HP, energy and stats are built from it); the Summary Stats tab shows `total (growth+trained)`. These were committed in `283a19e`.
 - New, uncommitted: each species can give any base stat a growth tier via `growth_rates` (`slow`/`steady`/`fast`, multipliers in `balance.json` `growth_tiers`: 0.8/1.0/1.2). `Stats.hp_at/stat_at/energy_at` take a percent (default 100); `BalanceDef.growth_percent`, `CreatureDef.growth_tier`. Validated in the validator and `tools/validate_data.gd`; the Summary marks non-steady stats with ▲/▼ (checked in the real window); the compendium shows a `Growth:` bullet (non-steady only) and a Lv 99 stats line per species. Spec: `documentation/specs/2026-11-04-stat-growth-rates-design.md`; plan: `documentation/plans/2026-11-04-stat-growth-rates.md`.
 - Follow-up content pass (not started): mark the shipped species with growth tiers. All 8 are still all-steady, so nothing changes in play until that is done.
+
+## Held items (implemented, uncommitted)
+- **Spec:** `documentation/specs/2026-11-05-held-items-design.md` (Implemented); **plan:** `documentation/plans/2026-11-05-held-items.md`.
+- **What it does:** a creature holds one item (`CreatureInstance.held_item`, save schema 5; tamer party members can set `held_item`). An item with category `held` has a `held` block shaped like a passive (`effects`, `triggers` with an optional `when`, `field`, `scope: allies` for auras) and a usage kind `use`: `permanent` (default), `consumed` (gone after it fires; `ITEM_CONSUMED`, "<Name>'s <Item> was used up.") or `per_battle` (fires once per battle). Banners name the item.
+- **Key code:** `core/progress/held_items.gd` (`HeldItems.give/take/def_of`), `PassiveRules` (`held_def`, `fire`, `_use_up`, held effects and auras), `Passives.field_mult` (lead's held `field` ops), `ItemDef.held/held_use`, tactician AI retaliation reads held `hit` triggers, Summary Stats tab Give held item / Swap / Take back (`game/progress/summary_screen.gd`), bag note "Give it from the Summary."
+- **Content:** `data/items/held.json`: Tide Charm (permanent type_power), Oran Berry (consumed, heals below half HP), Rough Bark (per_battle, lowers the attacker's Physical Attack), Scout Lens (permanent, encounter_rate field op), Guard Banner (aura). All five are stocked at the Town 1 shop (`tools/build_maps.gd` and `game/maps/town_01_center.tscn`). The compendium has a "Held items" section.
+- **Tour:** `--mode=held` (Give held item, a battle where the berry fires, the item gone afterwards). The tour puts the berry in the bag directly: there is no F1 give-item page.
+- **Not done / out of scope:** two held slots, steal/knock-off moves, giving items in battle, trading, durability, held items on wild creatures; no held items on tamer parties in shipped data; the AI does not model enter/round-end/faint/knockout held triggers (same as passives); no F1 page to give held items; the shop menu lists all 11 items in two name-only columns, with the price and description shown on the page for the focused item (no categories).
 
 ## Possible next steps (none requested yet)
 - Fix any remaining passives minors the user cares about (see the deferred list).

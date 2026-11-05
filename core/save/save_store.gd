@@ -15,7 +15,7 @@ const LAST_FILE := "last.json"
 ## schema -> Callable(Dictionary) -> Dictionary that upgrades a save by one version.
 ## Add an entry here whenever SaveGame.SCHEMA goes up.
 static func migrations() -> Dictionary:
-	return {1: _v1_to_v2, 2: _v2_to_v3, 3: _v3_to_v4}
+	return {1: _v1_to_v2, 2: _v2_to_v3, 3: _v3_to_v4, 4: _v4_to_v5}
 
 var root: String
 
@@ -52,6 +52,16 @@ static func _v3_to_v4(d: Dictionary) -> Dictionary:
 			c["affinity_passive"] = ""
 			c["active_passive"] = Passives.SLOT_ROLLED
 	out["schema"] = 4
+	return out
+
+
+## Schema 4 -> 5 (held items): creatures gain an empty held-item slot.
+static func _v4_to_v5(d: Dictionary) -> Dictionary:
+	var out := d.duplicate(true)
+	for key in ["party", "storage"]:
+		for c in out.get(key, []):
+			c["held_item"] = ""
+	out["schema"] = 5
 	return out
 
 

@@ -11,6 +11,8 @@ extends SceneTree
 ##                        training, Reset Seed, Storage Box, unsafe zone.
 ##   --mode=passives     passives tour: Set passive (Undertow), its battle-entry banner, Set Affinity
 ##                        unlocks Finisher, the Passive Unlocked screen, Summary -> Use Finisher.
+##   --mode=held          held-items tour: Summary -> Give held item (Oran Berry), a battle where it fires
+##                        (banner naming it, "used up"), the Summary again with the item gone.
 ##   --mode=scene         open one scene, wait, screenshot. Use with --scene / --frames.
 ##   --scene=res://...    scene for --mode=scene (default: the project's main scene)
 ##   --frames=N           frames to wait before the screenshot in scene mode (default 60)
@@ -37,7 +39,7 @@ func _initialize() -> void:
 	match _opts.mode:
 		"scene":
 			_run_scene()
-		"battle", "overworld", "progress", "passives":
+		"battle", "overworld", "progress", "passives", "held":
 			_tour(_opts.mode)
 		_:
 			_tour("frontend")

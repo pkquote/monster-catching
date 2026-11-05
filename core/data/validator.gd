@@ -262,9 +262,22 @@ func _check_cross_rules() -> void:
 					continue
 				if eff.get("op") in DataSchemas.FIELD_OPS:
 					_err("effects[%d].op" % i, "overworld op %s belongs in 'field'" % eff.op)
-				var w = eff.get("when")
-				if w is Dictionary and w.has("field") != w.has("side"):
-					_err("effects[%d].when" % i, "'field' and 'side' go together")
+				_check_when_pair(eff.get("when"), "effects[%d].when" % i)
+		_check_trigger_whens(triggers, "triggers")
+
+	for rec in _raw.get_entries("items"):
+		_check_held_item(rec)
+
+	for rec in _raw.get_entries("tamers"):
+		var t: Dictionary = rec.entry
+		_file = rec.file
+		_label = "[tamers:%s]" % t.get("id", "?")
+		var party = t.get("party", [])
+		if party is Array:
+			for i in party.size():
+				var held_id = party[i].get("held_item") if party[i] is Dictionary else null
+				if held_id is String and _raw_item_category(held_id) not in ["", "held"]:
+					_err("party[%d].held_item" % i, "'%s' is not a held item" % held_id)
 
 	for rec in _raw.get_entries("encounters"):
 		var e: Dictionary = rec.entry
@@ -301,6 +314,70 @@ func _check_cross_rules() -> void:
 			_err("power", "status moves must have power 0")
 		if m.get("category") in ["physical", "special"] and m.get("power", 0) == 0.0:
 			_err("power", "damaging moves need power > 0")
+
+
+func _check_when_pair(w: Variant, path: String) -> void:
+	if w is Dictionary and w.has("field") != w.has("side"):
+		_err(path, "'field' and 'side' go together")
+
+
+func _check_trigger_whens(triggers: Variant, path: String) -> void:
+	if not triggers is Array:
+		return
+	for i in triggers.size():
+		if triggers[i] is Dictionary:
+			_check_when_pair(triggers[i].get("when"), "%s[%d].when" % [path, i])
+
+
+func _raw_item_category(id: String) -> String:
+	for rec in _raw.get_entries("items"):
+		if rec.entry.get("id") == id:
+			return str(rec.entry.get("category", ""))
+	return ""
+
+
+func _check_held_item(rec: Dictionary) -> void:
+	var it: Dictionary = rec.entry
+	_file = rec.file
+	_label = "[items:%s]" % it.get("id", "?")
+	var is_held: bool = it.get("category") == "held"
+	if not is_held:
+		if it.has("held"):
+			_err("held", "only allowed for category 'held'")
+		return
+	if not it.has("held"):
+		_err("held", "required for category 'held'")
+		return
+	if it.has("target"):
+		_err("target", "not allowed on a held item")
+	if it.has("effects"):
+		_err("effects", "not allowed on a held item")
+	var h = it.held
+	if not h is Dictionary:
+		return
+	var effects = h.get("effects", [])
+	var triggers = h.get("triggers", [])
+	var field = h.get("field", [])
+	if effects is Array and triggers is Array and field is Array \
+			and effects.is_empty() and triggers.is_empty() and field.is_empty():
+		_err("held", "needs at least one of effects, triggers or field")
+	if field is Array:
+		for i in field.size():
+			if field[i] is Dictionary and not field[i].get("op") in DataSchemas.FIELD_OPS:
+				_err("held.field[%d].op" % i, "expected an overworld op %s" % [DataSchemas.FIELD_OPS])
+	if effects is Array:
+		for i in effects.size():
+			if effects[i] is Dictionary:
+				if effects[i].get("op") in DataSchemas.FIELD_OPS:
+					_err("held.effects[%d].op" % i, "overworld op %s belongs in 'field'" % effects[i].op)
+				_check_when_pair(effects[i].get("when"), "held.effects[%d].when" % i)
+	_check_trigger_whens(triggers, "held.triggers")
+	var use = h.get("use", "permanent")
+	if use in ["consumed", "per_battle"]:
+		if triggers is Array and triggers.is_empty():
+			_err("held.use", "'%s' needs at least one trigger" % use)
+		if effects is Array and not effects.is_empty():
+			_err("held.effects", "'%s' items cannot have always-on effects" % use)
 
 
 func _check_dialogue() -> void:

@@ -227,6 +227,36 @@ did it (the aura holder, not necessarily the protected creature). Always-on mult
 The battle scene shows it as a small banner over that creature ("Tidepup's Undertow!") that fades
 on its own while the effect's own events play.
 
+## Held items
+
+An item with category `held` carries a `held` block, parsed into `ItemDef.held` (a `PassiveDef` with the item's own
+id, name and description) and `ItemDef.held_use`. A creature holds one (`CreatureInstance.held_item`; tamer party
+members may set `held_item` too). `PassiveRules.effects_for` and `fire` treat the held item as a second source
+beside the active passive: its always-on `effects` (and `scope: "allies"` auras) and its `triggers` work exactly
+as above, and the banner names the item ("Tidepup's Oran Berry!"). The overworld `field` list of the party lead's
+held item combines with the passive's in `Passives.field_mult`. Design:
+[documentation/specs/2026-11-05-held-items-design.md](specs/2026-11-05-held-items-design.md); the items live in
+`data/items/held.json`.
+
+A trigger may carry a `when` (same conditions as an always-on effect: `hp_below`, `underdog`, `field` + `side`),
+checked on the holder when the trigger would fire; a failing `when` fires nothing, emits no banner and does not
+spend the item. Triggers on passives may use it too.
+
+| `use` | Behaviour |
+| --- | --- |
+| `permanent` (default) | Always held; always-on effects and triggers work every time |
+| `consumed` | Needs at least one trigger and no always-on `effects`. The first time a trigger fires, the item is spent: `item_consumed { bid, item }` is emitted ("Tidepup's Oran Berry was used up."), the battler loses it, and the creature really has no item after the battle |
+| `per_battle` | Needs at least one trigger and no always-on `effects`. The item fires once per battle: the first trigger that fires spends it for the rest of that battle. The creature keeps the item and it is ready again next battle |
+
+`item_consumed` follows the `passive_triggered` banner of the same trigger (the effects run between them). Held
+items give no bag use and cannot be given in battle. The effects a held item's trigger runs earn no Affinity,
+like any passive trigger.
+
+### Held items and the AI
+
+The tactician's hit-retaliation estimate includes the target's held-item `hit` triggers (including `when` and
+chance), and absorb, block and own-effect estimates read the held item through the same effect list as passives.
+
 ## AI styles
 
 | Style | Behavior |

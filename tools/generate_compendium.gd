@@ -22,6 +22,7 @@ const TARGET_LABELS := {
 	"all": "Everyone",
 	"own_side": "Own side",
 	"enemy_side": "Enemy side",
+	"attacker": "Attacker",
 }
 const TRIGGER_LABELS := {"enter": "entering", "hit": "being hit", "round_end": "round end",
 	"knockout": "a knockout", "faint": "fainting"}
@@ -72,6 +73,7 @@ func _build() -> void:
 	_creatures()
 	_moves()
 	_items()
+	_held_items()
 	_tamers()
 	_encounters()
 	_balance()
@@ -207,14 +209,6 @@ func _passives() -> void:
 	_w("|---|---|---|---|---|---|---|")
 	for id in _sorted_ids("passives"):
 		var p := db.passive(id)
-		var triggers := PackedStringArray()
-		for t in p.triggers:
-			var s := "On %s" % TRIGGER_LABELS[t.on]
-			if t.contact:
-				s += " (physical)"
-			if t.chance < 100:
-				s += " (%d%%)" % t.chance
-			triggers.append("%s: %s" % [s, _effects(t.effects)])
 		var species := PackedStringArray()
 		for cid in _sorted_ids("creatures"):
 			var c := db.creature(cid)
@@ -227,12 +221,47 @@ func _passives() -> void:
 						track = db.affinity(k).name
 				species.append("%s (%s)" % [c.name, track])
 		_w("| **%s** | `%s` | %s | %s | %s | %s | %s |" % [p.name, p.id, "Aura" if p.scope == "allies" else "Self",
-			_effects(p.effects), _or_dash("; ".join(triggers)), _effects(p.field), ", ".join(species)])
+			_effects(p.effects), _triggers(p.triggers), _effects(p.field), ", ".join(species)])
 	_w("")
 	for id in _sorted_ids("passives"):
 		var p := db.passive(id)
 		if not p.description.is_empty():
 			_w("- **%s:** %s" % [p.name, p.description])
+	_w("")
+
+
+## "On being hit (physical) (30%) [HP below 50%]: effects; ..." or an em dash.
+func _triggers(triggers: Array) -> String:
+	var parts := PackedStringArray()
+	for t in triggers:
+		var s := "On %s" % TRIGGER_LABELS[t.on]
+		if t.contact:
+			s += " (physical)"
+		if t.chance < 100:
+			s += " (%d%%)" % t.chance
+		if not t.when.is_empty():
+			s += " [%s]" % _when(t.when)
+		parts.append("%s: %s" % [s, _effects(t.effects)])
+	return _or_dash("; ".join(parts))
+
+
+func _held_items() -> void:
+	_section("Held items", "One item per creature, given from the Summary screen. *Permanent* items stay held; " +
+		"*Consumed* items are used up when they fire; *Per battle* items fire once each battle. " +
+		"*Aura* items apply their effects to every creature on the holder's side. A `when` condition is shown in brackets.")
+	_w("| Item | Id | Price | Use | Scope | Effects | Triggers | Overworld |")
+	_w("|---|---|---|---|---|---|---|---|")
+	var ids := _sorted_ids("items").filter(func(id): return db.item(id).held != null)
+	for id in ids:
+		var i := db.item(id)
+		_w("| **%s** | `%s` | %d | %s | %s | %s | %s | %s |" % [i.name, i.id, i.price,
+			i.held_use.replace("_", " ").capitalize(), "Aura" if i.held.scope == "allies" else "Self",
+			_effects(i.held.effects), _triggers(i.held.triggers), _effects(i.held.field)])
+	_w("")
+	for id in ids:
+		var i := db.item(id)
+		if not i.description.is_empty():
+			_w("- **%s:** %s" % [i.name, i.description])
 	_w("")
 
 
@@ -359,7 +388,7 @@ func _items() -> void:
 	for id in _sorted_ids("items"):
 		var i := db.item(id)
 		_w("| **%s** | `%s` | %s | %d | %s | %s | %s |" % [i.name, i.id, i.category.capitalize(), i.price,
-			TARGET_LABELS.get(i.target, i.target), _effects(i.effects), i.description])
+			"—" if i.category == "held" else TARGET_LABELS.get(i.target, i.target), _effects(i.effects), i.description])
 	_w("")
 
 
@@ -380,8 +409,9 @@ func _tamers() -> void:
 				moves = db.creature(p.species).moves_up_to(p.level)
 				moves = moves.slice(maxi(0, moves.size() - db.balance.max_moves))
 				note = " *(latest learnset)*"
-			_w("| %s | %d | %s%s |" % [db.creature(p.species).name, p.level,
-				", ".join(Array(moves).map(func(mid): return db.move(mid).name)), note])
+			var held := "" if p.held_item.is_empty() else " *(holds %s)*" % db.item(p.held_item).name
+			_w("| %s | %d | %s%s%s |" % [db.creature(p.species).name, p.level,
+				", ".join(Array(moves).map(func(mid): return db.move(mid).name)), note, held])
 		if not t.items.is_empty():
 			_w("")
 			_w("**Items:** %s" % ", ".join(t.items.map(func(it): return "%s x%d" % [db.item(it.item).name, it.count])))

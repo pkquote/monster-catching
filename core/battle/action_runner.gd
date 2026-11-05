@@ -173,6 +173,9 @@ func _item(b: Battler, a: BattleAction) -> void:
 	if it.category == "training":
 		e.emit({"type": BattleEvents.ACTION_INVALID, "bid": b.bid, "reason": "field_only", "item": a.item})
 		return
+	if it.category == "held":  # given from the Summary, never used from the bag
+		e.emit({"type": BattleEvents.ACTION_INVALID, "bid": b.bid, "reason": "held_item", "item": a.item})
+		return
 	side.items[a.item] = int(side.items[a.item]) - 1
 	var ctx := EffectContext.new()
 	ctx.engine = e

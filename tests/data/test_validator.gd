@@ -238,3 +238,97 @@ func test_budget_counts_position_relative_to_steady() -> void:
 	# turbo counts +1, not +2: turbo + fast is 2, within budget.
 	raw.entries.creatures[0].entry = _creature({"growth_rates": {"patk": "turbo", "pdef": "fast"}})
 	assert_array(Array(DataValidator.warnings(raw))).is_empty()
+
+
+# --- Held items -------------------------------------------------------------
+
+func _held_item(overrides: Dictionary = {}) -> Dictionary:
+	var it := {"id": "charm", "name": "Charm", "category": "held", "price": 10,
+		"held": {"effects": [{"op": "stat_mod", "stat": "patk", "mult": 1.1}]}}
+	it.merge(overrides, true)
+	return it
+
+
+func _heal_item() -> Dictionary:
+	return {"id": "tonic", "name": "Tonic", "category": "heal", "price": 5, "target": "one_ally",
+		"effects": [{"op": "heal", "fraction": 0.25}]}
+
+
+func _with_item(item: Dictionary) -> RawData:
+	var raw := _base()
+	raw.add_entry("items", item)
+	return raw
+
+
+func test_held_item_valid_passes() -> void:
+	var items := [
+		_held_item(),
+		_held_item({"id": "berry", "held": {"use": "consumed", "triggers": [
+			{"on": "hit", "when": {"hp_below": 0.5}, "effects": [{"op": "heal", "fraction": 0.25, "target": "self"}]}]}}),
+		_held_item({"id": "bell", "held": {"use": "per_battle", "scope": "allies", "triggers": [
+			{"on": "enter", "effects": [{"op": "stat_mod", "stat": "spd", "mult": 1.1, "target": "self"}]}]}}),
+		_held_item({"id": "lure", "held": {"field": [{"op": "encounter_rate", "mult": 0.5}]}}),
+	]
+	for it in items:
+		assert_array(Array(DataValidator.validate(_with_item(it)))).is_empty()
+
+
+func test_held_block_required_for_held_category() -> void:
+	var it := _held_item()
+	it.erase("held")
+	assert_str(_errors_for(_with_item(it))).contains("[items:charm] held: required for category 'held'")
+
+
+func test_held_block_rejected_on_other_categories() -> void:
+	var it := _heal_item()
+	it["held"] = {"effects": [{"op": "stat_mod", "stat": "patk", "mult": 1.1}]}
+	assert_str(_errors_for(_with_item(it))).contains("[items:tonic] held: only allowed for category 'held'")
+
+
+func test_held_block_needs_effects_triggers_or_field() -> void:
+	var errs := _errors_for(_with_item(_held_item({"held": {"use": "permanent"}})))
+	assert_str(errs).contains("[items:charm] held: needs at least one of effects, triggers or field")
+
+
+func test_consumed_and_per_battle_need_a_trigger_and_no_effects() -> void:
+	var fx := [{"op": "stat_mod", "stat": "patk", "mult": 1.1}]
+	var trig := [{"on": "hit", "effects": [{"op": "heal", "fraction": 0.25, "target": "self"}]}]
+	for use in ["consumed", "per_battle"]:
+		var errs := _errors_for(_with_item(_held_item({"held": {"use": use, "effects": fx}})))
+		assert_str(errs).contains("held.use: '%s' needs at least one trigger" % use)
+		errs = _errors_for(_with_item(_held_item({"held": {"use": use, "effects": fx, "triggers": trig}})))
+		assert_str(errs).contains("held.effects: '%s' items cannot have always-on effects" % use)
+		errs = _errors_for(_with_item(_held_item({"held": {"use": use,
+			"field": [{"op": "xp_mult", "mult": 1.1}]}})))
+		assert_str(errs).contains("held.use: '%s' needs at least one trigger" % use)
+
+
+func test_held_item_rejects_target_and_top_level_effects() -> void:
+	var errs := _errors_for(_with_item(_held_item({"target": "self",
+		"effects": [{"op": "heal", "fraction": 0.25}]})))
+	assert_str(errs).contains("[items:charm] target: not allowed on a held item")
+	assert_str(errs).contains("[items:charm] effects: not allowed on a held item")
+
+
+func test_trigger_when_is_validated() -> void:
+	var raw := _base()
+	raw.add_entry("passives", {"id": "grit", "name": "Grit", "triggers": [
+		{"on": "hit", "when": {"hp_below": 0.5}, "effects": [{"op": "heal", "fraction": 0.25, "target": "self"}]}]})
+	assert_array(Array(DataValidator.validate(raw))).is_empty()
+	raw.add_entry("passives", {"id": "bad", "name": "Bad", "triggers": [
+		{"on": "hit", "when": {"bogus": 1}, "effects": [{"op": "heal", "fraction": 0.25, "target": "self"}]}]})
+	assert_str(_errors_for(raw)).contains("when.bogus: unknown field")
+
+
+func test_tamer_held_item_must_be_a_held_item() -> void:
+	var tamer := func(held: String) -> Dictionary:
+		return {"id": "rival", "name": "Rival", "max_active": 1, "ai": "basic", "reward_money": 1,
+			"party": [{"species": "pup", "level": 5, "held_item": held}]}
+	var raw := _with_item(_heal_item())
+	raw.add_entry("items", _held_item())
+	raw.add_entry("tamers", tamer.call("tonic"))
+	assert_str(_errors_for(raw)).contains("[tamers:rival] party[0].held_item: 'tonic' is not a held item")
+	raw.entries.tamers[0].entry = tamer.call("charm")
+	assert_array(Array(DataValidator.validate(raw))).is_empty()
+	raw.entries.tamers[0].entry = tamer.call("nope")
+	assert_str(_errors_for(raw)).contains("unknown items id 'nope'")

@@ -9,6 +9,8 @@ const TAB_NAMES := {"stats": "Stats", "moves": "Moves", "training": "Training"}
 const STAT_NAMES := {"hp": "HP", "stamina": "Stamina", "patk": "Physical Attack", "pdef": "Physical Defense",
 	"satk": "Special Attack", "sdef": "Special Defense", "spd": "Speed", "resolve": "Resolve", "luck": "Luck"}
 const COLUMN_WIDTH := ProgressScreen.HALF_WIDTH
+## Longest "Held item" text shown (name and description), so it stays on one line.
+const HELD_LINE_MAX := 80
 const REFRESH := "@refresh"
 const PREV := "@prev"
 const NEXT := "@next"
@@ -154,9 +156,12 @@ func _render_stats(db: Database, c: CreatureInstance) -> Array:
 		lines.append("Max level")
 	else:
 		lines.append("XP to next level: %d" % (Stats.xp_for_level(c.level + 1) - c.xp))
-	lines.append("Bond: %d" % c.bond)
+	lines[lines.size() - 1] += "   Bond: %d" % c.bond
 	var active := PassiveUnlockScreen.passive_line(db, Passives.active_id(c))
 	lines.append("Passive: " + (active if active != "" else "none"))
+	lines.append("Held item: " + _held_line(db, c))
+	if _notice != "":
+		lines.append(_notice)
 	_body.text = "\n".join(lines)
 	var options: Array = []
 	var other := _other_passive(db, c)
@@ -182,9 +187,38 @@ func _render_stats(db: Database, c: CreatureInstance) -> Array:
 		row.add_child(bar)
 		UIKit.label(row, str(points), UIKit.BODY_SIZE)
 		grid.add_child(row)
+	var bag_has := not _bag_held(db).is_empty()
+	if not c.held_item.is_empty():
+		options.append({"label": "Take back", "value": {"held": "take"}})
+		if bag_has:
+			options.push_front({"label": "Swap held item", "value": {"held": "swap"}})
+	elif bag_has:
+		options.append({"label": "Give held item", "value": {"held": "give"}})
 	if Progression.growth_target(db, c) != "":
 		options.push_front({"label": "Grow", "value": "grow"})
 	return options
+
+
+## The held item's name and description; "none"; or the raw id when the data lacks it.
+func _held_line(db: Database, c: CreatureInstance) -> String:
+	if c.held_item.is_empty():
+		return "none"
+	var def := HeldItems.def_of(db, c)
+	if def == null:
+		return "unknown item: " + c.held_item
+	var text := "%s - %s" % [def.name, def.description] if def.description != "" else def.name
+	# One line only: the page has no room for a wrapped second one.
+	return text if text.length() <= HELD_LINE_MAX else text.left(HELD_LINE_MAX - 1).strip_edges() + "…"
+
+
+## The bag's held items: [{id, def, count}].
+func _bag_held(db: Database) -> Array:
+	var out: Array = []
+	for id in _save.inventory:
+		var def := db.item(id)
+		if def != null and def.category == "held" and int(_save.inventory[id]) > 0:
+			out.append({"id": id, "def": def, "count": int(_save.inventory[id])})
+	return out
 
 
 ## The passive that isn't active: {text} for the greyed line, plus {name, slot} when
@@ -241,6 +275,8 @@ func _act(parent: Node, db: Database, c: CreatureInstance, choice: Variant) -> v
 		_train(db, c, choice.train)
 	elif choice is Dictionary and choice.has("move"):
 		await LearnMoveScreen.run(parent, c, choice.move, true, _db)
+	elif choice is Dictionary and choice.has("held"):
+		await _held(db, c, choice.held)
 	elif choice == "seed":
 		if not await ResetSeedPrompt.confirm(menu, func(t: String) -> void: _body.text = t, c, _db):
 			return
@@ -249,6 +285,28 @@ func _act(parent: Node, db: Database, c: CreatureInstance, choice: Variant) -> v
 			_notice = "%d training %s came back." % [result.refunded, "point" if result.refunded == 1 else "points"]
 	elif choice == "grow":
 		await GrowScreen.run(parent, c, _db)
+
+
+func _held(db: Database, c: CreatureInstance, action: String) -> void:
+	if action == "take":
+		var known := HeldItems.def_of(db, c)
+		var taken := HeldItems.take(_save, c)
+		if taken.ok:
+			_notice = ("Took back the %s." % known.name) if known != null else "%s took back the held item." % c.display_name(db)
+		return
+	var options: Array = []
+	for entry in _bag_held(db):
+		options.append({"label": "%s ×%d" % [entry.def.name, entry.count], "value": entry.id})
+	options.append({"label": "Back", "value": null})
+	_body.text = "Give %s which item?" % c.display_name(db)
+	var id = await menu.choose("Pick an item.", options, true, 2)
+	if id == null:
+		return
+	var r := HeldItems.give(db, _save, c, id)
+	if r.ok:
+		_notice = "%s now holds the %s." % [c.display_name(db), db.item(id).name]
+	else:
+		_notice = "You don't have any left."
 
 
 func _train(db: Database, c: CreatureInstance, stat: String) -> void:

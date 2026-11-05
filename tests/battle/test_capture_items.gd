@@ -133,3 +133,16 @@ func test_tamer_format_and_fewer_fielded_creatures() -> void:
 func test_tamer_xp_is_boosted() -> void:
 	var b := db.balance
 	assert_int(Stats.xp_reward(b, 50, 10, true, 0.0)).is_equal(int(Stats.xp_reward(b, 50, 10, false, 0.0) * 1.5))
+
+
+func test_held_items_refused_as_bag_items() -> void:
+	var raw := FixtureDB.raw()
+	raw.add_entry("items", {"id": "charm", "name": "Charm", "category": "held", "price": 10,
+		"held": {"effects": [{"op": "stat_mod", "stat": "patk", "mult": 1.1}]}})
+	var held_db := Database.from_raw(raw)
+	var e := FixtureDB.engine(held_db, [FixtureDB.make(held_db, "fish")], [FixtureDB.make(held_db, "blob", 5)],
+		-1, -1, 1, true, {"charm": 1, "potion": 1})
+	var events := e.resolve_round([BattleAction.use_item(_me(e).bid, "charm", _me(e).bid)])
+	assert_str(FixtureDB.events_of(events, "action_invalid")[0].reason).is_equal("held_item")
+	assert_int(e.sides[0].items.charm).is_equal(1)
+	assert_array(FixtureDB.events_of(events, "item_used")).is_empty()

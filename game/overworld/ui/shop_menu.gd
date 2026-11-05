@@ -3,6 +3,8 @@ extends SideMenu
 ## A shop counter: buy from its stock, or sell your items for half price.
 
 const AMOUNTS := [1, 2, 3, 5, 10]
+## Two columns of this width (+ the 4px gap) fill the side panel's 192px.
+const BUY_BUTTON_WIDTH := 94
 
 
 func run(stock: PackedStringArray) -> void:
@@ -22,15 +24,24 @@ func run(stock: PackedStringArray) -> void:
 
 func _buy(stock: PackedStringArray) -> void:
 	var db := DataRegistry.db
+	# A stocked item's price and description show on the page while it is focused: the list
+	# is two narrow columns of names so a long stock (Back included) fits the window.
+	var show_hint := func(hint: Variant) -> void:
+		page(str(hint) if hint != null else "Buying. You have %d money." % Story.money())
 	while true:
 		var options: Array = []
 		for id in stock:
 			var it := db.item(id)
 			if it != null:
-				options.append({"label": "%s  %d" % [it.name, it.price], "value": id})
+				options.append({"label": it.name, "value": id,
+					"hint": "%s - %d\n%s\nYou have %d money." % [it.name, it.price, it.description, Story.money()]})
 		options.append({"label": "Back", "value": null})
 		page("Buying. You have %d money." % Story.money())
-		var id = await menu.choose("", options, true, 1)
+		menu.button_width = BUY_BUTTON_WIDTH
+		menu.hovered.connect(show_hint)  # only while the list is up: other menus focus with no hint
+		var id = await menu.choose("", options, true, 2)
+		menu.hovered.disconnect(show_hint)
+		menu.button_width = 192
 		if id == null:
 			return
 		var it := db.item(id)

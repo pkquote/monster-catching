@@ -27,6 +27,8 @@ var passive: String = ""
 var affinity_passive: String = ""
 ## Which slot is in effect: "rolled" or "affinity".
 var active_passive: String = Passives.SLOT_ROLLED
+## The held item's id ("" = none). See HeldItems.
+var held_item: String = ""
 
 
 ## A fresh creature at `level`, at full HP and energy, with its latest learnable moves.
@@ -139,6 +141,7 @@ func copy_from(other: CreatureInstance) -> void:
 	passive = d.passive
 	affinity_passive = d.affinity_passive
 	active_passive = d.active_passive
+	held_item = d.held_item
 
 
 func to_dict() -> Dictionary:
@@ -147,6 +150,7 @@ func to_dict() -> Dictionary:
 		"energy": energy, "bond": bond, "moves": Array(moves), "move_pool": Array(move_pool), "affinity": affinity.duplicate(),
 		"training": training.duplicate(), "status": status,
 		"passive": passive, "affinity_passive": affinity_passive, "active_passive": active_passive,
+		"held_item": held_item,
 	}
 
 
@@ -165,6 +169,7 @@ static func from_dict(d: Dictionary) -> CreatureInstance:
 	c.passive = d.get("passive", "")
 	c.affinity_passive = d.get("affinity_passive", "")
 	c.active_passive = d.get("active_passive", Passives.SLOT_ROLLED)
+	c.held_item = d.get("held_item", "")
 	for k in d.get("affinity", {}):
 		c.affinity[k] = int(d.affinity[k])
 	for k in d.get("training", {}):

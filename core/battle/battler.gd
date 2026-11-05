@@ -28,6 +28,8 @@ var last_hit_by := -1
 var endured := false
 ## Has already lost Bond for being overworked this battle.
 var overworked := false
+## A per_battle held item has already fired this battle.
+var held_spent := false
 
 
 func _init(p_bid: int, p_side: int, p_creature: CreatureInstance) -> void:

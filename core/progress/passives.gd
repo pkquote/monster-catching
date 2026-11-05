@@ -34,18 +34,24 @@ static func set_active(c: CreatureInstance, slot: String) -> String:
 
 
 ## Overworld multiplier for `op` (encounter_rate, xp_mult, bond_gain): the product of the
-## party lead's active passive's `field` entries with that op. The lead is party[0], fainted
+## party lead's active passive's and held item's `field` entries with that op. The lead is party[0], fainted
 ## or not; 1.0 with an empty party or no such entry.
 static func field_mult(db: Database, save: SaveGame, op: String) -> float:
 	if save.party.is_empty():
 		return 1.0
-	var def := db.passive(active_id(save.party[0]))
-	if def == null:
-		return 1.0
+	var lead: CreatureInstance = save.party[0]
+	var sources: Array[PassiveDef] = []
+	var own := db.passive(active_id(lead))
+	if own != null:
+		sources.append(own)
+	var item := HeldItems.def_of(db, lead)
+	if item != null and item.held != null:
+		sources.append(item.held)
 	var mult := 1.0
-	for f: Dictionary in def.field:
-		if f.op == op:
-			mult *= float(f.mult)
+	for def in sources:
+		for f: Dictionary in def.field:
+			if f.op == op:
+				mult *= float(f.mult)
 	return mult
 
 

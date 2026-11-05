@@ -46,6 +46,8 @@ func load_from(path: String) -> String:
 		c.clamp_to_cap(DataRegistry.db)
 		Progression.backfill_pool(DataRegistry.db, c)
 		Passives.backfill(DataRegistry.db, c)
+		if not c.held_item.is_empty() and DataRegistry.db.item(c.held_item) == null:
+			Log.warn(Log.SAVE, "Unknown held item", {"item": c.held_item, "species": c.species})
 	current_path = path
 	store.set_last(path)
 	Log.info(Log.SAVE, "Loaded", {"path": path, "player": current.player_name,

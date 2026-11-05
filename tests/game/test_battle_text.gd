@@ -67,3 +67,12 @@ func test_every_event_from_real_battles_describes_without_error() -> void:
 func test_passive_text_lines() -> void:
 	assert_str(_say({"type": "passive_triggered", "bid": 1, "passive": "steady"})).is_equal("B1's Steady!")
 	assert_str(_say({"type": "passive_unlocked", "bid": 1, "passive": "steady"})).is_equal("B1 awakened Steady!")
+
+
+func test_item_consumed_text() -> void:
+	assert_str(_say({"type": "item_consumed", "bid": 1, "item": "potion"})).is_equal("B1's Potion was used up.")
+
+
+func test_passive_text_names_the_held_item() -> void:
+	assert_str(_say({"type": "passive_triggered", "bid": 1, "passive": "", "item": "potion"})) \
+		.is_equal("B1's Potion!")

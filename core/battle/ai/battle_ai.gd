@@ -148,16 +148,28 @@ static func _absorbed_heal(engine: BattleEngine, m: MoveDef, t: Battler) -> floa
 	return minf(healed, max_hp - t.hp())
 
 
-## Expected cost to `b` of the hit triggers on `t`'s passive when `m` hits it: statuses,
-## stat drops and damage that land on the attacker, weighted by chance, less whatever
-## b's own passive blocks.
+## Expected cost to `b` of the hit triggers on `t`'s passive and held item when `m` hits it:
+## statuses, stat drops and damage that land on the attacker, weighted by chance, less
+## whatever b's own passive blocks. Triggers whose `when` fails cost nothing; a spent
+## per_battle item is ignored.
 static func _retaliation(engine: BattleEngine, b: Battler, m: MoveDef, t: Battler, ref: float) -> float:
+	var defs: Array[PassiveDef] = []
 	var pdef := engine.db.passive(Passives.active_id(t.creature))
-	if pdef == null:
-		return 0.0
+	if pdef != null:
+		defs.append(pdef)
+	var item: ItemDef = HeldItems.def_of(engine.db, t.creature)
+	if item != null and not (item.held_use == "per_battle" and t.held_spent):
+		var held: PassiveDef = engine.passive_rules.held_def(t)
+		if held != null:
+			defs.append(held)
 	var cost := 0.0
-	for trig: Dictionary in pdef.triggers:
+	var triggers: Array = []
+	for d in defs:
+		triggers.append_array(d.triggers)
+	for trig: Dictionary in triggers:
 		if trig.on != "hit" or (trig.contact and m.category != "physical"):
+			continue
+		if not engine.passive_rules.when_holds(t, trig.get("when", {})):
 			continue
 		var chance := float(trig.chance) / 100.0
 		for e: Dictionary in trig.effects:

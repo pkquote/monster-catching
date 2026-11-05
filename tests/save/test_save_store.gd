@@ -166,7 +166,7 @@ func test_v2_round_trip_keeps_position() -> void:
 	var back: SaveGame = r.save
 	assert_dict(back.position).is_equal({"map": "test_b", "x": 123.5, "y": 77.0, "facing": "left"})
 	assert_bool(back.story.is_done("test_b/Door1")).is_true()
-	assert_int(SaveGame.SCHEMA).is_equal(4)
+	assert_int(SaveGame.SCHEMA).is_equal(5)
 
 
 func test_v2_save_migrates_to_v3() -> void:
@@ -226,6 +226,41 @@ func test_v3_save_migrates_to_v4() -> void:
 		assert_str(c.passive).is_empty()
 		assert_str(c.affinity_passive).is_empty()
 		assert_str(c.active_passive).is_equal("rolled")
+
+
+func _v4_dict() -> Dictionary:
+	var mon := {"species": "tidepup", "level": 9, "xp": 0, "hp": 10, "moves": ["tackle"], "move_pool": ["tackle"],
+		"passive": "", "affinity_passive": "", "active_passive": "rolled"}
+	return {"schema": 4, "playthrough_id": "1700000000_abcdef", "kind": "manual", "player_name": "Old",
+		"created_unix": 1700000000, "saved_unix": 1700000000, "location": "Nowhere yet",
+		"party": [mon], "storage": [mon.duplicate()], "inventory": {}, "money": 5,
+		"story": {"flags": {}}, "position": {}}
+
+
+func test_v4_to_v5_adds_held_item() -> void:
+	var out := SaveStore._v4_to_v5(_v4_dict())
+	assert_int(out.schema).is_equal(5)
+	assert_bool(out.party[0].has("held_item")).is_true()
+	assert_str(out.party[0].held_item).is_empty()
+	assert_str(out.storage[0].held_item).is_empty()
+	assert_int(SaveGame.SCHEMA).is_equal(5)
+
+
+func test_loading_a_v4_save_succeeds() -> void:
+	var old_store := GameState.store
+	GameState.store = store
+	var dir := store.root.path_join("1700000000_abcdef")
+	DirAccess.make_dir_recursive_absolute(dir)
+	var path := dir.path_join("save_1.json")
+	_write(path, JSON.stringify(_v4_dict()))
+	var err := GameState.load_from(path)
+	var held := "x"
+	if err == "":
+		held = GameState.current.party[0].held_item
+	GameState.close_game()
+	GameState.store = old_store
+	assert_str(err).is_empty()
+	assert_str(held).is_empty()
 
 
 ## A v3 save loads end to end: known creatures get a rolled passive, an unknown species is left alone.

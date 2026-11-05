@@ -92,6 +92,15 @@ the tour calls `PassiveUnlockScreen.run(ow, creature, db)` directly after the de
 timeout 240 "$GODOT" --path . --script res://.claude/skills/run-godot-monster-catching-game/driver.gd -- --mode=passives --out="$TMPDIR/passives_shots" 2>&1 | grep "\[driver\]"
 ```
 
+**Held-items tour** (`--mode=held`): new game -> F1 test party -> an Oran Berry put in the bag -> Menu -> Party -> Tidepup ->
+Summary -> Give held item -> Oran Berry (the Stats tab then reads "Held item: Oran Berry - ...") -> a seeded wild battle
+with Tidepup under half HP: the berry fires (banner "Tidepup's Oran Berry!", then "Tidepup's Oran Berry was used up.") ->
+back in the world the Summary reads "Held item: none". The tour puts the berry in the bag directly (there is no F1 give-item page).
+
+```bash
+timeout 300 "$GODOT" --path . --script res://.claude/skills/run-godot-monster-catching-game/driver.gd -- --mode=held --out="$TMPDIR/held_shots" 2>&1 | grep "\[driver\]"
+```
+
 Screenshot a single scene:
 
 ```bash
@@ -105,11 +114,12 @@ timeout 60 "$GODOT" --path . --script res://.claude/skills/run-godot-monster-cat
 | `--mode=overworld` | the overworld tour above (`o01_…` to `o16_…` screenshots) |
 | `--mode=progress` | the progress tour above (`p01_…` to `p21_…` screenshots) |
 | `--mode=passives` | the passives tour above (`x01_…` to `x08_…` screenshots) |
+| `--mode=held` | the held-items tour above (`h01_…` to `h06_…` screenshots) |
 | `--mode=scene` | open `--scene` (default: main scene), wait `--frames` (default 60), screenshot |
 | `--out=<dir>` | screenshot folder; `user://` paths allowed (default `user://run_shots`) |
 
 Each tour is its own file in `tours/` (`frontend.gd`, `battle.gd`, `overworld.gd`, `progress.gd`,
-`passives.gd`):
+`passives.gd`, `held.gd`):
 a `RefCounted` with `var d` (the driver) and `func run()`. To drive a new flow, add
 `tours/<name>.gd`, add `<name>` to the `match` in `driver.gd`'s `_initialize`, and call the
 driver's helpers through `d.`: `wait_scene(name, max_frames)`,

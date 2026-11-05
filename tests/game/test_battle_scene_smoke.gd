@@ -110,6 +110,22 @@ func test_passive_banner_plays() -> void:
 	remove_child(scene)
 
 
+func test_item_consumed_plays_as_a_message_without_a_banner() -> void:
+	var pup := CreatureInstance.create(db, "tidepup", 12)
+	pup.passive = ""
+	var pack := [CreatureInstance.create(db, "sprigling", 3)]
+	pack[0].passive = ""
+	var scene := _scene(BattleSetup.wild([pup], pack, 1, {}))
+	await _wait_phase(scene, ["command"])
+	var bid: int = scene.engine.sides[0].active()[0].bid
+	var pb := BattlePlayback.new(scene, db)
+	var banner_before: Label = scene.last_passive_banner
+	await pb.play({"type": BattleEvents.ITEM_CONSUMED, "bid": bid, "item": "salve"})
+	assert_object(scene.last_passive_banner).is_same(banner_before)
+	assert_bool(scene._log.any(func(ev): return ev.type == BattleEvents.ITEM_CONSUMED)).is_true()
+	remove_child(scene)
+
+
 func test_command_screen_shows_active_passive() -> void:
 	var pup := CreatureInstance.create(db, "tidepup", 12)
 	pup.passive = "tidal_heart"
@@ -130,3 +146,15 @@ func test_command_screen_shows_active_passive() -> void:
 	await _wait_phase(scene2, ["command"])
 	assert_str(scene2.menu._title.text).is_equal("What will Tidepup do?")
 	remove_child(scene2)
+
+
+func test_held_items_are_not_offered_in_the_items_menu() -> void:
+	var party := [CreatureInstance.create(db, "tidepup", 10), CreatureInstance.create(db, "voltmoth", 10)]
+	var scene := _scene(BattleSetup.vs_tamer(db, party, "rival_01", 1, {"salve": 1, "oran_berry": 1}))
+	await _wait_phase(scene, ["command"])
+	assert_bool(scene.menu.pick_label("Items")).is_true()
+	await get_tree().process_frame
+	var items := Array(scene.menu.labels())
+	assert_bool(items.any(func(l): return l.begins_with("Salve"))).is_true()
+	assert_bool(items.any(func(l): return l.begins_with("Oran Berry"))).is_false()
+	remove_child(scene)

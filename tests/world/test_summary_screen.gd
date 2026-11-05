@@ -15,9 +15,13 @@ func after() -> void:
 
 func before_test() -> void:
 	world = await WorldTest.open(self, "test_b", "middle")
+	_add_item("test_charm", "Test Charm", "Raises Physical Attack a little.")
+	_add_item("test_berry", "Test Berry", "A snack to hold.")
 
 
 func after_test() -> void:
+	for id in ["test_charm", "test_berry", "test_long"]:
+		DataRegistry.db._tables["items"].erase(id)
 	DataRegistry.db.creature("tidepup").growth_rates = {}
 	WorldTest.close(world)
 
@@ -500,3 +504,140 @@ func test_stats_tab_fits_with_every_stat_trained_and_marked() -> void:
 	var s := await _open()
 	ScreenFit.check(self, s)
 	_set_growth({})
+
+
+## The shared db has no held items yet: add a test one (the real db is restored in after_test).
+func _add_item(id: String, item_name: String, description: String) -> void:
+	DataRegistry.db._tables["items"][id] = ItemDef.from_dict({"id": id, "name": item_name, "description": description,
+		"category": "held", "price": 10, "held": {"effects": [{"op": "stat_mod", "stat": "patk", "mult": 1.1}]}})
+
+
+## Held-item ids in the bag and on `c`: what must stay constant.
+func _count(c: CreatureInstance, id: String) -> int:
+	return int(GameState.current.inventory.get(id, 0)) + (1 if c.held_item == id else 0)
+
+
+func test_summary_shows_the_held_item_line() -> void:
+	var c := Story.give_creature("tidepup", 10)
+	var s := await _open()
+	assert_str(s.page_text()).contains("Held item: none")
+	c.held_item = "test_charm"
+	s.show_tab("moves")
+	s.show_tab("stats")
+	await get_tree().process_frame
+	await get_tree().process_frame
+	assert_str(s.page_text()).contains("Test Charm")
+	assert_str(s.page_text()).contains("Raises Physical Attack a little.")
+
+
+func test_give_from_the_summary() -> void:
+	var c := Story.give_creature("tidepup", 10)
+	GameState.current.inventory["test_charm"] = 2
+	var s := await _open()
+	await _pick(s, "Give held item")
+	await _pick(s, "Test Charm ×2")
+	assert_str(c.held_item).is_equal("test_charm")
+	assert_int(int(GameState.current.inventory["test_charm"])).is_equal(1)
+	await get_tree().process_frame
+	assert_str(s.page_text()).contains("Test Charm")
+	assert_str(s.page_text()).contains("Tidepup now holds the Test Charm.")
+
+
+func test_give_back_out_changes_nothing() -> void:
+	var c := Story.give_creature("tidepup", 10)
+	GameState.current.inventory["test_charm"] = 1
+	var s := await _open()
+	await _pick(s, "Give held item")
+	await _pick(s, "Back")
+	assert_str(c.held_item).is_empty()
+	assert_int(int(GameState.current.inventory["test_charm"])).is_equal(1)
+
+
+func test_swap_and_take_back_conserve_items() -> void:
+	var c := Story.give_creature("tidepup", 10)
+	GameState.current.inventory["test_charm"] = 1
+	GameState.current.inventory["test_berry"] = 1
+	var s := await _open()
+	await _pick(s, "Give held item")
+	await _pick(s, "Test Charm ×1")
+	assert_str(c.held_item).is_equal("test_charm")
+	await get_tree().process_frame
+	await _pick(s, "Swap held item")
+	await _pick(s, "Test Berry ×1")
+	assert_str(c.held_item).is_equal("test_berry")
+	assert_int(_count(c, "test_charm")).is_equal(1)
+	assert_int(_count(c, "test_berry")).is_equal(1)
+	assert_int(int(GameState.current.inventory["test_charm"])).is_equal(1)
+	assert_bool(GameState.current.inventory.has("test_berry")).is_false()
+	await get_tree().process_frame
+	await _pick(s, "Take back")
+	assert_str(c.held_item).is_empty()
+	assert_int(int(GameState.current.inventory["test_charm"])).is_equal(1)
+	assert_int(int(GameState.current.inventory["test_berry"])).is_equal(1)
+	await get_tree().process_frame
+	assert_str(s.page_text()).contains("Held item: none")
+	assert_str(s.page_text()).contains("Took back the Test Berry.")
+
+
+func test_give_is_offered_only_with_held_items_in_the_bag() -> void:
+	var c := Story.give_creature("tidepup", 10)
+	var s := await _open()
+	await get_tree().process_frame
+	for label in ["Give held item", "Swap held item", "Take back"]:
+		assert_bool(s.menu.labels().has(label)).is_false()
+	GameState.current.inventory["test_charm"] = 1
+	s.show_tab("moves")
+	s.show_tab("stats")
+	for i in 3:
+		await get_tree().process_frame
+	assert_bool(s.menu.labels().has("Give held item")).is_true()
+	assert_bool(s.menu.labels().has("Swap held item")).is_false()
+	c.held_item = "test_berry"  # holding one, and the bag has another
+	s.show_tab("moves")
+	s.show_tab("stats")
+	for i in 3:
+		await get_tree().process_frame
+	assert_bool(s.menu.labels().has("Give held item")).is_false()
+	assert_bool(s.menu.labels().has("Swap held item")).is_true()
+	assert_bool(s.menu.labels().has("Take back")).is_true()
+	GameState.current.inventory.erase("test_charm")  # nothing to swap with: only Take back
+	s.show_tab("moves")
+	s.show_tab("stats")
+	for i in 3:
+		await get_tree().process_frame
+	assert_bool(s.menu.labels().has("Swap held item")).is_false()
+	assert_bool(s.menu.labels().has("Take back")).is_true()
+
+
+func test_unknown_held_id_shows_a_fallback() -> void:
+	var c := Story.give_creature("tidepup", 10)
+	c.held_item = "ghost"
+	var s := await _open()
+	assert_str(s.page_text()).contains("Held item: unknown item: ghost")
+	await _assert_fits(s)
+	await _pick(s, "Take back")
+	assert_str(c.held_item).is_empty()
+	assert_int(int(GameState.current.inventory.get("ghost", 0))).is_equal(1)
+
+
+func test_held_item_works_for_a_fainted_creature() -> void:
+	var c := Story.give_creature("tidepup", 10)
+	c.hp = 0
+	GameState.current.inventory["test_charm"] = 1
+	var s := await _open()
+	await _pick(s, "Give held item")
+	await _pick(s, "Test Charm ×1")
+	assert_str(c.held_item).is_equal("test_charm")
+
+
+func test_summary_fits_with_a_long_item_name_and_description() -> void:
+	var c := Story.give_creature("tidepup", 99)
+	for key in DataSchemas.TRAINABLE_STATS:
+		c.training[key] = 30
+	_add_item("test_long", "The Extraordinarily Long Named Held Item",
+		"Does a great many wonderful things for its holder, including a long sentence about all of them.")
+	c.held_item = "test_long"
+	GameState.current.inventory["test_charm"] = 1
+	var s := await _open()
+	await get_tree().process_frame
+	ScreenFit.check(self, s)

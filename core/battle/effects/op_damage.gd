@@ -7,7 +7,7 @@ func apply(ctx: EffectContext, e: Dictionary, target: Battler) -> void:
 	if ctx.is_reaction():
 		var shelter := ctx.engine.field_rules.reaction_shelter(ctx.reaction, target)
 		if shelter != null:
-			ctx.engine.emit_passive(shelter)
+			ctx.engine.emit_passive(shelter, ctx.engine.passive_rules.last_item)
 			return
 	var result := BattleMath.damage(ctx.engine, ctx, e, target, true)
 	var type := ctx.damage_type(e)

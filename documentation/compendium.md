@@ -7,7 +7,7 @@
 |---|---|
 | [Creatures](#creatures) | 8 |
 | [Moves](#moves) | 44 |
-| [Items](#items) | 6 |
+| [Items](#items) | 11 |
 | [Statuses](#statuses) | 4 |
 | [Field States](#field-states) | 12 |
 | [Reactions](#reactions) | 8 |
@@ -614,12 +614,35 @@ Grouped by type. Physical moves use P.Atk vs P.Def; special moves use S.Atk vs S
 
 | Item | Id | Category | Price | Target | Effects | Description |
 |---|---|---|---|---|---|---|
+| **Guard Banner** | `guard_banner` | Held | 800 | — | — | Allies on the field take 10% less damage. |
 | **Lure Cage** | `lure_cage` | Capture | 100 | One enemy | Capture x1 | A plain woven cage. Works anywhere. |
+| **Oran Berry** | `oran_berry` | Held | 200 | — | — | Eaten when hurt below half HP: heals a quarter. One use. |
 | **Reset Seed** | `reset_seed` | Training | 600 | One ally | Returns all spent training points (field use only) | Returns all of a creature's training points so they can be spent again. |
+| **Rough Bark** | `rough_bark` | Held | 500 | — | — | First physical hit each battle lowers the attacker's Phys. Attack. |
 | **Salve** | `salve` | Heal | 150 | One ally | Heals 33% max HP | Restores a third of a creature's HP. |
+| **Scout Lens** | `scout_lens` | Held | 350 | — | — | Wild encounters are 10% rarer while it leads. |
 | **Snare Vine** | `snare_vine` | Capture | 250 | One enemy | Capture x0.8, x2.5 on Overgrown | Far more effective on an Overgrown side. |
+| **Tide Charm** | `tide_charm` | Held | 400 | — | — | Water moves hit 10% harder. |
 | **Tide Net** | `tide_net` | Capture | 250 | One enemy | Capture x0.8, x2.5 on Soaked | Far more effective on a Soaked side. |
 | **Tonic** | `tonic` | Heal | 150 | One ally | Restores 50% max energy | Restores half of a creature's energy. |
+
+## Held items
+
+One item per creature, given from the Summary screen. *Permanent* items stay held; *Consumed* items are used up when they fire; *Per battle* items fire once each battle. *Aura* items apply their effects to every creature on the holder's side. A `when` condition is shown in brackets.
+
+| Item | Id | Price | Use | Scope | Effects | Triggers | Overworld |
+|---|---|---|---|---|---|---|---|
+| **Guard Banner** | `guard_banner` | 800 | Permanent | Aura | All damage taken x0.9 | — | — |
+| **Oran Berry** | `oran_berry` | 200 | Consumed | Self | — | On being hit [HP below 50%]: Heals 25% max HP → self | — |
+| **Rough Bark** | `rough_bark` | 500 | Per Battle | Self | — | On being hit (physical): P.Atk -1 → attacker | — |
+| **Scout Lens** | `scout_lens` | 350 | Permanent | Self | — | — | Wild encounter rate x0.9 |
+| **Tide Charm** | `tide_charm` | 400 | Permanent | Self | Water moves x1.1 | — | — |
+
+- **Guard Banner:** Allies on the field take 10% less damage.
+- **Oran Berry:** Eaten when hurt below half HP: heals a quarter. One use.
+- **Rough Bark:** First physical hit each battle lowers the attacker's Phys. Attack.
+- **Scout Lens:** Wild encounters are 10% rarer while it leads.
+- **Tide Charm:** Water moves hit 10% harder.
 
 ## Tamers
 

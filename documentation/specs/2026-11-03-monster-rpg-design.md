@@ -1,7 +1,7 @@
 # Monster-Catching RPG — Design Spec
 
 Date: 2026-11-03
-Status: Approved. M0–M4 and creature passives implemented.
+Status: Approved. M0–M4, creature passives and held items implemented.
 
 ## 1. Intent
 
@@ -25,6 +25,7 @@ mechanics that feel distinct from the genre's defaults.
 | Signature mechanic 1 | **Field states and reactions**, held per side, interactable on both sides |
 | Signature mechanic 2 | **Behavior-shaped growth** via Affinity tracks |
 | Creature passives | Each creature rolls a **passive** for life and can unlock a second through Affinity; one is active at a time (always-on, triggered, protection and overworld effects). Design: [creature passives](2026-11-04-passives-design.md) |
+| Held items | A creature holds one **held item** (an item with category `held`): always-on effects, triggers and overworld effects like a passive, and a usage kind (`permanent`, `consumed`, `per_battle`). Given and taken back on the Summary. Design: [held items](2026-11-05-held-items-design.md) |
 | Catching | Capture items whose odds depend on HP, status and the target side's field states |
 | Architecture | Headless `core/` engine, presentation in `game/`, event-stream boundary |
 | Content data | JSON from day one, folder-per-type, many files per folder, id references |
@@ -104,6 +105,7 @@ Targets: `self`, `one_ally`, `one_enemy`, `all_allies`, `all_enemies`, `all`, `o
   - `hp_factor = 1 - (hp / max_hp) * hp_weight` (from balance)
   - `field_mult` = product of the item's `field_bonus` for each matching state on the **target's side**
 - Starter items: **Lure Cage** (plain), **Tide Net** (bonus on Soaked), **Snare Vine** (bonus on Overgrown).
+- **Held items** are not used from the bag: the item category `held` has a `held` block (the same shape as a passive: `effects`, `triggers` with an optional `when`, `field`, plus `scope` and a usage kind `use` of `permanent`, `consumed` or `per_battle`). A creature holds at most one (`CreatureInstance.held_item`, saved from schema 5, also settable on tamer party members); the Summary's Stats tab gives, swaps and takes it back, and a consumed item is gone after the battle. Five starter items are sold at the Town 1 shop.
 
 ### 2.7 Stats
 
@@ -294,7 +296,7 @@ Splash ──► Title menu ──► Resume      (most recently loaded/written 
   `user://saves/<playthrough_id>/autosave.json` and `save_<timestamp>.json`.
 - `user://saves/last.json` records the most recently loaded or written save (the Resume target).
 - A save holds: `schema`, `playthrough_id`, `kind` (manual/auto), player name, created and saved
-  times, playtime, location label, party and storage (`CreatureInstance` dicts), inventory,
+  times, playtime, location label, party and storage (`CreatureInstance` dicts, including each creature's `held_item`), inventory,
   money, story flags.
 - Writes are atomic: write `<file>.tmp`, then replace the real file. A leftover `.tmp` is used if
   the real file is missing.
@@ -332,6 +334,7 @@ them to the engine (audio buses, window, input map). Game actions are mirrored i
 | **M3 Overworld + story** | One town + interiors + one route, editor-built maps with placeable pieces, 8-way movement, NPCs, Dialogue Manager conversations, starter cutscene, items and hidden items, tamers with line of sight, heal spot + shop, pause menu, defeat rules, minigame hook. Detailed design: [M3 overworld design](2026-11-03-m3-overworld-design.md) |
 | **M4 Progression + menus** | Level-ups, one species with growth branches, party + storage menus, training-point and respec UI |
 | **Creature passives** | Rolled and Affinity passives, battle triggers and banners, the Passive Unlocked screen, switching on the Summary, the lead's overworld effects. Detailed design: [creature passives design](2026-11-04-passives-design.md) |
+| **Held items** | One held item per creature: permanent, consumed and per-battle items, auras, overworld effects, give/take on the Summary, AI awareness. Detailed design: [held items design](2026-11-05-held-items-design.md) |
 
 Starter content: ~8 creatures, ~20 moves, 5 field states, 4 reactions, 3 capture items, 2 tamers, 1 encounter table (placeholders).
 

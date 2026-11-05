@@ -16,6 +16,9 @@ const DEFAULT_TARGET := {"enter": "self", "hit": "attacker", "round_end": "self"
 var _depth := 0
 ## bids knocked out by a trigger's effects (their faint fires no triggers).
 var _silenced := {}
+## The held item id that supplied the effect matched by the latest _source / absorbs call
+## ("" when it came from a passive). Read it right after the lookup, for the banner.
+var last_item := ""
 
 
 ## True while a trigger's effects run. Nothing earns Affinity then (BattleRewards.award).
@@ -32,31 +35,52 @@ func effects_for(b: Battler) -> Array:
 	return out
 
 
-func _collect(b: Battler, out: Array, holders: Array) -> void:
+## `holders` and `items` run parallel to `out`: who carries each effect, and the held item
+## id it comes from ("" for a passive).
+func _collect(b: Battler, out: Array, holders: Array, items: Array = []) -> void:
 	if not b.active or not b.alive():
 		return
 	var e := engine
 	var seen := {}
+	var seen_items := {}
 	var own_id := Passives.active_id(b.creature)
 	var own := e.db.passive(own_id) if own_id != "" else null
 	if own != null:
 		seen[own_id] = true
-		_append_holding(out, holders, b, own.effects)
+		_append_holding(out, holders, items, b, own.effects, "")
+	var own_held := held_def(b)
+	if own_held != null:
+		seen_items[own_held.id] = true
+		_append_holding(out, holders, items, b, own_held.effects, own_held.id)
 	for ally in e.sides[b.side].active():
 		var pid := Passives.active_id(ally.creature)
-		if pid == "" or seen.has(pid):
-			continue
-		var def := e.db.passive(pid)
-		if def == null or def.scope != "allies":
-			continue
-		seen[pid] = true
-		# An aura's conditions are read from the creature that carries it.
-		_append_holding(out, holders, ally, def.effects)
+		if pid != "" and not seen.has(pid):
+			var def := e.db.passive(pid)
+			if def != null and def.scope == "allies":
+				seen[pid] = true
+				# An aura's conditions are read from the creature that carries it.
+				_append_holding(out, holders, items, ally, def.effects, "")
+		var held := held_def(ally)
+		if held != null and held.scope == "allies" and not seen_items.has(held.id):
+			seen_items[held.id] = true
+			_append_holding(out, holders, items, ally, held.effects, held.id)
 
 
-## Runs each of `b`'s active passive's triggers for `on`. `attacker` is the creature that
+## `b`'s held item as a def, or null: nothing held, an unknown or non-held item id, or `b`
+## is benched or fainted.
+func held_def(b: Battler) -> PassiveDef:
+	if not b.active or not b.alive():
+		return null
+	var item := HeldItems.def_of(engine.db, b.creature)
+	return item.held if item != null else null
+
+
+## Runs each of `b`'s triggers for `on`: its active passive's first, then its held item's
+## (unless a per_battle item is already spent). `attacker` is the creature that
 ## set it off (the hitter for hit, the foe knocked out for knockout, the killer for faint);
 ## `contact` is true for physical moves (hit triggers with "contact" need it).
+## A trigger fires only when its `when` holds, its chance roll passes and its effects would
+## change something. Only then is a held item used up (consumed: gone; per_battle: spent).
 func fire(b: Battler, on: String, attacker: Battler = null, contact := false) -> void:
 	var e := engine
 	if _depth > 0 or e.is_over():
@@ -65,10 +89,31 @@ func fire(b: Battler, on: String, attacker: Battler = null, contact := false) ->
 		return
 	var pid := Passives.active_id(b.creature)
 	var def := e.db.passive(pid) if pid != "" else null
-	if def == null:
-		return
+	if def != null:
+		_fire_from(b, def, "", on, attacker, contact)
+	var item := HeldItems.def_of(e.db, b.creature)
+	var held := _trigger_item(b, on)
+	if held != null and item != null and not (item.held_use == "per_battle" and b.held_spent):
+		_fire_from(b, held, held.id, on, attacker, contact)
+
+
+## The held item def whose triggers `b` may run for `on`. A fainting creature has just left
+## the field, so its faint triggers don't need it to be active or alive.
+func _trigger_item(b: Battler, on: String) -> PassiveDef:
+	if on != "faint":
+		return held_def(b)
+	var item := HeldItems.def_of(engine.db, b.creature)
+	return item.held if item != null else null
+
+
+## One source's triggers (`item_id` is "" for the creature's passive).
+func _fire_from(b: Battler, def: PassiveDef, item_id: String, on: String, attacker: Battler,
+		contact: bool) -> void:
+	var e := engine
 	for t: Dictionary in def.triggers:
 		if t.on != on or (t.contact and not contact):
+			continue
+		if not when_holds(b, t.when):
 			continue
 		if int(t.chance) < 100 and e.rng.randi_range(1, 100) > int(t.chance):
 			continue
@@ -83,10 +128,30 @@ func fire(b: Battler, on: String, attacker: Battler = null, contact := false) ->
 			ctx.targets.append(target)
 		if _does_nothing(ctx, t.effects):
 			continue
-		e.emit({"type": BattleEvents.PASSIVE_TRIGGERED, "bid": b.bid, "passive": pid})
+		e.emit_passive(b, item_id)
 		_depth += 1
 		e.run_effects(ctx, t.effects)
 		_depth -= 1
+		if item_id != "" and _use_up(b):
+			return
+
+
+## `b`'s held item fired: a consumed one is gone from the battle copy, a per_battle one is
+## spent. Applies the usage bookkeeping and returns whether the item can no longer fire.
+func _use_up(b: Battler) -> bool:
+	var item := HeldItems.def_of(engine.db, b.creature)
+	if item == null:
+		return false
+	match item.held_use:
+		"consumed":
+			var id := b.creature.held_item
+			b.creature.held_item = ""
+			engine.emit({"type": BattleEvents.ITEM_CONSUMED, "bid": b.bid, "item": id})
+			return true
+		"per_battle":
+			b.held_spent = true
+			return true
+	return false
 
 
 ## True when every effect would change nothing: only heals on creatures at full HP and
@@ -127,9 +192,16 @@ func note_damage(target: Battler) -> void:
 ## The share of max HP that damage of `type` heals `target` instead (absorb_type), or 0.
 func absorbs(target: Battler, type: String) -> float:
 	var best := 0.0
-	for eff: Dictionary in effects_for(target):
-		if eff.op == "absorb_type" and eff.type == type:
-			best = maxf(best, float(eff.fraction))
+	var best_item := ""
+	var effs: Array = []
+	var items: Array = []
+	_collect(target, effs, [], items)
+	for i in effs.size():
+		var eff: Dictionary = effs[i]
+		if eff.op == "absorb_type" and eff.type == type and float(eff.fraction) > best:
+			best = float(eff.fraction)
+			best_item = items[i]
+	last_item = best_item
 	return best
 
 
@@ -227,20 +299,25 @@ func when_holds(b: Battler, when: Dictionary) -> bool:
 	return true
 
 
-func _append_holding(out: Array, holders: Array, holder: Battler, effects: Array) -> void:
+func _append_holding(out: Array, holders: Array, items: Array, holder: Battler, effects: Array,
+		item_id: String) -> void:
 	for eff: Dictionary in effects:
 		if when_holds(holder, eff.get("when", {})):
 			out.append(eff)
 			holders.append(holder)
+			items.append(item_id)
 
 
-## The creature whose passive gives `b` the first effect matching `pred` (`b` itself, or
-## an aura holder), or null.
+## The creature whose passive or held item gives `b` the first effect matching `pred` (`b`
+## itself, or an aura holder), or null. Sets `last_item` to the item that supplied it.
 func _source(b: Battler, pred: Callable) -> Battler:
 	var effs: Array = []
 	var holders: Array = []
-	_collect(b, effs, holders)
+	var items: Array = []
+	_collect(b, effs, holders, items)
+	last_item = ""
 	for i in effs.size():
 		if pred.call(effs[i]):
+			last_item = items[i]
 			return holders[i]
 	return null

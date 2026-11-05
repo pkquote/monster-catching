@@ -286,7 +286,12 @@ func resolve_targets(user: Battler, key: String, chosen: int, allow_random := tr
 # --- Mutations called by effect ops ------------------------------------------------
 
 ## PASSIVE_TRIGGERED for `b`'s active passive (it visibly acted: a trigger, a block, an absorb).
-func emit_passive(b: Battler) -> void:
+## With `item` (a held item id, PassiveRules.last_item) the event names that item instead:
+## `passive` is "" and `item` is set.
+func emit_passive(b: Battler, item := "") -> void:
+	if item != "":
+		emit({"type": BattleEvents.PASSIVE_TRIGGERED, "bid": b.bid, "passive": "", "item": item})
+		return
 	emit({"type": BattleEvents.PASSIVE_TRIGGERED, "bid": b.bid, "passive": Passives.active_id(b.creature)})
 
 
@@ -336,7 +341,7 @@ func deal_damage(target: Battler, amount: int, attacker: Battler, type: String, 
 	# absorb_type: the damage heals instead, and doesn't count as a hit.
 	var absorb := passive_rules.absorbs(target, type) if type != "" else 0.0
 	if absorb > 0.0:
-		emit_passive(target)
+		emit_passive(target, passive_rules.last_item)
 		heal(target, maxi(1, roundi(target.creature.max_hp(db) * absorb)), null)
 		return true
 	var dealt := mini(amount, target.hp())
@@ -385,7 +390,7 @@ func inflict_status(target: Battler, status_id: String, user: Battler) -> void:
 		return
 	var immune := passive_rules.status_blocker(target, status_id)
 	if immune != null:
-		emit_passive(immune)
+		emit_passive(immune, passive_rules.last_item)
 		return
 	if user != target and rng.randf() < BattleMath.resist_chance(self, target, user):
 		emit({"type": BattleEvents.RESISTED, "bid": target.bid, "status": status_id})
@@ -400,7 +405,7 @@ func inflict_status(target: Battler, status_id: String, user: Battler) -> void:
 func shift_stage(target: Battler, stat: String, amount: int, user: Battler) -> void:
 	var guard := passive_rules.stage_guard(target, stat, user) if amount < 0 else null
 	if guard != null:
-		emit_passive(guard)
+		emit_passive(guard, passive_rules.last_item)
 		return
 	if amount < 0 and user != null and user.side != target.side \
 			and rng.randf() < BattleMath.resist_chance(self, target, user):

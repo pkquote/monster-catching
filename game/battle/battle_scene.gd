@@ -408,7 +408,10 @@ func passive_banner(text: String, bid: int) -> void:
 		anchor = v.position + Vector2(CreatureView.SIZE.x / 2.0, 0)
 	elif b != null:
 		anchor = FORMATION[b.side][1][0] + Vector2(CreatureView.SIZE.x / 2.0, 0)
+	# A banner still showing over the same creature pushes this one up so they don't overprint.
+	var shown := _passive_banners.filter(func(o: Label): return int(o.get_meta("bid", -2)) == bid).size()
 	var l := UIKit.label(self, text, UIKit.HEADING_SIZE, UIKit.ACCENT)
+	l.set_meta("bid", bid)
 	l.size = PASSIVE_BANNER
 	l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	l.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
@@ -416,7 +419,7 @@ func passive_banner(text: String, bid: int) -> void:
 	l.add_theme_constant_override("outline_size", 4)
 	l.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	l.position = Vector2(clampf(anchor.x - PASSIVE_BANNER.x / 2.0, 0, 640 - PASSIVE_BANNER.x),
-		clampf(anchor.y - PASSIVE_BANNER.y, 0, STAGE_H - PASSIVE_BANNER.y))
+		clampf(anchor.y - l.size.y * (shown + 1), 0, STAGE_H - l.size.y))
 	l.modulate.a = 0.0
 	_passive_banners.append(l)
 	last_passive_banner = l

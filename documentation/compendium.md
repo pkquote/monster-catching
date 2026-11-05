@@ -327,7 +327,7 @@ Each creature rolls one of its species' passives, and unlocks an Affinity passiv
 - **Finisher:** On a knockout, restores 15% energy. Scrap hits 50% harder.
 - **Fog Weaver:** Field states it applies last 1 round longer.
 - **Frost Guard:** Can't be Chilled. Takes half damage from Ice.
-- **Guardian Aura:** Allies on the field take 10% less damage.
+- **Guardian Aura:** Allies on the field take 10% less damage from moves.
 - **Kindling:** Below a third of its HP, Fire moves hit 50% harder.
 - **Lightning Rod:** Electric damage heals it for 25% of its HP instead.
 - **Photosynth:** Heals 1/16 of its HP at the end of each round. Bond gains are 25% larger while it leads.

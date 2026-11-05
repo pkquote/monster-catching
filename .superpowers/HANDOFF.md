@@ -1,6 +1,6 @@
 # Handoff: godot-monster-catching-game
 
-Date: 2026-11-04. Branch: `master`. Last commit: `efe5d7e` ("Add creature passive abilities"). The working tree is clean apart from this file.
+Date: 2026-11-04. Branch: `master`. Last commit: `efe5d7e` ("Add creature passive abilities"). The working tree holds the uncommitted minor fixes listed below.
 
 ## Read this first: standing rules
 - **Never commit, stage or stash.** The user writes every commit. Leave changes in the working tree.
@@ -53,21 +53,21 @@ Godot 4.7.2 (.NET build, but GDScript only) monster-catching RPG.
 - The commit includes the spec, plan, `.superpowers/2026-11-04-passives-handoff.md` and the `passives` tour. `.superpowers/sdd/` is an empty directory.
 
 ## Decisions and known small issues
-`.superpowers/2026-11-04-passives-handoff.md` lists the 23 rulings made on the user's behalf and the 36 deferred minor issues, each with what it costs if wrong. The most notable:
+`.superpowers/2026-11-04-passives-handoff.md` lists the 23 rulings made on the user's behalf and the 32 deferred minor issues still open, each with what it costs if wrong. The most notable:
 - **Rulings:**
   - Passive-run effects earn no Affinity.
   - A passive trigger that would do nothing (a heal at full HP, energy restore at full energy) is skipped silently.
   - Faint and knockout triggers don't fire on the knockout that ends the battle.
   - An aura's `when` condition is checked on the aura's holder.
   - `underdog` counts only standing creatures on the field.
-- **Deferred minors a player could notice:**
-  - The battle AI ignores protection passives.
-  - Guardian Aura's text says 10% less damage, but status and field damage ticks aren't reduced.
-  - Two passive banners on one creature in quick succession overprint.
-  - A foe can print "Wild X awakened Y!".
-  - An absorbed move's side effects still land on the absorber.
+- **Deferred minors a player could notice:** the battle AI ignores protection passives (values burns into fireproof, drops into guard, sheltered states).
+- **Resolved after the passives commit (uncommitted):**
+  - Guardian Aura's text now says "from moves".
+  - Foes unlock Affinity passives silently (no "Wild X awakened Y!").
+  - Passive banners over the same creature stack instead of overprinting.
+  - An absorbed move's other per-target effects skip the absorber (`EffectContext.absorbed`; `deal_damage` returns true when it absorbs).
 
 ## Possible next steps (none requested yet)
-- Fix the passives minors the user cares about: AI awareness of passives, the Guardian Aura copy, banner stacking.
+- Fix the remaining passives minors the user cares about, e.g. AI awareness of passives (needs a short design decision first).
 - Continue the milestone roadmap in the main spec's Milestones table. M1–M4, the code audit and passives are done.
 - Ask the user what is next before starting anything. New features go through brainstorming first.

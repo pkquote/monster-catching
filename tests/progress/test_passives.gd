@@ -188,6 +188,18 @@ func test_unlock_event_emitted() -> void:
 	assert_int(found[0].bid).is_equal(e.sides[0].active()[0].bid)
 
 
+func test_foe_unlock_is_silent() -> void:
+	var fx := FixtureDB.build()
+	fx.creature("blob").affinity_passives = {"striker": "steady"}
+	var foe := FixtureDB.make(fx, "blob", 10, ["hit"])
+	foe.affinity["striker"] = fx.balance.growth_affinity_threshold - 1
+	var e := FixtureDB.engine(fx, [FixtureDB.make(fx, "tank", 10, ["hit"])], [foe])
+	var events := e.resolve_round([BattleAction.use_move(e.sides[1].active()[0].bid, "hit", e.sides[0].active()[0].bid)])
+	assert_array(FixtureDB.events_of(events, BattleEvents.PASSIVE_UNLOCKED)).is_empty()
+	# The unlock still happens; it just isn't announced.
+	assert_bool(e.sides[1].active()[0].creature.affinity_passive == "steady").is_true()
+
+
 func test_existing_affinity_passive_is_not_reported_as_unlocked() -> void:
 	var c := CreatureInstance.create(db, "emberkit", 5)
 	c.affinity_passive = "finisher"

@@ -37,7 +37,6 @@
 - Task 4: minor (deferred): when_holds treats any non-"own" side as enemy (validator enum guards it).
 - Task 5: minor (deferred): knockout credit uses last_hit_by, so tick faints credit a stale attacker; faint-trigger creature effects could land on a benched attacker (no shipped content).
 - Task 5: minor (deferred): absorb banner names the target's own passive (wrong if an aura ever carries absorb_type).
-- Task 5: minor (deferred): an absorbed move's secondary effects still land on the absorber (same as existing immunity behaviour).
 - Task 5: minor (deferred): absorb at full HP emits PASSIVE_TRIGGERED + HEAL 0.
 - Task 5: minor (deferred): no test that a chance-less trigger consumes no RNG, that "attacker" is rejected outside triggers, or the 2v2 faint-decides-battle case.
 - Task 5: minor (deferred): replace() may emit a stray UNDERDOG after BATTLE_END when the replace decides the battle.
@@ -48,7 +47,6 @@
 - Task 6: minor (deferred): passives_for calls shelters (full _collect) per field state on every passives() call — fine at current scale.
 - Task 7: minor (deferred): encounter-rate test only checks 1..39 of 40 rolled; could pin a seeded count.
 - Task 7: minor (deferred): no test that rate_mult 0 still draws one randf per tile, or that foe-side Bond stays unscaled.
-- Task 8: minor (deferred): two passive banners on the same creature within ~1.1s overprint at the same spot (banner lives 1.12s, playback waits 0.4s).
 - Task 8: minor (deferred): BattleText dereferences db.passive(ev.passive).name without a null guard (validator prevents bad ids).
 - Task 8: minor (deferred): command-title "fits" test checks the label rect, not text width; affinity-active title untested.
 - Task 9: minor (deferred): ScreenFit checks use short descriptions only; the longest pair (~110 chars each) is untested (screen scrolls, not clips).
@@ -58,8 +56,6 @@
 - Task 10: minor (deferred): refresh_world() not asserted; tests pick drop-downs by position.
 - Final: minor (deferred): battle-engine.md:238 and battle_engine.gd:20 say "three parts" but list four.
 - Final: minor (deferred): start() does not refill/offer replacement after an entry-trigger KO at battle start (unreachable with shipped content).
-- Final: minor (deferred): Guardian Aura copy says "take 10% less damage" but damage_fraction ticks are not reduced.
 - Final: minor (deferred): Passives.backfill runs on every load, so a slot emptied with debug "(none)" refills on next load.
 - Final: minor (deferred): PassiveUnlockScreen "Current:" shows c.passive, not active_id (only reachable via debug/hand-edited saves).
-- Final: minor (deferred): foes can emit PASSIVE_UNLOCKED ("Wild X awakened Y!") in long battles.
 - Final: minor (deferred): an unlock-only entry for a creature already growth-ready re-shows the Grow prompt.

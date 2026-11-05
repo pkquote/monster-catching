@@ -6,6 +6,8 @@ var db: Database
 
 func before() -> void:
 	var r := FixtureDB.raw()
+	r.add_entry("moves", FixtureDB._m("zap_drop", "electric", "special", 50, 100, "one_enemy",
+		[{"op": "damage"}, {"op": "stat_stage", "stat": "patk", "stages": -1}]))
 	for p in [
 		{"id": "water_power", "effects": [{"op": "type_power", "type": "water", "mult": 2.0}]},
 		{"id": "strong", "effects": [{"op": "stat_mod", "stat": "patk", "mult": 2.0}]},
@@ -307,6 +309,20 @@ func test_absorb_type_heals_instead() -> void:
 	assert_int(me.stages.patk).is_equal(0)
 	assert_int(foe.last_hit_by).is_equal(-1)
 	assert_bool(e.rewards.affinity_log.has(me.bid)).is_false()
+
+
+func test_absorbed_move_skips_its_side_effects() -> void:
+	var e := FixtureDB.engine(db, [_make("blob", "", ["zap_drop"])], [_make("tank", "rod")])
+	var me := _first(e, 0)
+	var foe := _first(e, 1)
+	foe.creature.hp = foe.creature.max_hp(db) / 2
+	e.resolve_round([BattleAction.use_move(me.bid, "zap_drop", foe.bid), BattleAction.pass_turn(foe.bid)])
+	assert_int(foe.stages.patk).is_equal(0)
+	# A creature without the passive still takes the side effect.
+	var plain := FixtureDB.engine(db, [_make("blob", "", ["zap_drop"])], [_make("tank", "")])
+	var target := _first(plain, 1)
+	plain.resolve_round([BattleAction.use_move(_first(plain, 0).bid, "zap_drop", target.bid), BattleAction.pass_turn(target.bid)])
+	assert_int(target.stages.patk).is_equal(-1)
 
 
 func test_absorb_when_immune_still_heals() -> void:

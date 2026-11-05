@@ -23,6 +23,8 @@ var spread := false
 var mult := 1.0
 ## Stacks used up by a reaction (for scale_with_stacks).
 var stacks_consumed := 0
+## Battlers whose passive absorbed this move's damage: its other per-target effects skip them.
+var absorbed: Array[Battler] = []
 ## [side_index, state_id] pairs to remove once the move finishes.
 var pending_consume: Array = []
 

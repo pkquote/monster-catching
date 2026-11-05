@@ -325,19 +325,20 @@ func run_effects(ctx: EffectContext, effects: Array) -> void:
 		if e.has("target"):
 			targets = _effect_targets(ctx, e.target)
 		for t in targets:
-			if t.alive():
+			if t.alive() and not (t in ctx.absorbed and e.op != "damage"):
 				op.apply(ctx, e, t)
 
 
 ## `contact` is true for physical moves (for hit triggers that need it).
+## Returns true when the target's passive absorbed the damage (it healed instead).
 func deal_damage(target: Battler, amount: int, attacker: Battler, type: String, type_mult := 1.0,
-		contact := false) -> void:
+		contact := false) -> bool:
 	# absorb_type: the damage heals instead, and doesn't count as a hit.
 	var absorb := passive_rules.absorbs(target, type) if type != "" else 0.0
 	if absorb > 0.0:
 		emit_passive(target)
 		heal(target, maxi(1, roundi(target.creature.max_hp(db) * absorb)), null)
-		return
+		return true
 	var dealt := mini(amount, target.hp())
 	# Resolve: once per battle, a knockout blow from a foe may leave 1 HP.
 	if dealt >= target.hp() and target.hp() > 1 and not target.endured and attacker != null \
@@ -356,6 +357,7 @@ func deal_damage(target: Battler, amount: int, attacker: Battler, type: String, 
 		if target.hp() > 0:
 			rewards.award(target, "hit_survived")
 			passive_rules.fire(target, "hit", attacker, contact)
+	return false
 
 
 func heal(target: Battler, amount: int, user: Battler, from_item := false) -> void:

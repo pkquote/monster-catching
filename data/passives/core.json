@@ -39,7 +39,7 @@
     { "id": "finisher", "name": "Finisher", "description": "On a knockout, restores 15% energy. Scrap hits 50% harder.",
       "effects": [{"op": "scrap_power", "mult": 1.5}],
       "triggers": [{"on": "knockout", "effects": [{"op": "restore_energy", "fraction": 0.15}]}] },
-    { "id": "guardian_aura", "name": "Guardian Aura", "description": "Allies on the field take 10% less damage.",
+    { "id": "guardian_aura", "name": "Guardian Aura", "description": "Allies on the field take 10% less damage from moves.",
       "scope": "allies",
       "effects": [{"op": "incoming_type_mod", "mult": 0.9}] },
     { "id": "reaction_spark", "name": "Reaction Spark", "description": "Reactions it triggers deal 30% more. Its field states gain +1 stack.",

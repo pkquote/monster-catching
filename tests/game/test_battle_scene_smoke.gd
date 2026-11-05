@@ -95,6 +95,12 @@ func test_passive_banner_plays() -> void:
 	assert_str(banner.text).is_equal("Tidepup's Undertow!")
 	assert_int(banner.get_theme_font_size("font_size")).is_less(UIKit.TITLE_SIZE)
 	assert_bool(ScreenFit.VIEW.encloses(banner.get_global_rect())).is_true()
+	# A second banner over the same creature, while the first still shows, sits above it.
+	# (Called directly: playback's own pause would let the first one fade in the test's fast time.)
+	scene.passive_banner("One", bid)
+	var one: Label = scene.last_passive_banner
+	scene.passive_banner("Two", bid)
+	assert_bool(scene.last_passive_banner.get_rect().intersects(one.get_rect())).is_false()
 	# A creature that has left the field still gets a banner, kept on screen.
 	scene.release_view(bid)
 	await pb.play({"type": BattleEvents.PASSIVE_TRIGGERED, "bid": bid, "passive": "undertow"})

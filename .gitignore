@@ -4,3 +4,6 @@
 /reports/
 /build/
 .vscode/
+
+# Obsidian vault settings (documentation/ is opened as a vault)
+.obsidian/

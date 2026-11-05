@@ -18,7 +18,8 @@ func award(b: Battler, happening: String, times := 1) -> void:
 	var aff := Progression.award_affinity(e.db, b.creature, happening, times)
 	if aff == "":
 		return
-	if before == "" and b.creature.affinity_passive != "":
+	# Only the player's creatures announce an awakening; a foe unlocks silently.
+	if before == "" and b.creature.affinity_passive != "" and b.side == 0:
 		e.emit({"type": BattleEvents.PASSIVE_UNLOCKED, "bid": b.bid, "passive": b.creature.affinity_passive})
 	if not affinity_log.has(b.bid):
 		affinity_log[b.bid] = {}

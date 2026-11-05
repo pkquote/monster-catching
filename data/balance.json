@@ -52,6 +52,12 @@
     "round_limit": 200,
     "max_field_states": 3,
     "growth_affinity_threshold": 30,
+    "growth_tiers": {
+      "slow": 0.8,
+      "steady": 1.0,
+      "fast": 1.2
+    },
+    "growth_budget": 2,
     "underdog": {
       "bonus_actions_per_ratio": 0.5,
       "spread_reduction_per_ratio": 0.2,

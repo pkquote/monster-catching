@@ -120,10 +120,11 @@ Every species defines 9 base stats. Bond is per creature, not per species.
 | Stamina | `stamina` | species | Size of the energy pool |
 | Bond | `bond` | per creature | −100…+100; reflects how the creature is treated |
 
-Formulas: HP = `2·base·Lv/100 + Lv + 10`; other battle stats = `2·base·Lv/100 + 5`;
-max energy = `2·base_stamina·Lv/100 + 20`. Training points (2.10) are added on top.
+Formulas (integer division, `pct` = the stat's growth tier as a whole percent, 100 = steady): HP = `2·base·pct·Lv/10000 + Lv + 10`; other battle stats = `2·base·pct·Lv/10000 + 5`;
+max energy = `2·base_stamina·pct·Lv/10000 + 20`. Training points (2.10) are added on top.
+Each species may give any of its 9 base stats a growth tier (`slow` 80%, `steady` 100%, `fast` 120%; `growth_rates` in the species JSON, tier values in `balance.json`); unlisted stats are steady.
 
-The level cap is 99. The formula's level-driven value is a creature's **growth** (`CreatureInstance.grown`); training is the part the player added. The Summary's Stats tab shows both: `Physical Attack 104 (92+12)` is a total of 104, from 92 growth and 12 training (an untrained stat shows only its total). A species' base stat sets its growth rate: about `base/50` per level, so a base-50 stat reaches 104 and a base-100 stat 203 at level 99, against at most +30 from training.
+The level cap is 99. The formula's level-driven value is a creature's **growth** (`CreatureInstance.grown`); training is the part the player added. The Summary's Stats tab shows both: `Physical Attack 104 (92+12)` is a total of 104, from 92 growth and 12 training (an untrained stat shows only its total). A species' base stat and growth tier set its growth rate: about `base·pct/5000` per level, so at level 99 a base-50 stat reaches 84 (slow), 104 (steady) or 123 (fast), and a base-100 stat 163, 203 or 242, against at most +30 from training. The Summary marks a stat whose tier is not steady with ▲ (fast) or ▼ (slow).
 
 ### 2.8 Resolve
 

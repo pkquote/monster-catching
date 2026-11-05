@@ -11,6 +11,7 @@ class LoadResult:
 	extends RefCounted
 	var db: Database
 	var errors: PackedStringArray = []
+	var warnings: PackedStringArray = []
 
 	func ok() -> bool:
 		return errors.is_empty() and db != null
@@ -25,6 +26,7 @@ static func load_database(data_root: String, dialogue_root: String = "") -> Load
 	if not result.errors.is_empty():
 		return result
 	result.errors.append_array(DataValidator.validate(raw))
+	result.warnings = DataValidator.warnings(raw)
 	if result.errors.is_empty():
 		result.db = Database.from_raw(raw)
 	return result

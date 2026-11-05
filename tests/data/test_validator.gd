@@ -162,3 +162,79 @@ func test_minigame_scene_must_exist() -> void:
 	raw = _base()
 	raw.add_entry("minigames", {"id": "qd", "name": "Quick Draw", "scene": "res://game/overworld/overworld.tscn"})
 	assert_array(Array(DataValidator.validate(raw))).is_empty()
+
+
+func test_unknown_growth_tier_fails() -> void:
+	var raw := _base()
+	raw.entries.creatures[0].entry = _creature({"growth_rates": {"patk": "fats"}})
+	var errs := _errors_for(raw)
+	assert_str(errs).contains("[creatures:pup]")
+	assert_str(errs).contains("fats")
+
+
+func test_unknown_growth_stat_fails() -> void:
+	var raw := _base()
+	raw.entries.creatures[0].entry = _creature({"growth_rates": {"speed": "fast"}})
+	assert_str(_errors_for(raw)).contains("speed")
+
+
+func test_valid_growth_rates_pass() -> void:
+	var raw := _base()
+	raw.entries.creatures[0].entry = _creature({"growth_rates": {"patk": "fast", "spd": "slow"}})
+	assert_array(Array(DataValidator.validate(raw))).is_empty()
+
+
+func test_steady_tier_must_exist_and_be_one() -> void:
+	for tiers in [{"slow": 0.8, "fast": 1.2}, {"slow": 0.8, "steady": 1.1, "fast": 1.2}]:
+		var raw := _base()
+		var b := FixtureDB.balance()
+		b["growth_tiers"] = tiers
+		raw.set_single("balance", b)
+		assert_str(_errors_for(raw)).contains("steady")
+
+
+func test_tier_rounding_to_steady_fails() -> void:
+	var raw := _base()
+	var b := FixtureDB.balance()
+	b["growth_tiers"] = {"slow": 0.8, "steady": 1.0, "fast": 1.004}
+	raw.set_single("balance", b)
+	var errs := _errors_for(raw)
+	assert_str(errs).contains("fast")
+	assert_str(errs).contains("steady")
+
+
+func test_normal_tiers_pass() -> void:
+	var raw := _base()
+	var b := FixtureDB.balance()
+	b["growth_tiers"] = {"slow": 0.8, "steady": 1.0, "fast": 1.2}
+	raw.set_single("balance", b)
+	assert_array(Array(DataValidator.validate(raw))).is_empty()
+
+
+func test_over_budget_species_warns_without_failing() -> void:
+	var raw := _base()
+	raw.entries.creatures[0].entry = _creature({"growth_rates": {"patk": "fast", "pdef": "fast", "spd": "fast"}})
+	assert_array(Array(DataValidator.validate(raw))).is_empty()
+	var warns := DataValidator.warnings(raw)
+	assert_int(warns.size()).is_equal(1)
+	assert_str(warns[0]).contains("[creatures:pup]")
+	assert_str(warns[0]).contains("warning: growth tiers sum to 3")
+
+
+func test_slow_stats_offset_fast_ones() -> void:
+	var raw := _base()
+	raw.entries.creatures[0].entry = _creature({"growth_rates": {
+		"patk": "fast", "pdef": "fast", "spd": "fast", "hp": "slow"}})
+	assert_array(Array(DataValidator.warnings(raw))).is_empty()
+
+
+func test_budget_counts_position_relative_to_steady() -> void:
+	var raw := _base()
+	var b := FixtureDB.balance()
+	b["growth_tiers"] = {"slow": 0.8, "steady": 1.0, "fast": 1.2, "turbo": 1.5}
+	raw.set_single("balance", b)
+	raw.entries.creatures[0].entry = _creature({"growth_rates": {"patk": "turbo", "pdef": "fast", "spd": "fast"}})
+	assert_int(DataValidator.warnings(raw).size()).is_equal(1)
+	# turbo counts +1, not +2: turbo + fast is 2, within budget.
+	raw.entries.creatures[0].entry = _creature({"growth_rates": {"patk": "turbo", "pdef": "fast"}})
+	assert_array(Array(DataValidator.warnings(raw))).is_empty()

@@ -17,6 +17,8 @@ var growth: Array
 var passives: PackedStringArray
 ## Affinity track id -> passive id.
 var affinity_passives: Dictionary
+## Base stat -> growth tier id; unlisted stats are "steady".
+var growth_rates: Dictionary
 
 
 static func from_dict(d: Dictionary) -> CreatureDef:
@@ -44,6 +46,7 @@ static func from_dict(d: Dictionary) -> CreatureDef:
 		})
 	c.passives = PackedStringArray(d.passives)
 	c.affinity_passives = d.get("affinity_passives", {}).duplicate()
+	c.growth_rates = d.get("growth_rates", {}).duplicate()
 	return c
 
 
@@ -54,3 +57,8 @@ func moves_up_to(level: int) -> PackedStringArray:
 		if l.level <= level and not out.has(l.move):
 			out.append(l.move)
 	return out
+
+
+## Growth tier id for a base stat ("steady" when not listed).
+func growth_tier(stat: String) -> String:
+	return growth_rates.get(stat, "steady")

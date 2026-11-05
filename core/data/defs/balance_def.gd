@@ -10,6 +10,10 @@ var spread_mult: float
 var round_limit: int
 var max_field_states: int
 var growth_affinity_threshold: int
+## Growth tier id -> multiplier on a stat's per-level growth.
+var growth_tiers: Dictionary
+## Total tier steps a creature may spend on growth_rates.
+var growth_budget: int
 var underdog: Dictionary
 var catch_cfg: Dictionary
 var xp_cfg: Dictionary
@@ -39,6 +43,10 @@ static func from_dict(d: Dictionary) -> BalanceDef:
 	b.round_limit = int(d.round_limit)
 	b.max_field_states = int(d.max_field_states)
 	b.growth_affinity_threshold = int(d.growth_affinity_threshold)
+	b.growth_tiers = {}
+	for k in d.growth_tiers:
+		b.growth_tiers[k] = float(d.growth_tiers[k])
+	b.growth_budget = int(d.growth_budget)
 	b.underdog = d.underdog.duplicate()
 	b.catch_cfg = d.catch.duplicate()
 	b.xp_cfg = d.xp.duplicate()
@@ -58,3 +66,8 @@ static func from_dict(d: Dictionary) -> BalanceDef:
 		var a: Dictionary = d.affinity_awards[key]
 		b.affinity_awards[key] = {"affinity": a.affinity, "points": int(a.points)}
 	return b
+
+
+## A tier's multiplier as an exact whole percent (1.2 -> 120).
+func growth_percent(tier: String) -> int:
+	return roundi(float(growth_tiers[tier]) * 100.0)

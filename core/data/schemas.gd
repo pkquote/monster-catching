@@ -197,6 +197,7 @@ const ENTRY := {
 			"default": {"t": "bool", "opt": true},
 			"into": {"t": "ref", "cat": "creatures"},
 		}}},
+		"growth_rates": {"t": "map", "opt": true, "key": {"t": "enum", "values": BASE_STATS}, "value": {"t": "id"}},
 		"passives": {"t": "array", "min": 1, "max": 2, "of": {"t": "ref", "cat": "passives"}},
 		"affinity_passives": {"t": "map", "opt": true,
 			"key": {"t": "ref", "cat": "affinities"},
@@ -319,6 +320,8 @@ const ENTRY := {
 		"stab": {"t": "number", "min": 1.0, "max": 3.0},
 		"max_field_states": {"t": "int", "min": 1, "max": 5},
 		"growth_affinity_threshold": {"t": "int", "min": 0},
+		"growth_tiers": {"t": "map", "key": {"t": "id"}, "value": {"t": "number", "min": 0.1, "max": 3.0}},
+		"growth_budget": {"t": "int", "min": 0, "max": 9},
 		"underdog": {"t": "dict", "fields": {
 			"bonus_actions_per_ratio": {"t": "number", "min": 0.0, "max": 2.0},
 			"spread_reduction_per_ratio": {"t": "number", "min": 0.0, "max": 1.0},

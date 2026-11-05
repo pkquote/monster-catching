@@ -76,3 +76,8 @@ func _write(path: String, text: String) -> void:
 	var f := FileAccess.open(path, FileAccess.WRITE)
 	f.store_string(text)
 	f.close()
+
+
+func test_shipped_content_has_no_warnings() -> void:
+	var result := DataLoader.load_database("res://data", "res://dialogue")
+	assert_array(Array(result.warnings)).is_empty()

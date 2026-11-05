@@ -137,6 +137,13 @@ func _render_stats(db: Database, c: CreatureInstance) -> Array:
 	for key in ["hp", "stamina", "patk", "pdef", "satk", "sdef", "spd", "resolve", "luck"]:
 		var value := c.max_hp(db) if key == "hp" else c.max_energy(db) if key == "stamina" else c.stat(db, key)
 		var text := "%s %d" % [STAT_NAMES[key], value]
+		# ▲ / ▼: this species grows the stat faster / slower than steady.
+		var tier := db.creature(c.species).growth_tier(key)
+		var multiplier: float = db.balance.growth_tiers.get(tier, 1.0)
+		if multiplier > 1.0:
+			text += "▲"
+		elif multiplier < 1.0:
+			text += "▼"
 		# Growth from the species and level, then what training added on top.
 		if c.trained(key) > 0:
 			text += " (%d+%d)" % [c.grown(db, key), value - c.grown(db, key)]

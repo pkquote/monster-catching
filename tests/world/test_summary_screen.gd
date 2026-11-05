@@ -18,6 +18,7 @@ func before_test() -> void:
 
 
 func after_test() -> void:
+	DataRegistry.db.creature("tidepup").growth_rates = {}
 	WorldTest.close(world)
 
 
@@ -458,3 +459,44 @@ func test_stats_tab_fits_with_every_stat_trained() -> void:
 		c.training[key] = 30
 	var s := await _open()
 	ScreenFit.check(self, s)
+
+
+func _set_growth(rates: Dictionary) -> void:
+	DataRegistry.db.creature("tidepup").growth_rates = rates
+
+
+func test_stats_tab_marks_fast_and_slow_stats() -> void:
+	var db := DataRegistry.db
+	_set_growth({"spd": "fast", "pdef": "slow"})
+	var c := Story.give_creature("tidepup", 10)
+	var s := await _open()
+	var text := s.page_text()
+	assert_str(text).contains("Speed %d▲" % c.stat(db, "spd"))
+	assert_str(text).contains("Physical Defense %d▼" % c.stat(db, "pdef"))
+	assert_str(text).contains("Luck %d" % c.stat(db, "luck"))
+	assert_str(text).not_contains("Luck %d▲" % c.stat(db, "luck"))
+	assert_str(text).not_contains("Luck %d▼" % c.stat(db, "luck"))
+	_set_growth({})
+
+
+func test_marker_comes_before_the_training_split() -> void:
+	var db := DataRegistry.db
+	_set_growth({"spd": "fast"})
+	var c := Story.give_creature("tidepup", 10)
+	Training.train(db, c, "spd", 3)
+	var s := await _open()
+	assert_str(s.page_text()).contains("Speed %d▲ (%d+3)" % [c.stat(db, "spd"), c.grown(db, "spd")])
+	_set_growth({})
+
+
+func test_stats_tab_fits_with_every_stat_trained_and_marked() -> void:
+	var c := Story.give_creature("tidepup", 99)
+	var rates := {}
+	for i in DataSchemas.BASE_STATS.size():
+		rates[DataSchemas.BASE_STATS[i]] = "fast" if i % 2 == 0 else "slow"
+	_set_growth(rates)
+	for key in DataSchemas.TRAINABLE_STATS:
+		c.training[key] = 30
+	var s := await _open()
+	ScreenFit.check(self, s)
+	_set_growth({})

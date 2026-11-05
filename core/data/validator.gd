@@ -21,6 +21,37 @@ static func validate(raw: RawData) -> PackedStringArray:
 	return v._run(raw)
 
 
+## Soft content warnings (never fail the build): species whose growth tiers
+## outweigh the balance budget. A tier counts +1 above steady, -1 below.
+static func warnings(raw: RawData) -> PackedStringArray:
+	var out := PackedStringArray()
+	if not raw.singles.has("balance"):
+		return out
+	var bal: Dictionary = raw.singles["balance"].data
+	var tiers = bal.get("growth_tiers", {})
+	var budget = bal.get("growth_budget", 0)
+	if not tiers is Dictionary or not _is_number(budget):
+		return out
+	for rec in raw.get_entries("creatures"):
+		var c: Dictionary = rec.entry
+		var rates = c.get("growth_rates", {})
+		if not rates is Dictionary:
+			continue
+		var total := 0
+		for stat in rates:
+			var mult = tiers.get(rates[stat]) if rates[stat] is String else null
+			if not _is_number(mult):
+				continue
+			if float(mult) > 1.0:
+				total += 1
+			elif float(mult) < 1.0:
+				total -= 1
+		if total > int(budget):
+			out.append("%s [creatures:%s]: warning: growth tiers sum to %d (budget %d)" % [
+				rec.file, c.get("id", "?"), total, int(budget)])
+	return out
+
+
 func _run(raw: RawData) -> PackedStringArray:
 	_raw = raw
 	for cat in DataSchemas.CATEGORIES:
@@ -167,6 +198,21 @@ func _check_range(n: float, rule: Dictionary, path: String) -> void:
 # --- Rules that span fields or entries -------------------------------------
 
 func _check_cross_rules() -> void:
+	var tiers := {}
+	if _raw.singles.has("balance"):
+		var brec: Dictionary = _raw.singles["balance"]
+		var t = brec.data.get("growth_tiers", {})
+		if t is Dictionary:
+			tiers = t
+			_file = brec.file
+			_label = "[balance]"
+			var steady = tiers.get("steady")
+			if not (steady is float or steady is int) or float(steady) != 1.0:
+				_err("growth_tiers", "must define 'steady' as exactly 1.0")
+			for tier_id in tiers:
+				var mult = tiers[tier_id]
+				if tier_id != "steady" and _is_number(mult) and roundi(float(mult) * 100.0) == 100:
+					_err("growth_tiers", "tier '%s' rounds to the same percent as steady" % tier_id)
 	for rec in _raw.get_entries("creatures"):
 		var c: Dictionary = rec.entry
 		_file = rec.file
@@ -174,6 +220,11 @@ func _check_cross_rules() -> void:
 		var learnset = c.get("learnset", [])
 		if learnset is Array and not learnset.any(func(l): return l is Dictionary and l.get("level") == 1.0):
 			_err("learnset", "needs at least one level-1 move")
+		var rates = c.get("growth_rates", {})
+		if rates is Dictionary:
+			for stat in rates:
+				if rates[stat] is String and not tiers.has(rates[stat]):
+					_err("growth_rates.%s" % stat, "unknown growth tier '%s'" % rates[stat])
 		var growth = c.get("growth", [])
 		if growth is Array:
 			var defaults_per_level := {}

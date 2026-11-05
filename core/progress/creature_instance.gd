@@ -69,13 +69,15 @@ func trained(stat_name: String) -> int:
 ## What the species' growth gives this stat at the current level, before any training.
 ## `stat_name` is "hp", "stamina" (the energy pool) or any other stat.
 func grown(db: Database, stat_name: String) -> int:
-	var base: Dictionary = species_def(db).base_stats
+	var def := species_def(db)
+	var base: Dictionary = def.base_stats
+	var pct := db.balance.growth_percent(def.growth_tier(stat_name))
 	match stat_name:
 		"hp":
-			return Stats.hp_at(base.hp, level)
+			return Stats.hp_at(base.hp, level, pct)
 		"stamina":
-			return Stats.energy_at(base.stamina, level, int(db.balance.energy_cfg.base))
-	return Stats.stat_at(base[stat_name], level)
+			return Stats.energy_at(base.stamina, level, int(db.balance.energy_cfg.base), pct)
+	return Stats.stat_at(base[stat_name], level, pct)
 
 
 func max_hp(db: Database) -> int:
@@ -91,12 +93,14 @@ func stat(db: Database, stat_name: String) -> int:
 	return grown(db, stat_name) + trained(stat_name)
 
 
-## Pulls a creature above the level cap (a hand-edited or older save) back down to it.
+## Pulls a creature above the level cap (a hand-edited or older save) back down to it,
+## and keeps HP and energy within the current maximums (growth tiers can shrink them).
 func clamp_to_cap(db: Database) -> void:
-	if level <= db.balance.level_cap:
-		return
-	level = db.balance.level_cap
-	xp = mini(xp, Stats.xp_for_level(level))
+	if level > db.balance.level_cap:
+		level = db.balance.level_cap
+		xp = mini(xp, Stats.xp_for_level(level))
+	if not db.has("creatures", species):
+		return  # unknown species (removed content): leave HP and energy alone
 	hp = mini(hp, max_hp(db))
 	energy = mini(energy, max_energy(db))
 

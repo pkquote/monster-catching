@@ -3,19 +3,19 @@ extends RefCounted
 ## Stat and experience formulas. All pure functions.
 
 
-## HP at a level: 2*base*level/100 + level + 10
-static func hp_at(base: int, level: int) -> int:
-	return (2 * base * level) / 100 + level + 10
+## HP at a level: 2*base*pct*level/10000 + level + 10 (pct = growth tier percent, 100 = steady)
+static func hp_at(base: int, level: int, pct: int = 100) -> int:
+	return (2 * base * pct * level) / 10000 + level + 10
 
 
-## Physical/Special Atk/Def, Spd, Luck, Resolve at a level: 2*base*level/100 + 5
-static func stat_at(base: int, level: int) -> int:
-	return (2 * base * level) / 100 + 5
+## Physical/Special Atk/Def, Spd, Luck, Resolve at a level: 2*base*pct*level/10000 + 5
+static func stat_at(base: int, level: int, pct: int = 100) -> int:
+	return (2 * base * pct * level) / 10000 + 5
 
 
-## Max energy from base Stamina: 2*base*level/100 + flat
-static func energy_at(base_stamina: int, level: int, flat: int) -> int:
-	return (2 * base_stamina * level) / 100 + flat
+## Max energy from base Stamina: 2*base*pct*level/10000 + flat
+static func energy_at(base_stamina: int, level: int, flat: int, pct: int = 100) -> int:
+	return (2 * base_stamina * pct * level) / 10000 + flat
 
 
 ## Total XP needed to reach `level` (level 1 = 0).

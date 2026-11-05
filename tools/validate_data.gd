@@ -7,6 +7,8 @@ extends SceneTree
 func _init() -> void:
 	var result := DataLoader.load_database("res://data", "res://dialogue")
 	if result.ok():
+		for w in result.warnings:
+			print(w)
 		var db := result.db
 		print("Data OK: %d creatures, %d moves, %d items, %d tamers, %d encounters, %d field states, %d reactions, %d passives" % [
 			db.count("creatures"), db.count("moves"), db.count("items"), db.count("tamers"),

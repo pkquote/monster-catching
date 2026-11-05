@@ -274,6 +274,13 @@ func _creatures() -> void:
 			parts.append("%s %d" % [STAT_LABELS[k], c.base_stats[k]])
 		_w("- **Base stats:** %s" % " · ".join(parts))
 		_w("- **Catch rate:** %d%% base · **XP yield:** %d" % [roundi(c.catch_rate * 100), c.xp_yield])
+		var tiers := PackedStringArray()
+		for k in DataSchemas.BASE_STATS:
+			if c.growth_tier(k) != "steady":
+				tiers.append("%s %s" % [STAT_LABELS[k], c.growth_tier(k)])
+		if not tiers.is_empty():
+			_w("- **Growth:** %s" % ", ".join(tiers))
+		_w("- **Lv %d stats:** %s" % [db.balance.level_cap, _stats_at_cap(c)])
 		if grows_from.has(id):
 			_w("- **Grows from:** %s" % ", ".join(grows_from[id]))
 		if not c.growth.is_empty():
@@ -289,6 +296,25 @@ func _creatures() -> void:
 			_w("| %d | %s | %s | %s | %s | %d | %s |" % [l.level, m.name, db.type_def(m.type).name,
 				m.category.capitalize(), _power(m), m.cost, _acc(m)])
 		_w("")
+
+
+func _stats_at_cap(c: CreatureDef) -> String:
+	var lv: int = db.balance.level_cap
+	var parts := PackedStringArray()
+	var total := 0
+	for k in DataSchemas.BASE_STATS:
+		var pct := db.balance.growth_percent(c.growth_tier(k))
+		var v: int
+		if k == "hp":
+			v = Stats.hp_at(c.base_stats[k], lv, pct)
+		elif k == "stamina":
+			v = Stats.energy_at(c.base_stats[k], lv, db.balance.energy_cfg.base, pct)
+		else:
+			v = Stats.stat_at(c.base_stats[k], lv, pct)
+		parts.append("%s %d" % [STAT_LABELS[k], v])
+		if k in ["hp", "patk", "pdef", "satk", "sdef", "spd"]:
+			total += v
+	return "%s · Total %d" % [" · ".join(parts), total]
 
 
 func _moves() -> void:

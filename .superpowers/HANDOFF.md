@@ -1,6 +1,6 @@
 # Handoff: godot-monster-catching-game
 
-Date: 2026-11-04. Branch: `master`. Last commit: `d18eb44` ("Fix four passives minors"). The working tree holds the uncommitted passive-aware battle AI (last item under "Resolved" below).
+Date: 2026-11-04. Branch: `master`. Last commit: `283a19e` ("Show stat growth vs training; cap level at 99"). The working tree holds the uncommitted stat-growth-rates work (see "Stat growth rates" below) on top of it.
 
 ## Read this first: standing rules
 - **Never commit, stage or stash.** The user writes every commit. Leave changes in the working tree.
@@ -67,9 +67,10 @@ Godot 4.7.2 (.NET build, but GDScript only) monster-catching RPG.
   - An absorbed move's other per-target effects skip the absorber (`EffectContext.absorbed`; `deal_damage` returns true when it absorbs).
   - The battle AI is passive-aware (`core/battle/ai/battle_ai.gd`, tests in `tests/battle/test_ai_passives.gd`, documented under "Passives and the AI" in `documentation/battle-engine.md`): absorb, status/stage/shelter blocks, `field_boost`, `rest_bonus`, and hit-trigger retaliation (tactician only). Faint, knockout, enter and round-end triggers are deliberately not modelled.
 
-## Stat growth (in progress, uncommitted)
-- Done: level cap is 99; `CreatureInstance.grown(db, stat)` is the level-derived growth, with `max_hp`, `max_energy` and `stat` built from it; `clamp_to_cap` runs in `GameState.load_from`; the Summary Stats tab shows `total (growth+trained)` (spec section 2.7).
-- Next (agreed, not started): per-species growth rates, separate from base stats. This changes the stat formula, data schema and save math, so brainstorm it as its own spec first.
+## Stat growth rates (implemented, uncommitted)
+- Level cap is 99; `CreatureInstance.grown(db, stat)` is the level-derived growth (max HP, energy and stats are built from it); the Summary Stats tab shows `total (growth+trained)`. These were committed in `283a19e`.
+- New, uncommitted: each species can give any base stat a growth tier via `growth_rates` (`slow`/`steady`/`fast`, multipliers in `balance.json` `growth_tiers`: 0.8/1.0/1.2). `Stats.hp_at/stat_at/energy_at` take a percent (default 100); `BalanceDef.growth_percent`, `CreatureDef.growth_tier`. Validated in the validator and `tools/validate_data.gd`; the Summary marks non-steady stats with ▲/▼ (checked in the real window); the compendium shows a `Growth:` bullet (non-steady only) and a Lv 99 stats line per species. Spec: `documentation/specs/2026-11-04-stat-growth-rates-design.md`; plan: `documentation/plans/2026-11-04-stat-growth-rates.md`.
+- Follow-up content pass (not started): mark the shipped species with growth tiers. All 8 are still all-steady, so nothing changes in play until that is done.
 
 ## Possible next steps (none requested yet)
 - Fix any remaining passives minors the user cares about (see the deferred list).

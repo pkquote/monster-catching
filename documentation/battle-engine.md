@@ -68,11 +68,11 @@ engine.commit(0)               # write the player's creatures back (BattleLaunch
 
 | What | Formula |
 | --- | --- |
-| HP | `2·base·Lv/100 + Lv + 10` |
-| Atk / Def / Spd | `2·base·Lv/100 + 5` |
+| HP | `2·base·pct·Lv/10000 + Lv + 10` (`pct` = growth tier percent: slow 80, steady 100, fast 120) |
+| Atk / Def / Spd | `2·base·pct·Lv/10000 + 5` |
 | XP to reach a level | `Lv³` |
 | Stat stages (−6…+6) | Atk/Def/Spd: `(2+s)/2` or `2/(2−s)`. Accuracy: `(3+s)/3` or `3/(3−s)` |
-| Max energy | `2·base_stamina·Lv/100 + energy.base` (+1 per Stamina training point) |
+| Max energy | `2·base_stamina·pct·Lv/10000 + energy.base` (+1 per Stamina training point) |
 | Training | Each point adds +1 to a stat, +`hp_per_point` to HP |
 | Effective stat | raw (incl. training) × stage × passive `stat_mod`s (status, own side's field states and creature passives) × (1 + Underdog stat bonus, P/S Atk and Def only) |
 | Damage | `((2·Lv/5 + 2) · power · A/D) / 50 + 2` × same-type bonus × type matchup × field bonus × attacker's `type_power` (and `scrap_power` for Scrap, `reaction_power` for its reactions) × target's `incoming_type_mod`s (side field states and passives) × spread × Bond performance × roll(0.85–1.0), minimum 1. `A/D` is P.Atk/P.Def for physical moves and S.Atk/S.Def for special moves |

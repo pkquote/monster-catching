@@ -237,6 +237,17 @@ on its own while the effect's own events play.
 
 Every AI picks only moves it can afford, falls back on Scrap, and considers Rest below 20% energy.
 
+### Passives and the AI
+
+Damage estimates already include stat, type-power, resistance, Scrap and reaction passives. On top of that:
+
+- **Absorb (aggressive and tactician):** damage a target's `absorb_type` passive would absorb counts as 0, and the heal it gives (capped at the target's missing HP) is subtracted for a foe or added for an ally. The AI stops hitting absorbers and may hit its own.
+- **Blocks (tactician):** `status_immune`, `guard_stages` and `field_shelter` zero the value of the statuses, stat drops and reaction damage they block, in moves and in reactions.
+- **Own passives (tactician):** `field_boost` stacks count toward a setup's reaction value, and `rest_bonus` scales Rest's value.
+- **Retaliation (tactician):** a hit that doesn't knock the target out is charged the expected cost of the target's `hit` triggers on the attacker (status, stat drop or damage, weighted by chance; `contact` triggers need a physical move), less whatever the attacker's own passive blocks.
+
+Not modelled: faint, knockout, enter and round-end triggers.
+
 ## Code layout
 
 `BattleEngine` is the public face: the battle screen, the AI and effect ops call only it. It owns the

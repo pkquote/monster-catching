@@ -1,6 +1,6 @@
 # Handoff: godot-monster-catching-game
 
-Date: 2026-11-04. Branch: `master`. Last commit: `efe5d7e` ("Add creature passive abilities"). The working tree holds the uncommitted minor fixes listed below.
+Date: 2026-11-04. Branch: `master`. Last commit: `d18eb44` ("Fix four passives minors"). The working tree holds the uncommitted passive-aware battle AI (last item under "Resolved" below).
 
 ## Read this first: standing rules
 - **Never commit, stage or stash.** The user writes every commit. Leave changes in the working tree.
@@ -53,21 +53,21 @@ Godot 4.7.2 (.NET build, but GDScript only) monster-catching RPG.
 - The commit includes the spec, plan, `.superpowers/2026-11-04-passives-handoff.md` and the `passives` tour. `.superpowers/sdd/` is an empty directory.
 
 ## Decisions and known small issues
-`.superpowers/2026-11-04-passives-handoff.md` lists the 23 rulings made on the user's behalf and the 32 deferred minor issues still open, each with what it costs if wrong. The most notable:
+`.superpowers/2026-11-04-passives-handoff.md` lists the 23 rulings made on the user's behalf and the 31 deferred minor issues still open, each with what it costs if wrong. The most notable:
 - **Rulings:**
   - Passive-run effects earn no Affinity.
   - A passive trigger that would do nothing (a heal at full HP, energy restore at full energy) is skipped silently.
   - Faint and knockout triggers don't fire on the knockout that ends the battle.
   - An aura's `when` condition is checked on the aura's holder.
   - `underdog` counts only standing creatures on the field.
-- **Deferred minors a player could notice:** the battle AI ignores protection passives (values burns into fireproof, drops into guard, sheltered states).
-- **Resolved after the passives commit (uncommitted):**
+- **Resolved after the passives commit (all but the AI are in `d18eb44`):**
   - Guardian Aura's text now says "from moves".
   - Foes unlock Affinity passives silently (no "Wild X awakened Y!").
   - Passive banners over the same creature stack instead of overprinting.
   - An absorbed move's other per-target effects skip the absorber (`EffectContext.absorbed`; `deal_damage` returns true when it absorbs).
+  - The battle AI is passive-aware (`core/battle/ai/battle_ai.gd`, tests in `tests/battle/test_ai_passives.gd`, documented under "Passives and the AI" in `documentation/battle-engine.md`): absorb, status/stage/shelter blocks, `field_boost`, `rest_bonus`, and hit-trigger retaliation (tactician only). Faint, knockout, enter and round-end triggers are deliberately not modelled.
 
 ## Possible next steps (none requested yet)
-- Fix the remaining passives minors the user cares about, e.g. AI awareness of passives (needs a short design decision first).
+- Fix any remaining passives minors the user cares about (see the deferred list).
 - Continue the milestone roadmap in the main spec's Milestones table. M1–M4, the code audit and passives are done.
 - Ask the user what is next before starting anything. New features go through brainstorming first.

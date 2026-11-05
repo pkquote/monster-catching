@@ -43,7 +43,6 @@
 - Task 5: minor (deferred): a foe on an auto-replace side KO'd during the player's replace() is refilled only at the next round end (existing refill timing).
 - Task 6: minor (deferred): no test for a status blocked inside a trigger's effects (two banners, no STATUS_APPLIED).
 - Task 6: minor (deferred): guard tests miss foe raises and same-side ally drops; aura test covers status+guard only.
-- Task 6: minor (deferred): battle AI ignores protection passives (values burns into fireproof, drops into guard, sheltered states).
 - Task 6: minor (deferred): passives_for calls shelters (full _collect) per field state on every passives() call — fine at current scale.
 - Task 7: minor (deferred): encounter-rate test only checks 1..39 of 40 rolled; could pin a seeded count.
 - Task 7: minor (deferred): no test that rate_mult 0 still draws one randf per tile, or that foe-side Bond stays unscaled.

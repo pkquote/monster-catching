@@ -51,7 +51,7 @@ static func choose(engine: BattleEngine, bid: int, style: String) -> BattleActio
 				"score": 0.0 if style == "basic" else score(engine, b, m, t, style, ref)})
 	var max_e := float(b.creature.max_energy(engine.db))
 	if float(b.energy()) < max_e * LOW_ENERGY:
-		options.append({"action": BattleAction.rest(bid), "score": REST_VALUE})
+		options.append({"action": BattleAction.rest(bid), "score": rest_score(engine, b)})
 	if options.is_empty():
 		return BattleAction.pass_turn(bid)
 	if style == "basic":
@@ -63,6 +63,12 @@ static func choose(engine: BattleEngine, bid: int, style: String) -> BattleActio
 	return best.action
 
 
+## What Rest is worth: REST_VALUE, scaled up by the creature's rest_bonus passive.
+static func rest_score(engine: BattleEngine, b: Battler) -> float:
+	var base := float(engine.db.balance.energy_cfg.rest_fraction)
+	return REST_VALUE * (base + engine.passive_rules.rest_bonus(b)) / base
+
+
 static func score(engine: BattleEngine, b: Battler, m: MoveDef, target_bid: int, style: String,
 		ref := -1.0) -> float:
 	var db := engine.db
@@ -71,6 +77,9 @@ static func score(engine: BattleEngine, b: Battler, m: MoveDef, target_bid: int,
 	var targets := engine.resolve_targets(b, m.target, target_bid, false)
 	var value := 0.0
 	for t in targets:
+		# A target whose passive absorbs the move's type is healed, not hurt.
+		var healed := _absorbed_heal(engine, m, t)
+		value += healed if t.side == b.side else -healed
 		var est := estimate_damage(engine, b, m, t, targets.size() > 1)
 		if est <= 0.0:
 			continue
@@ -79,6 +88,8 @@ static func score(engine: BattleEngine, b: Battler, m: MoveDef, target_bid: int,
 			value -= landed * 1.5
 		else:
 			value += landed + (KO_BONUS if est >= t.hp() else 0.0)
+			if style == "tactician" and est < t.hp():
+				value -= _retaliation(engine, b, m, t, ref)
 	for e in m.effects:
 		if e.op == "heal":
 			var max_hp := float(b.creature.max_hp(db))
@@ -119,9 +130,57 @@ static func estimate_damage(engine: BattleEngine, b: Battler, m: MoveDef, t: Bat
 			var s := ctx.side_index(e.side)
 			if s != -1 and engine.sides[s].field.has(e.state):
 				ctx.mult *= float(e.mult)
-		elif e.op == "damage":
+		elif e.op == "damage" and engine.passive_rules.absorbs(t, ctx.damage_type(e)) <= 0.0:
 			total += BattleMath.damage(engine, ctx, e, t, false).amount
 	return total
+
+
+## HP that `m`'s damage effects would heal `t` through an absorb_type passive.
+static func _absorbed_heal(engine: BattleEngine, m: MoveDef, t: Battler) -> float:
+	var healed := 0.0
+	var max_hp := float(t.creature.max_hp(engine.db))
+	for e in m.effects:
+		if e.op != "damage" or int(e.get("power", m.power)) <= 0:
+			continue
+		var fraction := engine.passive_rules.absorbs(t, str(e.get("type", m.type)))
+		if fraction > 0.0:
+			healed += maxf(1.0, roundf(max_hp * fraction))
+	return minf(healed, max_hp - t.hp())
+
+
+## Expected cost to `b` of the hit triggers on `t`'s passive when `m` hits it: statuses,
+## stat drops and damage that land on the attacker, weighted by chance, less whatever
+## b's own passive blocks.
+static func _retaliation(engine: BattleEngine, b: Battler, m: MoveDef, t: Battler, ref: float) -> float:
+	var pdef := engine.db.passive(Passives.active_id(t.creature))
+	if pdef == null:
+		return 0.0
+	var cost := 0.0
+	for trig: Dictionary in pdef.triggers:
+		if trig.on != "hit" or (trig.contact and m.category != "physical"):
+			continue
+		var chance := float(trig.chance) / 100.0
+		for e: Dictionary in trig.effects:
+			if e.get("target", "attacker") != "attacker":
+				continue
+			var each := 0.0
+			match e.op:
+				"apply_status":
+					if b.status() == "" and not engine.passive_rules.blocks_status(b, e.status):
+						each = status_value(engine, b, e.status, ref) * float(e.get("chance", 100)) / 100.0
+				"stat_stage":
+					if int(e.stages) < 0 and not engine.passive_rules.guards_stage(b, e.stat, t):
+						each = float(DEBUFF_VALUE.get(e.stat, 0.1)) * ref * -int(e.stages)
+				"damage":
+					var ctx := EffectContext.new()
+					ctx.engine = engine
+					ctx.user = t
+					ctx.source = "passive"
+					ctx.attacker = b
+					ctx.targets.append(b)
+					each = minf(float(b.hp()), float(BattleMath.damage(engine, ctx, e, b, false).amount))
+			cost += each * chance
+	return cost
 
 
 ## Expected payoff of reaction `r` firing on `side_index`, triggered by `b`.
@@ -145,12 +204,19 @@ static func reaction_value(engine: BattleEngine, b: Battler, r: ReactionDef, sid
 			var sign := 1.0 if t.side != b.side else -1.0
 			match e.op:
 				"damage":
+					if engine.field_rules.reaction_shelter(r, t) != null:
+						continue
+					var fraction := engine.passive_rules.absorbs(t, ctx.damage_type(e))
+					if fraction > 0.0:
+						var max_hp := float(t.creature.max_hp(engine.db))
+						value -= sign * minf(maxf(1.0, roundf(max_hp * fraction)), max_hp - t.hp())
+						continue
 					value += sign * minf(float(t.hp()), float(BattleMath.damage(engine, ctx, e, t, false).amount))
 				"apply_status":
-					if t.status() == "":
+					if t.status() == "" and not engine.passive_rules.blocks_status(t, e.status):
 						value += sign * status_value(engine, t, e.status, ref) * float(e.get("chance", 100)) / 100.0
 				"stat_stage":
-					if int(e.stages) < 0:
+					if int(e.stages) < 0 and not engine.passive_rules.guards_stage(t, e.stat, b):
 						value += sign * float(DEBUFF_VALUE.get(e.stat, 0.1)) * ref * -int(e.stages)
 	return value
 
@@ -186,7 +252,7 @@ static func _setup_value(engine: BattleEngine, b: Battler, m: MoveDef, targets: 
 				if s == -1:
 					continue
 				var field := engine.sides[s].field
-				var stacks := int(e.get("stacks", 1))
+				var stacks := int(e.get("stacks", 1)) + engine.passive_rules.field_boost(b).x
 				if field.has(e.state):
 					value += RESTACK * ref
 					continue
@@ -219,12 +285,12 @@ static func _setup_value(engine: BattleEngine, b: Battler, m: MoveDef, targets: 
 					value += FOLLOW_CASH_IN * ref
 			"apply_status":
 				for t in targets:
-					if t.side != b.side and t.status() == "":
+					if t.side != b.side and t.status() == "" and not engine.passive_rules.blocks_status(t, e.status):
 						value += status_value(engine, t, e.status, ref) * float(e.get("chance", 100)) / 100.0
 			"stat_stage":
 				if int(e.stages) < 0:
 					for t in targets:
-						if t.side != b.side:
+						if t.side != b.side and not engine.passive_rules.guards_stage(t, e.stat, b):
 							value += float(DEBUFF_VALUE.get(e.stat, 0.1)) * ref * -int(e.stages)
 	return value
 

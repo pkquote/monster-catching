@@ -66,19 +66,39 @@ func trained(stat_name: String) -> int:
 	return int(training.get(stat_name, 0))
 
 
+## What the species' growth gives this stat at the current level, before any training.
+## `stat_name` is "hp", "stamina" (the energy pool) or any other stat.
+func grown(db: Database, stat_name: String) -> int:
+	var base: Dictionary = species_def(db).base_stats
+	match stat_name:
+		"hp":
+			return Stats.hp_at(base.hp, level)
+		"stamina":
+			return Stats.energy_at(base.stamina, level, int(db.balance.energy_cfg.base))
+	return Stats.stat_at(base[stat_name], level)
+
+
 func max_hp(db: Database) -> int:
-	return Stats.hp_at(species_def(db).base_stats.hp, level) \
-		+ trained("hp") * int(db.balance.training_cfg.hp_per_point)
+	return grown(db, "hp") + trained("hp") * int(db.balance.training_cfg.hp_per_point)
 
 
 func max_energy(db: Database) -> int:
-	return Stats.energy_at(species_def(db).base_stats.stamina, level, int(db.balance.energy_cfg.base)) \
-		+ trained("stamina")
+	return grown(db, "stamina") + trained("stamina")
 
 
 ## Raw (unmodified) stat: patk, pdef, satk, sdef, spd, luck or resolve. Includes training.
 func stat(db: Database, stat_name: String) -> int:
-	return Stats.stat_at(species_def(db).base_stats[stat_name], level) + trained(stat_name)
+	return grown(db, stat_name) + trained(stat_name)
+
+
+## Pulls a creature above the level cap (a hand-edited or older save) back down to it.
+func clamp_to_cap(db: Database) -> void:
+	if level <= db.balance.level_cap:
+		return
+	level = db.balance.level_cap
+	xp = mini(xp, Stats.xp_for_level(level))
+	hp = mini(hp, max_hp(db))
+	energy = mini(energy, max_energy(db))
 
 
 func is_fainted() -> bool:

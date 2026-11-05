@@ -123,6 +123,8 @@ Every species defines 9 base stats. Bond is per creature, not per species.
 Formulas: HP = `2·base·Lv/100 + Lv + 10`; other battle stats = `2·base·Lv/100 + 5`;
 max energy = `2·base_stamina·Lv/100 + 20`. Training points (2.10) are added on top.
 
+The level cap is 99. The formula's level-driven value is a creature's **growth** (`CreatureInstance.grown`); training is the part the player added. The Summary's Stats tab shows both: `Physical Attack 104 (92+12)` is a total of 104, from 92 growth and 12 training (an untrained stat shows only its total). A species' base stat sets its growth rate: about `base/50` per level, so a base-50 stat reaches 104 and a base-100 stat 203 at level 99, against at most +30 from training.
+
 ### 2.8 Resolve
 
 - **Resistance:** a status, or a stat drop from a foe, is resisted with chance

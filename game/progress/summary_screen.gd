@@ -137,8 +137,9 @@ func _render_stats(db: Database, c: CreatureInstance) -> Array:
 	for key in ["hp", "stamina", "patk", "pdef", "satk", "sdef", "spd", "resolve", "luck"]:
 		var value := c.max_hp(db) if key == "hp" else c.max_energy(db) if key == "stamina" else c.stat(db, key)
 		var text := "%s %d" % [STAT_NAMES[key], value]
+		# Growth from the species and level, then what training added on top.
 		if c.trained(key) > 0:
-			text += " (+%d)" % c.trained(key)
+			text += " (%d+%d)" % [c.grown(db, key), value - c.grown(db, key)]
 		cells.append(text)
 	for i in range(0, cells.size(), 3):
 		lines.append("   ".join(cells.slice(i, i + 3)))

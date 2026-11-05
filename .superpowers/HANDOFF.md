@@ -67,6 +67,10 @@ Godot 4.7.2 (.NET build, but GDScript only) monster-catching RPG.
   - An absorbed move's other per-target effects skip the absorber (`EffectContext.absorbed`; `deal_damage` returns true when it absorbs).
   - The battle AI is passive-aware (`core/battle/ai/battle_ai.gd`, tests in `tests/battle/test_ai_passives.gd`, documented under "Passives and the AI" in `documentation/battle-engine.md`): absorb, status/stage/shelter blocks, `field_boost`, `rest_bonus`, and hit-trigger retaliation (tactician only). Faint, knockout, enter and round-end triggers are deliberately not modelled.
 
+## Stat growth (in progress, uncommitted)
+- Done: level cap is 99; `CreatureInstance.grown(db, stat)` is the level-derived growth, with `max_hp`, `max_energy` and `stat` built from it; `clamp_to_cap` runs in `GameState.load_from`; the Summary Stats tab shows `total (growth+trained)` (spec section 2.7).
+- Next (agreed, not started): per-species growth rates, separate from base stats. This changes the stat formula, data schema and save math, so brainstorm it as its own spec first.
+
 ## Possible next steps (none requested yet)
 - Fix any remaining passives minors the user cares about (see the deferred list).
 - Continue the milestone roadmap in the main spec's Milestones table. M1–M4, the code audit and passives are done.

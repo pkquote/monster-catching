@@ -43,6 +43,7 @@ func load_from(path: String) -> String:
 		return r.error
 	current = r.save
 	for c: CreatureInstance in current.party + current.storage:
+		c.clamp_to_cap(DataRegistry.db)
 		Progression.backfill_pool(DataRegistry.db, c)
 		Passives.backfill(DataRegistry.db, c)
 	current_path = path

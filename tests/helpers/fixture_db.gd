@@ -18,7 +18,7 @@ static func stats(overrides: Dictionary) -> Dictionary:
 
 static func balance() -> Dictionary:
 	return {
-		"level_cap": 100, "party_size": 6, "max_moves": 4, "stab": 1.25, "spread_mult": 0.75,
+		"level_cap": 99, "party_size": 6, "max_moves": 4, "stab": 1.25, "spread_mult": 0.75,
 		"round_limit": 50, "max_field_states": 3, "growth_affinity_threshold": 10,
 		# Resolve is off by default so status tests are deterministic; see build(overrides).
 		"resolve": {"resist_cap": 0.0, "endure_cap": 0.0},

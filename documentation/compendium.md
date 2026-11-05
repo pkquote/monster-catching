@@ -686,7 +686,7 @@ Global tuning values from `data/balance.json`.
 
 | Setting | Value |
 |---|---|
-| Level cap | 100 |
+| Level cap | 99 |
 | Party size | 6 |
 | Max moves per creature | 4 |
 | Same-type attack bonus | x1.25 |

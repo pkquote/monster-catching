@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "data": {
-    "level_cap": 100,
+    "level_cap": 99,
     "party_size": 6,
     "max_moves": 4,
     "stab": 1.25,

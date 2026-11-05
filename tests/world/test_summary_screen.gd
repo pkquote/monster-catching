@@ -437,3 +437,24 @@ func test_summary_of_a_stored_creature_with_odd_passives() -> void:
 	await _pick(s, "Next creature")
 	assert_str(s.page_text()).contains("Passive: none")
 	s.close()
+
+
+func test_stats_tab_splits_growth_from_training() -> void:
+	var db := DataRegistry.db
+	var c := Story.give_creature("tidepup", 10)
+	Training.train(db, c, "patk", 3)
+	var s := await _open()
+	var text := s.page_text()
+	var grown := c.grown(db, "patk")
+	assert_str(text).contains("Physical Attack %d (%d+3)" % [grown + 3, grown])
+	# Untrained stats show the plain total.
+	assert_str(text).contains("Speed %d" % c.stat(db, "spd"))
+	assert_str(text).not_contains("Speed %d (" % c.stat(db, "spd"))
+
+
+func test_stats_tab_fits_with_every_stat_trained() -> void:
+	var c := Story.give_creature("tidepup", 99)
+	for key in DataSchemas.TRAINABLE_STATS:
+		c.training[key] = 30
+	var s := await _open()
+	ScreenFit.check(self, s)

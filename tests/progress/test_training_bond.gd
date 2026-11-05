@@ -107,3 +107,39 @@ func test_new_fields_round_trip() -> void:
 	assert_int(copy.bond).is_equal(-30)
 	assert_int(copy.energy).is_equal(7)
 	assert_int(copy.trained("spd")).is_equal(3)
+
+
+func test_grown_stats_exclude_training_and_add_up_to_the_totals() -> void:
+	var c := FixtureDB.make(db, "blob", 20)
+	var untrained := {}
+	for key in ["hp", "stamina", "patk", "pdef", "satk", "sdef", "spd", "resolve", "luck"]:
+		untrained[key] = c.max_hp(db) if key == "hp" else c.max_energy(db) if key == "stamina" else c.stat(db, key)
+	Training.train(db, c, "hp", 3)
+	Training.train(db, c, "stamina", 2)
+	Training.train(db, c, "patk", 4)
+	var base: int = db.creature("blob").base_stats.patk
+	assert_int(c.grown(db, "patk")).is_equal(Stats.stat_at(base, 20))
+	assert_int(c.grown(db, "hp")).is_equal(untrained.hp)
+	assert_int(c.grown(db, "stamina")).is_equal(untrained.stamina)
+	assert_int(c.max_hp(db)).is_equal(c.grown(db, "hp") + 3 * int(db.balance.training_cfg.hp_per_point))
+	assert_int(c.max_energy(db)).is_equal(c.grown(db, "stamina") + 2)
+	assert_int(c.stat(db, "patk")).is_equal(c.grown(db, "patk") + 4)
+	for key in untrained:
+		assert_int(c.grown(db, key)).is_equal(untrained[key])
+
+
+func test_level_cap_is_99() -> void:
+	assert_int(db.balance.level_cap).is_equal(99)
+	assert_int(CreatureInstance.create(db, "blob", 150).level).is_equal(99)
+
+
+func test_clamp_to_cap_pulls_an_over_level_creature_down() -> void:
+	var c := FixtureDB.make(db, "blob", 50)
+	c.level = 100
+	c.hp = 9999
+	c.clamp_to_cap(db)
+	assert_int(c.level).is_equal(99)
+	assert_int(c.hp).is_equal(c.max_hp(db))
+	var fine := FixtureDB.make(db, "blob", 30)
+	fine.clamp_to_cap(db)
+	assert_int(fine.level).is_equal(30)

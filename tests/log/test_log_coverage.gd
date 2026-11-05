@@ -40,7 +40,7 @@ func test_battle_logs_start_round_events_and_results() -> void:
 	var s := GameState.current
 	Story.give_creature("tidepup", 10)
 	var e := BattleEngine.new(db, RandomNumberGenerator.new(),
-		BattleLauncher.wild_setup(s, [CreatureInstance.create(db, "pebblet", 3)], 1))
+		BattleLauncher.wild_setup(db, s, [CreatureInstance.create(db, "pebblet", 3)], 1))
 	e.start()
 	e.resolve_round([BattleAction.use_move(0, "tackle", 1)])
 	var started := _find(Log.BATTLE, "Battle started")
@@ -61,7 +61,7 @@ func test_trace_events_are_skipped_below_trace() -> void:
 	var db := DataRegistry.db
 	Story.give_creature("tidepup", 10)
 	var e := BattleEngine.new(db, RandomNumberGenerator.new(),
-		BattleLauncher.wild_setup(GameState.current, [CreatureInstance.create(db, "pebblet", 3)], 1))
+		BattleLauncher.wild_setup(db, GameState.current, [CreatureInstance.create(db, "pebblet", 3)], 1))
 	e.start()
 	assert_array(records.filter(func(r): return r.level == Log.Level.TRACE)).is_empty()
 

@@ -91,7 +91,7 @@ func take_money(n: int) -> bool:
 ## `starter` gives it starter Bond.
 func give_creature(species: String, level: int, starter := false) -> CreatureInstance:
 	var db := DataRegistry.db
-	var c := CreatureInstance.create(db, species, level)
+	var c := CreatureInstance.create(db, species, level, PackedStringArray(), BattleLauncher.fresh_rng())
 	if starter:
 		Bond.make_starter(db, c)
 	var to_party := BattleLauncher.add_to_party(db, _save(), c)
@@ -107,8 +107,9 @@ func party_size() -> int:
 ## Rests the whole party: full HP and energy, status cleared, "rested" Bond change.
 func heal_party() -> void:
 	Log.info(Log.STORY, "Party healed", {"party": _save().party.size()})
+	var gain := Passives.field_mult(DataRegistry.db, _save(), "bond_gain")
 	for c: CreatureInstance in _save().party:
-		Bond.rest(DataRegistry.db, c)
+		Bond.rest(DataRegistry.db, c, gain)
 
 
 ## Where the player wakes after losing a battle.

@@ -21,11 +21,18 @@ var affinity: Dictionary = {}
 var training: Dictionary = {}
 ## Status that persists after battle ("" = none). Cleared on heal.
 var status: String = ""
+## The passive rolled from the species' list at creation.
+var passive: String = ""
+## The passive unlocked by Affinity ("" until then).
+var affinity_passive: String = ""
+## Which slot is in effect: "rolled" or "affinity".
+var active_passive: String = Passives.SLOT_ROLLED
 
 
 ## A fresh creature at `level`, at full HP and energy, with its latest learnable moves.
+## Its passive is rolled with `rng` (the first listed without one).
 static func create(db: Database, species_id: String, at_level: int,
-		move_ids: PackedStringArray = PackedStringArray()) -> CreatureInstance:
+		move_ids: PackedStringArray = PackedStringArray(), rng: RandomNumberGenerator = null) -> CreatureInstance:
 	var c := CreatureInstance.new()
 	c.species = species_id
 	c.level = clampi(at_level, 1, db.balance.level_cap)
@@ -41,6 +48,7 @@ static func create(db: Database, species_id: String, at_level: int,
 			c.move_pool.append(m)
 	for a in db.ids("affinities"):
 		c.affinity[a] = 0
+	c.passive = Passives.roll(db, species_id, rng)
 	c.hp = c.max_hp(db)
 	c.energy = c.max_energy(db)
 	return c
@@ -104,6 +112,9 @@ func copy_from(other: CreatureInstance) -> void:
 	affinity = d.affinity
 	training = d.training
 	status = d.status
+	passive = d.passive
+	affinity_passive = d.affinity_passive
+	active_passive = d.active_passive
 
 
 func to_dict() -> Dictionary:
@@ -111,6 +122,7 @@ func to_dict() -> Dictionary:
 		"species": species, "nickname": nickname, "level": level, "xp": xp, "hp": hp,
 		"energy": energy, "bond": bond, "moves": Array(moves), "move_pool": Array(move_pool), "affinity": affinity.duplicate(),
 		"training": training.duplicate(), "status": status,
+		"passive": passive, "affinity_passive": affinity_passive, "active_passive": active_passive,
 	}
 
 
@@ -126,6 +138,9 @@ static func from_dict(d: Dictionary) -> CreatureInstance:
 	c.moves = PackedStringArray(d.moves)
 	c.move_pool = PackedStringArray(d.get("move_pool", d.moves))
 	c.status = d.get("status", "")
+	c.passive = d.get("passive", "")
+	c.affinity_passive = d.get("affinity_passive", "")
+	c.active_passive = d.get("active_passive", Passives.SLOT_ROLLED)
 	for k in d.get("affinity", {}):
 		c.affinity[k] = int(d.affinity[k])
 	for k in d.get("training", {}):

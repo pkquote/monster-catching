@@ -8,6 +8,8 @@ extends Control
 ## Optional params: "seed" (int), "return_to" (scene path, default the world).
 
 const STAGE_H := 236
+## The passive banner: a fixed box (long text is trimmed) kept inside the stage.
+const PASSIVE_BANNER := Vector2(240, 22)
 ## Top-left of each creature view, by side and number of slots on that side.
 const FORMATION := [
 	{1: [Vector2(90, 150)], 2: [Vector2(40, 120), Vector2(160, 170)],
@@ -34,10 +36,13 @@ var fields: Array[FieldView] = []
 var menu: CommandMenu
 var continue_button: Button
 var summary: BattleSummary
+## The most recent passive banner (tests read its text and rect).
+var last_passive_banner: Label
 
 var _actors: Control
 var _message: Label
 var _banner: Label
+var _passive_banners: Array[Label] = []
 var _log: Array = []
 var _results_panel: Control
 
@@ -114,7 +119,7 @@ func _choose_action(bid: int, planned: Array) -> BattleAction:
 	var b := engine.battler(bid)
 	var who := display_name(bid)
 	var nth := planned.filter(func(a): return a.actor == bid).size()
-	var title := "What will %s do?%s" % [who, "  (extra action)" if nth > 0 else ""]
+	var title := "What will %s do?%s%s" % [who, "  (extra action)" if nth > 0 else "", _passive_suffix(b)]
 	_highlight(bid)
 	while true:
 		var bench := _swap_choices(planned)
@@ -151,6 +156,12 @@ func _choose_action(bid: int, planned: Array) -> BattleAction:
 	return null
 
 
+## "  ·  <passive name>" for the battler's active passive, or "" when it has none.
+func _passive_suffix(b: Battler) -> String:
+	var def := db.passive(Passives.active_id(b.creature))
+	return "" if def == null else "  ·  " + def.name
+
+
 func _choose_move(bid: int) -> BattleAction:
 	var b := engine.battler(bid)
 	var options: Array = []
@@ -160,9 +171,10 @@ func _choose_move(bid: int) -> BattleAction:
 		var m := db.move(mid)
 		var cat: String = {"physical": "P", "special": "S", "status": "—"}[m.category]
 		var power := "" if m.power == 0 else str(m.power)
-		var cost := "free" if m.cost == 0 else "%d EN" % m.cost
+		var en := engine.passive_rules.move_cost(b, m)
+		var cost := "free" if en == 0 else "%d EN" % en
 		options.append({"label": "%s · %s %s%s · %s" % [m.name, db.type_def(m.type).name, cat, power, cost],
-			"value": mid, "disabled": m.cost > b.energy()})
+			"value": mid, "disabled": en > b.energy()})
 	while true:
 		var mid = await menu.choose("%s: choose a move  (EN %d/%d)" % [display_name(bid), b.energy(), b.creature.max_energy(db)], options, true)
 		if mid == null:
@@ -379,6 +391,40 @@ func banner(text: String) -> void:
 	t.tween_property(_banner, "modulate:a", 0.0, BattlePlayback.scaled(0.2))
 	await t.finished
 	_banner.visible = false
+
+
+## A small banner over creature `bid` that fades on its own; never awaited, so playback
+## keeps going. A creature that has fainted or left (or an unknown bid) gets it over
+## its side's usual spot.
+func passive_banner(text: String, bid: int) -> void:
+	for old in _passive_banners:
+		if not old.visible:
+			old.queue_free()
+	_passive_banners = _passive_banners.filter(func(l: Label): return l.visible)
+	var anchor := Vector2(320, 100)
+	var v: CreatureView = views.get(bid)
+	var b := engine.battler(bid)
+	if v != null and v.visible:
+		anchor = v.position + Vector2(CreatureView.SIZE.x / 2.0, 0)
+	elif b != null:
+		anchor = FORMATION[b.side][1][0] + Vector2(CreatureView.SIZE.x / 2.0, 0)
+	var l := UIKit.label(self, text, UIKit.HEADING_SIZE, UIKit.ACCENT)
+	l.size = PASSIVE_BANNER
+	l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	l.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+	l.add_theme_color_override("font_outline_color", Color(0, 0, 0))
+	l.add_theme_constant_override("outline_size", 4)
+	l.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	l.position = Vector2(clampf(anchor.x - PASSIVE_BANNER.x / 2.0, 0, 640 - PASSIVE_BANNER.x),
+		clampf(anchor.y - PASSIVE_BANNER.y, 0, STAGE_H - PASSIVE_BANNER.y))
+	l.modulate.a = 0.0
+	_passive_banners.append(l)
+	last_passive_banner = l
+	var t := l.create_tween()
+	t.tween_property(l, "modulate:a", 1.0, BattlePlayback.scaled(0.12))
+	t.tween_interval(BattlePlayback.scaled(0.8))
+	t.tween_property(l, "modulate:a", 0.0, BattlePlayback.scaled(0.2))
+	t.tween_callback(l.hide)
 
 
 func record(ev: Dictionary) -> void:

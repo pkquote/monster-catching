@@ -5,8 +5,10 @@ extends RefCounted
 var engine: BattleEngine
 ## The battler responsible (credited with Affinity). Null for passive ticks.
 var user: Battler
-## "move" | "item" | "reaction" | "status"
+## "move" | "item" | "reaction" | "status" | "passive"
 var source: String
+## For a passive trigger: the creature that set it off (target key "attacker").
+var attacker: Battler
 var move: MoveDef
 var item: ItemDef
 var reaction: ReactionDef

@@ -88,12 +88,13 @@ func _move(b: Battler, a: BattleAction) -> void:
 	if m == null or not (b.creature.moves.has(a.move) or a.move == e.fallback_move()):
 		e.emit({"type": BattleEvents.ACTION_INVALID, "bid": b.bid, "reason": "unknown_move", "move": a.move})
 		return
-	if m.cost > b.energy():
+	var cost := e.passive_rules.move_cost(b, m)
+	if cost > b.energy():
 		e.emit({"type": BattleEvents.ACTION_INVALID, "bid": b.bid, "reason": "no_energy", "move": a.move})
 		return
-	if m.cost > 0:
-		b.creature.energy -= m.cost
-		e.emit({"type": BattleEvents.ENERGY, "bid": b.bid, "change": -m.cost, "energy": b.energy(),
+	if cost > 0:
+		b.creature.energy -= cost
+		e.emit({"type": BattleEvents.ENERGY, "bid": b.bid, "change": -cost, "energy": b.energy(),
 			"max_energy": b.creature.max_energy(db)})
 	var ctx := EffectContext.new()
 	ctx.engine = e
@@ -127,7 +128,8 @@ func _move(b: Battler, a: BattleAction) -> void:
 func _rest(b: Battler) -> void:
 	var e := engine
 	e.emit({"type": BattleEvents.REST, "bid": b.bid})
-	e.restore_energy(b, maxi(1, roundi(b.creature.max_energy(e.db) * float(e.db.balance.energy_cfg.rest_fraction))))
+	var fraction := float(e.db.balance.energy_cfg.rest_fraction) + e.passive_rules.rest_bonus(b)
+	e.restore_energy(b, maxi(1, roundi(b.creature.max_energy(e.db) * fraction)))
 
 
 ## Negative Bond: may lash out (Scrap on itself or an ally) or disobey (random other

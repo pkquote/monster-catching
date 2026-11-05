@@ -3,6 +3,8 @@ extends RefCounted
 ## Declarative schemas for every JSON content category.
 ##
 ## Rule keys:
+##   when   : true on an "effects" rule to allow a "when" condition on each effect
+##   trigger: true on an "effects" rule to allow target "attacker" (passive triggers)
 ##   t      : "string" | "int" | "number" | "bool" | "id" | "ref" | "enum"
 ##            | "array" | "dict" | "map" | "effects"
 ##   opt    : true if the field may be omitted
@@ -17,6 +19,12 @@ extends RefCounted
 
 const TARGETS := ["self", "one_ally", "one_enemy", "all_allies", "all_enemies", "all",
 	"own_side", "enemy_side"]
+## Passive trigger effects may also aim at the creature that set the trigger off.
+const TRIGGER_TARGETS := TARGETS + ["attacker"]
+## Overworld-only ops (a passive's "field" list); everything else is for battle.
+const FIELD_OPS := ["encounter_rate", "xp_mult", "bond_gain"]
+## When a passive trigger fires.
+const TRIGGER_ON := ["enter", "hit", "round_end", "knockout", "faint"]
 const SIDES := ["user", "target", "own", "enemy", "both"]
 ## Stats that stages and stat_mod effects can change in battle.
 const STATS := ["patk", "pdef", "satk", "sdef", "spd", "acc", "resolve", "luck"]
@@ -46,6 +54,7 @@ const CATEGORIES := {
 	"reactions": "file",
 	"affinities": "file",
 	"minigames": "file",
+	"passives": "folder",
 	"balance": "single",
 }
 
@@ -104,7 +113,50 @@ const EFFECT_OPS := {
 		"mult": {"t": "number", "min": 0.0, "max": 5.0},
 	},
 	"incoming_type_mod": {
+		"type": {"t": "ref", "cat": "types", "opt": true},
+		"mult": {"t": "number", "min": 0.0, "max": 5.0},
+	},
+	"type_power": {
 		"type": {"t": "ref", "cat": "types"},
+		"mult": {"t": "number", "min": 0.0, "max": 5.0},
+	},
+	"absorb_type": {
+		"type": {"t": "ref", "cat": "types"},
+		"fraction": {"t": "number", "min": 0.0, "max": 1.0},
+	},
+	"status_immune": {
+		"status": {"t": "ref", "cat": "statuses", "opt": true},
+	},
+	"guard_stages": {
+		"stat": {"t": "enum", "values": STATS, "opt": true},
+	},
+	"field_shelter": {
+		"state": {"t": "ref", "cat": "field_states"},
+	},
+	"field_boost": {
+		"stacks": {"t": "int", "opt": true, "min": 1, "max": 5},
+		"turns": {"t": "int", "opt": true, "min": 1, "max": 10},
+	},
+	"reaction_power": {
+		"mult": {"t": "number", "min": 0.0, "max": 5.0},
+	},
+	"energy_discount": {
+		"type": {"t": "ref", "cat": "types", "opt": true},
+		"amount": {"t": "int", "min": 1, "max": 30},
+	},
+	"rest_bonus": {
+		"fraction": {"t": "number", "min": 0.0, "max": 1.0},
+	},
+	"scrap_power": {
+		"mult": {"t": "number", "min": 0.0, "max": 5.0},
+	},
+	"encounter_rate": {
+		"mult": {"t": "number", "min": 0.0, "max": 5.0},
+	},
+	"xp_mult": {
+		"mult": {"t": "number", "min": 0.0, "max": 5.0},
+	},
+	"bond_gain": {
 		"mult": {"t": "number", "min": 0.0, "max": 5.0},
 	},
 	"restore_energy": {
@@ -116,6 +168,14 @@ const EFFECT_OPS := {
 			"key": {"t": "ref", "cat": "field_states"},
 			"value": {"t": "number", "min": 0.0, "max": 10.0}},
 	},
+}
+
+## Optional condition on a passive's always-on effect.
+const WHEN := {
+	"hp_below": {"t": "number", "opt": true, "min": 0.0, "max": 1.0},
+	"underdog": {"t": "bool", "opt": true},
+	"field": {"t": "ref", "cat": "field_states", "opt": true},
+	"side": {"t": "enum", "values": ["own", "enemy"], "opt": true},
 }
 
 const ENTRY := {
@@ -137,6 +197,24 @@ const ENTRY := {
 			"default": {"t": "bool", "opt": true},
 			"into": {"t": "ref", "cat": "creatures"},
 		}}},
+		"passives": {"t": "array", "min": 1, "max": 2, "of": {"t": "ref", "cat": "passives"}},
+		"affinity_passives": {"t": "map", "opt": true,
+			"key": {"t": "ref", "cat": "affinities"},
+			"value": {"t": "ref", "cat": "passives"}},
+	},
+	"passives": {
+		"id": {"t": "id"},
+		"name": {"t": "string"},
+		"description": {"t": "string", "opt": true},
+		"scope": {"t": "enum", "values": ["self", "allies"], "opt": true},
+		"effects": {"t": "effects", "when": true, "opt": true},
+		"triggers": {"t": "array", "opt": true, "of": {"t": "dict", "fields": {
+			"on": {"t": "enum", "values": TRIGGER_ON},
+			"chance": {"t": "int", "opt": true, "min": 1, "max": 100},
+			"contact": {"t": "bool", "opt": true},
+			"effects": {"t": "effects", "trigger": true},
+		}}},
+		"field": {"t": "effects", "opt": true},
 	},
 	"moves": {
 		"id": {"t": "id"},
@@ -171,6 +249,7 @@ const ENTRY := {
 			"species": {"t": "ref", "cat": "creatures"},
 			"level": {"t": "int", "min": 1, "max": 100},
 			"moves": {"t": "array", "opt": true, "min": 1, "max": 4, "of": {"t": "ref", "cat": "moves"}},
+			"passive": {"t": "ref", "cat": "passives", "opt": true},
 		}}},
 		"items": {"t": "array", "opt": true, "of": {"t": "dict", "fields": {
 			"item": {"t": "ref", "cat": "items"},

@@ -1,7 +1,7 @@
 # Monster-Catching RPG — Design Spec
 
 Date: 2026-11-03
-Status: Approved. M0–M4 implemented.
+Status: Approved. M0–M4 and creature passives implemented.
 
 ## 1. Intent
 
@@ -24,6 +24,7 @@ mechanics that feel distinct from the genre's defaults.
 | Battle formats | 1v1, 2v2, 3v3 and uneven (e.g. 1v3); outnumbered side gets **Underdog** compensation |
 | Signature mechanic 1 | **Field states and reactions**, held per side, interactable on both sides |
 | Signature mechanic 2 | **Behavior-shaped growth** via Affinity tracks |
+| Creature passives | Each creature rolls a **passive** for life and can unlock a second through Affinity; one is active at a time (always-on, triggered, protection and overworld effects). Design: [creature passives](2026-11-04-passives-design.md) |
 | Catching | Capture items whose odds depend on HP, status and the target side's field states |
 | Architecture | Headless `core/` engine, presentation in `game/`, event-stream boundary |
 | Content data | JSON from day one, folder-per-type, many files per folder, id references |
@@ -214,7 +215,7 @@ res://
 
 ```
 data/
-  creatures/  moves/  items/  tamers/  encounters/     ← any number of *.json files
+  creatures/  moves/  items/  passives/  tamers/  encounters/     ← any number of *.json files
   types.json  statuses.json  field_states.json  reactions.json  affinities.json  balance.json
 ```
 
@@ -327,6 +328,7 @@ them to the engine (audio buses, window, input map). Game actions are mirrored i
 | **M2 Battle scene** | Diagonal stage, placeholder sprites, action menus, event playback, catch animation, results; test battles from the placeholder world. Detailed design: [M2 battle scene design](2026-11-03-m2-battle-scene-design.md) |
 | **M3 Overworld + story** | One town + interiors + one route, editor-built maps with placeable pieces, 8-way movement, NPCs, Dialogue Manager conversations, starter cutscene, items and hidden items, tamers with line of sight, heal spot + shop, pause menu, defeat rules, minigame hook. Detailed design: [M3 overworld design](2026-11-03-m3-overworld-design.md) |
 | **M4 Progression + menus** | Level-ups, one species with growth branches, party + storage menus, training-point and respec UI |
+| **Creature passives** | Rolled and Affinity passives, battle triggers and banners, the Passive Unlocked screen, switching on the Summary, the lead's overworld effects. Detailed design: [creature passives design](2026-11-04-passives-design.md) |
 
 Starter content: ~8 creatures, ~20 moves, 5 field states, 4 reactions, 3 capture items, 2 tamers, 1 encounter table (placeholders).
 

@@ -56,6 +56,17 @@ func test_resting_heals_and_sets_wake_up_point() -> void:
 	assert_dict(GameState.current.story.last_heal).is_equal({"map": "town_01_center", "spawn": "heal"})
 
 
+func test_lead_passive_scales_rest_bond() -> void:
+	var c := Story.give_creature("sprigling", 5)
+	c.passive = "photosynth"  # Bond gains x1.25
+	c.bond = 0
+	world.player.place(GameMap.centre_of(Vector2i(3, 3)), Vector2i.UP)
+	world.interact()
+	await get_tree().process_frame
+	await _talk("Yes")
+	assert_int(c.bond).is_equal(roundi(int(DataRegistry.db.balance.bond_cfg.changes.rested) * 1.25))
+
+
 func test_saying_no_changes_nothing() -> void:
 	var c := _hurt_creature()
 	world.player.place(GameMap.centre_of(Vector2i(3, 3)), Vector2i.UP)

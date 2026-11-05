@@ -26,7 +26,7 @@ func test_is_win() -> void:
 func test_progress_entry_is_null_without_a_level_gain() -> void:
 	var db := DataRegistry.db
 	var c := CreatureInstance.create(db, "tidepup", 15)
-	assert_object(Progression.progress_entry(db, c, 15)).is_null()
+	assert_object(Progression.progress_entry(db, c, 15, "")).is_null()
 	Progression.award_xp(db, c, Stats.xp_for_level(16) - c.xp)
-	var e := Progression.progress_entry(db, c, 15)
+	var e := Progression.progress_entry(db, c, 15, "")
 	assert_bool(e is ProgressEntry).is_true()

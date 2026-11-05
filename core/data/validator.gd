@@ -129,12 +129,12 @@ func _check_value(value: Variant, rule: Dictionary, path: String) -> void:
 				_check_value(k, rule.key, "%s.<key %s>" % [path, k])
 				_check_value(value[k], rule.value, "%s.%s" % [path, k])
 		"effects":
-			_check_effects(value, path)
+			_check_effects(value, path, rule.get("when", false), rule.get("trigger", false))
 		_:
 			_err(path, "schema error: unknown rule type '%s'" % rule.t)
 
 
-func _check_effects(value: Variant, path: String) -> void:
+func _check_effects(value: Variant, path: String, allow_when: bool = false, is_trigger: bool = false) -> void:
 	if not value is Array:
 		_err(path, "expected array of effects")
 		return
@@ -150,7 +150,10 @@ func _check_effects(value: Variant, path: String) -> void:
 			continue
 		var fields: Dictionary = DataSchemas.EFFECT_OPS[op].duplicate()
 		fields["op"] = {"t": "string"}
-		fields["target"] = {"t": "enum", "values": DataSchemas.TARGETS, "opt": true}
+		fields["target"] = {"t": "enum", "opt": true,
+			"values": DataSchemas.TRIGGER_TARGETS if is_trigger else DataSchemas.TARGETS}
+		if allow_when:
+			fields["when"] = {"t": "dict", "fields": DataSchemas.WHEN, "opt": true}
 		_check_fields(eff, fields, sub)
 
 
@@ -186,6 +189,31 @@ func _check_cross_rules() -> void:
 					if defaults_per_level.has(lvl):
 						_err("growth", "more than one default branch at level %s" % lvl)
 					defaults_per_level[lvl] = true
+
+	for rec in _raw.get_entries("passives"):
+		var p: Dictionary = rec.entry
+		_file = rec.file
+		_label = "[passives:%s]" % p.get("id", "?")
+		var effects = p.get("effects", [])
+		var triggers = p.get("triggers", [])
+		var field = p.get("field", [])
+		if effects is Array and triggers is Array and field is Array \
+				and effects.is_empty() and triggers.is_empty() and field.is_empty():
+			_err("", "needs at least one of effects, triggers or field")
+		if field is Array:
+			for i in field.size():
+				if field[i] is Dictionary and not field[i].get("op") in DataSchemas.FIELD_OPS:
+					_err("field[%d].op" % i, "expected an overworld op %s" % [DataSchemas.FIELD_OPS])
+		if effects is Array:
+			for i in effects.size():
+				var eff = effects[i]
+				if not eff is Dictionary:
+					continue
+				if eff.get("op") in DataSchemas.FIELD_OPS:
+					_err("effects[%d].op" % i, "overworld op %s belongs in 'field'" % eff.op)
+				var w = eff.get("when")
+				if w is Dictionary and w.has("field") != w.has("side"):
+					_err("effects[%d].when" % i, "'field' and 'side' go together")
 
 	for rec in _raw.get_entries("encounters"):
 		var e: Dictionary = rec.entry

@@ -82,6 +82,10 @@ func play(ev: Dictionary) -> void:
 		"reaction":
 			await scene.banner(db.reaction(ev.reaction).name.to_upper() + "!")
 			await _say(text)
+		"passive_triggered":
+			# Not awaited: the banner fades by itself while the effect's own events play.
+			scene.passive_banner(text, int(ev.bid))
+			await _pause(0.4)
 		"capture_attempt":
 			var target: CreatureView = scene.views.get(int(ev.target))
 			scene.message("You threw a %s..." % db.item(ev.item).name)

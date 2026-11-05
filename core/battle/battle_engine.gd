@@ -21,6 +21,7 @@ extends RefCounted
 ##   actions     (ActionRunner)  turn order and running moves, items, swaps, Rest, fleeing
 ##   field_rules (FieldRules)    field states and reactions
 ##   rewards     (BattleRewards) XP, Bond and Affinity
+##   passive_rules (PassiveRules) creature passives: always-on effects and auras
 
 var db: Database
 var rng: RandomNumberGenerator
@@ -31,6 +32,7 @@ var round_number := 0
 var actions: ActionRunner
 var field_rules: FieldRules
 var rewards: BattleRewards
+var passive_rules: PassiveRules
 
 var _battlers: Dictionary = {}  # bid -> Battler
 var _events: Array = []
@@ -38,6 +40,7 @@ var _over := false
 var _winner := -1
 var _end_reason := ""
 var _captured: Array[CreatureInstance] = []
+var _starting := false  # placing the opening line-ups (entry triggers wait until all are placed)
 
 
 func _init(p_db: Database, p_rng: RandomNumberGenerator, p_setup: BattleSetup) -> void:
@@ -47,6 +50,7 @@ func _init(p_db: Database, p_rng: RandomNumberGenerator, p_setup: BattleSetup) -
 	actions = ActionRunner.new(self)
 	field_rules = FieldRules.new(self)
 	rewards = BattleRewards.new(self)
+	passive_rules = PassiveRules.new(self)
 	var next_bid := 0
 	for i in setup.sides.size():
 		var sd := setup.sides[i]
@@ -78,12 +82,18 @@ func start() -> Array:
 		"foes": sides[1].battlers.map(func(b: Battler): return "%s L%d" % [b.creature.species, b.creature.level])})
 	emit({"type": BattleEvents.BATTLE_START, "wild": setup.is_wild, "tamer": setup.tamer_id,
 		"slots": [sides[0].slots.size(), sides[1].slots.size()]})
+	_starting = true
 	for side in sides:
 		for slot in side.slots.size():
 			var bench := side.bench()
 			if bench.is_empty():
 				break
 			place(side, slot, bench[0])
+	_starting = false
+	# Entry triggers once both sides are out, fastest first.
+	for b in _by_speed(sides[0].active() + sides[1].active()):
+		passive_rules.fire(b, "enter")
+	check_faints()
 	_update_underdog()
 	check_end()
 	return _take_events()
@@ -110,7 +120,7 @@ func usable_moves(bid: int) -> PackedStringArray:
 	var out := PackedStringArray()
 	for mid in b.creature.moves:
 		var m := db.move(mid)
-		if m != null and m.cost <= b.energy():
+		if m != null and passive_rules.move_cost(b, m) <= b.energy():
 			out.append(mid)
 	if not out.has(fallback_move()):
 		out.append(fallback_move())
@@ -188,6 +198,9 @@ func replace(side_index: int, bid: int) -> Array:
 		emit({"type": BattleEvents.ACTION_INVALID, "bid": bid, "reason": "bad_replacement"})
 		return _take_events()
 	place(side, open[0], b)
+	# Its entry trigger may have knocked creatures out (e.g. through a reaction).
+	check_faints()
+	check_end()
 	_update_underdog()
 	return _take_events()
 
@@ -228,16 +241,15 @@ func all_battlers() -> Array:
 
 # --- Queries used by formulas and ops -------------------------------------------
 
-func side_passives(side_index: int) -> Array:
-	return field_rules.side_passives(side_index)
-
-
 func status_passives(b: Battler) -> Array:
 	return [] if b.status() == "" else db.status(b.status()).effects
 
 
+## Every always-on effect on `b`: its side's field states (minus any it shelters from),
+## its status, and creature passives (its own active passive and allied auras; see
+## PassiveRules.effects_for).
 func passives(b: Battler) -> Array:
-	return side_passives(b.side) + status_passives(b)
+	return field_rules.passives_for(b) + status_passives(b) + passive_rules.effects_for(b)
 
 
 ## Creature targets for a move/item target key. Invalid choices are re-targeted
@@ -272,6 +284,11 @@ func resolve_targets(user: Battler, key: String, chosen: int, allow_random := tr
 
 
 # --- Mutations called by effect ops ------------------------------------------------
+
+## PASSIVE_TRIGGERED for `b`'s active passive (it visibly acted: a trigger, a block, an absorb).
+func emit_passive(b: Battler) -> void:
+	emit({"type": BattleEvents.PASSIVE_TRIGGERED, "bid": b.bid, "passive": Passives.active_id(b.creature)})
+
 
 func emit(event: Dictionary) -> void:
 	if OS.is_debug_build() and not BattleEvents.ALL.has(event.get("type")):
@@ -312,7 +329,15 @@ func run_effects(ctx: EffectContext, effects: Array) -> void:
 				op.apply(ctx, e, t)
 
 
-func deal_damage(target: Battler, amount: int, attacker: Battler, type: String, type_mult := 1.0) -> void:
+## `contact` is true for physical moves (for hit triggers that need it).
+func deal_damage(target: Battler, amount: int, attacker: Battler, type: String, type_mult := 1.0,
+		contact := false) -> void:
+	# absorb_type: the damage heals instead, and doesn't count as a hit.
+	var absorb := passive_rules.absorbs(target, type) if type != "" else 0.0
+	if absorb > 0.0:
+		emit_passive(target)
+		heal(target, maxi(1, roundi(target.creature.max_hp(db) * absorb)), null)
+		return
 	var dealt := mini(amount, target.hp())
 	# Resolve: once per battle, a knockout blow from a foe may leave 1 HP.
 	if dealt >= target.hp() and target.hp() > 1 and not target.endured and attacker != null \
@@ -324,11 +349,13 @@ func deal_damage(target: Battler, amount: int, attacker: Battler, type: String, 
 	emit({"type": BattleEvents.DAMAGE, "bid": target.bid, "amount": dealt, "hp": target.hp(),
 		"max_hp": target.creature.max_hp(db), "by": attacker.bid if attacker != null else -1,
 		"damage_type": type, "effectiveness": type_mult})
+	passive_rules.note_damage(target)
 	if attacker != null and attacker.side != target.side and dealt > 0:
 		target.last_hit_by = attacker.bid
 		rewards.award(attacker, "hit_dealt")
 		if target.hp() > 0:
 			rewards.award(target, "hit_survived")
+			passive_rules.fire(target, "hit", attacker, contact)
 
 
 func heal(target: Battler, amount: int, user: Battler, from_item := false) -> void:
@@ -354,6 +381,10 @@ func inflict_status(target: Battler, status_id: String, user: Battler) -> void:
 	if target.status() != "":
 		emit({"type": BattleEvents.STATUS_FAILED, "bid": target.bid, "status": status_id, "has": target.status()})
 		return
+	var immune := passive_rules.status_blocker(target, status_id)
+	if immune != null:
+		emit_passive(immune)
+		return
 	if user != target and rng.randf() < BattleMath.resist_chance(self, target, user):
 		emit({"type": BattleEvents.RESISTED, "bid": target.bid, "status": status_id})
 		return
@@ -365,6 +396,10 @@ func inflict_status(target: Battler, status_id: String, user: Battler) -> void:
 
 
 func shift_stage(target: Battler, stat: String, amount: int, user: Battler) -> void:
+	var guard := passive_rules.stage_guard(target, stat, user) if amount < 0 else null
+	if guard != null:
+		emit_passive(guard)
+		return
 	if amount < 0 and user != null and user.side != target.side \
 			and rng.randf() < BattleMath.resist_chance(self, target, user):
 		emit({"type": BattleEvents.RESISTED, "bid": target.bid, "stat": stat})
@@ -417,16 +452,27 @@ func place(side: BattleSide, slot: int, b: Battler) -> void:
 		"hp": b.hp(), "max_hp": b.creature.max_hp(db),
 		"energy": b.energy(), "max_energy": b.creature.max_energy(db)})
 	rewards.check_overwork(b)
+	if not _starting:
+		passive_rules.fire(b, "enter")
 
 
+## Faints, then their faint and knockout triggers, unless the faints decided the battle.
+## Repeats while those triggers knock more creatures out.
 func check_faints() -> void:
-	for side in sides:
-		for b in side.battlers:
-			if b.active and b.creature.hp <= 0 and not b.fainted:
-				b.fainted = true
-				b.active = false
-				emit({"type": BattleEvents.FAINT, "bid": b.bid, "side": side.index})
-				rewards.on_faint(b)
+	while true:
+		var downed: Array[Battler] = []
+		for side in sides:
+			for b in side.battlers:
+				if b.active and b.creature.hp <= 0 and not b.fainted:
+					b.fainted = true
+					b.active = false
+					emit({"type": BattleEvents.FAINT, "bid": b.bid, "side": side.index})
+					rewards.on_faint(b)
+					downed.append(b)
+		if downed.is_empty() or sides.any(func(s: BattleSide): return s.defeated()):
+			return
+		for b in downed:
+			passive_rules.on_faint(b, battler(b.last_hit_by))
 
 
 func check_end() -> void:
@@ -455,6 +501,11 @@ func finish(winner: int, reason: String) -> void:
 ## Targets for an effect with its own "target" key. Reactions resolve relative to
 ## the side the reaction fired on; everything else relative to the user.
 func _effect_targets(ctx: EffectContext, key: String) -> Array[Battler]:
+	if key == "attacker":
+		var hitter: Array[Battler] = []
+		if ctx.attacker != null:
+			hitter.append(ctx.attacker)
+		return hitter
 	if not ctx.is_reaction() and ctx.user != null:
 		return resolve_targets(ctx.user, key, -1)
 	var own := sides[ctx.target_side]
@@ -499,12 +550,31 @@ func _end_of_round() -> void:
 	check_end()
 	if _over:
 		return
+	# Passive round_end triggers, before field states count down.
+	for b in _by_speed(sides[0].active() + sides[1].active()):
+		passive_rules.fire(b, "round_end")
+	check_faints()
+	check_end()
+	if _over:
+		return
 	field_rules.tick_all()
-	for side in sides:
-		if side.auto_replace:
+	# Refill auto-replace sides. An entry trigger can knock creatures out on either side,
+	# so faints are checked after each placement and refilling repeats until nothing changes.
+	var refilled := true
+	while refilled:
+		refilled = false
+		for side in sides:
+			if not side.auto_replace:
+				continue
 			while not side.open_slots().is_empty() and not side.bench().is_empty():
 				place(side, side.open_slots()[0], side.bench()[0])
-		else:
+				refilled = true
+				check_faints()
+				check_end()
+				if _over:
+					return
+	for side in sides:
+		if not side.auto_replace:
 			var n := pending_replacements(side.index)
 			if n > 0:
 				emit({"type": BattleEvents.REPLACEMENT_NEEDED, "side": side.index, "count": n})
@@ -522,6 +592,16 @@ func _update_underdog() -> void:
 			emit({"type": BattleEvents.UNDERDOG, "side": side.index, "ratio": u.ratio,
 				"bonus_actions": u.bonus_actions, "stat_bonus": u.stat_bonus,
 				"spread_reduction": u.spread_reduction, "xp_bonus": u.xp_bonus})
+
+
+## Fastest first (effective Speed), ties by bid.
+func _by_speed(list: Array) -> Array[Battler]:
+	var keyed: Array = list.map(func(b: Battler): return [BattleMath.effective_stat(self, b, "spd"), b])
+	keyed.sort_custom(func(x, y): return x[0] > y[0] or (x[0] == y[0] and x[1].bid < y[1].bid))
+	var out: Array[Battler] = []
+	for k in keyed:
+		out.append(k[1])
+	return out
 
 
 func _take_events() -> Array:

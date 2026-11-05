@@ -42,3 +42,17 @@ func test_grace_tiles_after_a_battle() -> void:
 	for i in 4:
 		assert_bool(r.on_grass_tile("route_01_grass", true)).is_false()
 	assert_bool(r.on_grass_tile("route_01_grass", true)).is_true()
+
+
+func test_encounter_rate_mult() -> void:
+	var always := FixtureDB.build({"overworld": {"walk_speed": 4.0, "run_speed": 7.0, "encounter_rate": 1.0,
+		"encounter_grace_tiles": 4, "walk_energy_tiles": 8, "defeat_money_fraction": 0.1, "sell_fraction": 0.5}})
+	var r := EncounterRoller.new(always.balance, rng)
+	for i in 200:
+		assert_bool(r.on_grass_tile("route_01_grass", true, 0.0)).is_false()
+	assert_bool(r.on_grass_tile("route_01_grass", true, 1.0)).is_true()
+	var hits := 0
+	for i in 10000:
+		if r.on_grass_tile("route_01_grass", true, 0.5):
+			hits += 1
+	assert_float(hits / 10000.0).is_equal_approx(0.5, 0.03)

@@ -13,6 +13,7 @@
 | [Reactions](#reactions) | 8 |
 | [Types](#types) | 14 |
 | [Affinities](#affinities) | 4 |
+| [Passives](#passives) | 19 |
 | [Tamers](#tamers) | 4 |
 | [Encounters](#encounters) | 2 |
 
@@ -292,6 +293,52 @@ Growth tracks filled by how a creature is used in battle. Growth branches need a
 | **Striker** | `striker` | Grows from dealing damage and landing finishing blows. |
 | **Trickster** | `trickster` | Grows from statuses, debuffs, and making foes miss. |
 | **Warden** | `warden` | Grows from absorbing hits, healing, and protecting allies. |
+
+## Passives
+
+Each creature rolls one of its species' passives, and unlocks an Affinity passive at the growth threshold. *Aura* passives apply their effects to every creature on the field's side. A `when` condition is shown in brackets.
+
+| Passive | Id | Scope | Effects | Triggers | Overworld | Species |
+|---|---|---|---|---|---|---|
+| **Bulwark Hide** | `bulwark_hide` | Self | Earth damage taken x0.7; Foes can't lower its P.Def | — | — | Torrentusk |
+| **Chill Skin** | `chill_skin` | Self | — | On being hit (physical) (30%): Inflicts Chill | — | Mistcoil |
+| **Cold Snap** | `cold_snap` | Self | — | On a knockout: Spd +1 | XP earned x1.1 | Frostling |
+| **Ember Trail** | `ember_trail` | Self | — | On fainting: Applies Scorched to the enemy side | — | Emberkit |
+| **Finisher** | `finisher` | Self | Scrap x1.5 | On a knockout: Restores 15% max energy | — | Emberkit (Striker), Frostling (Striker), Mistcoil (Striker), Pebblet (Striker), Sprigling (Striker), Tidepup (Striker), Torrentusk (Striker), Voltmoth (Striker) |
+| **Fog Weaver** | `fog_weaver` | Self | Its field states get +1 round(s) | — | — | Mistcoil |
+| **Frost Guard** | `frost_guard` | Self | Can't be given Chill; Ice damage taken x0.5 | — | — | Frostling |
+| **Guardian Aura** | `guardian_aura` | Aura | All damage taken x0.9 | — | — | Emberkit (Warden), Frostling (Warden), Mistcoil (Warden), Pebblet (Warden), Sprigling (Warden), Tidepup (Warden), Torrentusk (Warden), Voltmoth (Warden) |
+| **Kindling** | `kindling` | Self | Fire moves x1.5 [HP below 34%] | — | — | Emberkit |
+| **Lightning Rod** | `lightning_rod` | Self | Electric damage heals 25% max HP instead | — | — | Voltmoth |
+| **Photosynth** | `photosynth` | Self | — | On round end: Heals 6.25% max HP | Bond gains x1.25 | Sprigling |
+| **Reaction Spark** | `reaction_spark` | Self | Reactions it triggers x1.3; Its field states get +1 stack(s) | — | — | Emberkit (Catalyst), Frostling (Catalyst), Mistcoil (Catalyst), Pebblet (Catalyst), Sprigling (Catalyst), Tidepup (Catalyst), Torrentusk (Catalyst), Voltmoth (Catalyst) |
+| **Rootbed** | `rootbed` | Self | Can't be given Daze | On entering: Applies Overgrown to own side | — | Sprigling |
+| **Rubble Pile** | `rubble_pile` | Self | P.Def x1.3 [outnumbered] | — | — | Pebblet |
+| **Slippery** | `slippery` | Self | Can't be given a status; Rest restores +15% max energy | — | — | Emberkit (Trickster), Frostling (Trickster), Mistcoil (Trickster), Pebblet (Trickster), Sprigling (Trickster), Tidepup (Trickster), Torrentusk (Trickster), Voltmoth (Trickster) |
+| **Static Wings** | `static_wings` | Self | Electric moves cost 2 less | — | — | Voltmoth |
+| **Sturdy** | `sturdy` | Self | Foes can't lower its stats | — | — | Pebblet |
+| **Tidal Heart** | `tidal_heart` | Self | Water moves x1.2 | — | — | Tidepup, Torrentusk |
+| **Undertow** | `undertow` | Self | — | On entering: Applies Soaked to the enemy side | Wild encounter rate x0.8 | Tidepup |
+
+- **Bulwark Hide:** Takes 30% less Earth damage. Foes can't lower its Physical Defense.
+- **Chill Skin:** When hit by a physical move, 30% chance to Chill the attacker.
+- **Cold Snap:** On a knockout, +1 Speed. Earns 10% more XP while it leads.
+- **Ember Trail:** When it faints, scorches the enemy side.
+- **Finisher:** On a knockout, restores 15% energy. Scrap hits 50% harder.
+- **Fog Weaver:** Field states it applies last 1 round longer.
+- **Frost Guard:** Can't be Chilled. Takes half damage from Ice.
+- **Guardian Aura:** Allies on the field take 10% less damage.
+- **Kindling:** Below a third of its HP, Fire moves hit 50% harder.
+- **Lightning Rod:** Electric damage heals it for 25% of its HP instead.
+- **Photosynth:** Heals 1/16 of its HP at the end of each round. Bond gains are 25% larger while it leads.
+- **Reaction Spark:** Reactions it triggers deal 30% more. Its field states gain +1 stack.
+- **Rootbed:** On entering battle, grows Overgrown on its own side. Can't be Dazed.
+- **Rubble Pile:** While outnumbered, Physical Defense x1.3.
+- **Slippery:** Can't be given a status. Rest restores an extra 15% energy.
+- **Static Wings:** Electric moves cost 2 less energy.
+- **Sturdy:** Foes can't lower its stats.
+- **Tidal Heart:** Water moves hit 20% harder.
+- **Undertow:** On entering battle, soaks the enemy side. Wild encounters are 20% rarer while it leads.
 
 ## Creatures
 

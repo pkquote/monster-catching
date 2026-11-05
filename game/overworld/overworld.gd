@@ -260,7 +260,8 @@ func _on_tile_entered(tile: Vector2i) -> void:
 				return
 	if not map.indoor and map.is_encounter_tile(tile):
 		var table := map.encounter_at(tile)
-		if roller.on_grass_tile(table, BattleLauncher.healthy_count(save) > 0):
+		if roller.on_grass_tile(table, BattleLauncher.healthy_count(save) > 0,
+				Passives.field_mult(DataRegistry.db, save, "encounter_rate")):
 			Log.info(Log.WORLD, "Wild encounter", {"table": table, "tile": tile})
 			battles.start_wild(table)
 

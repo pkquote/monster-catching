@@ -28,6 +28,15 @@ static func row_text(db: Database, c: CreatureInstance) -> String:
 	return line
 
 
+## "Lead passive: <name>" when the lead's active passive works on the overworld
+## (has `field` effects), else "".
+static func lead_line(db: Database, save: SaveGame) -> String:
+	if save.party.is_empty():
+		return ""
+	var def := db.passive(Passives.active_id(save.party[0]))
+	return "Lead passive: " + def.name if def != null and not def.field.is_empty() else ""
+
+
 ## A list row: the text, a placeholder sprite as the button icon, and HP / energy bars.
 static func _row_option(db: Database, c: CreatureInstance, value: int) -> Dictionary:
 	return {"label": row_text(db, c), "value": value, "decorate": func(b: Button) -> void:
@@ -61,7 +70,7 @@ func _loop() -> void:
 	var save := _save
 	while true:
 		_title.text = "Party"
-		_body.text = "" if not save.party.is_empty() else "Nobody in your party yet."
+		_body.text = lead_line(db, save) if not save.party.is_empty() else "Nobody in your party yet."
 		var options: Array = []
 		for i in save.party.size():
 			options.append(_row_option(db, save.party[i], i))

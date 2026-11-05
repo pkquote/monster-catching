@@ -129,21 +129,21 @@ func test_progress_entry_reports_offers_and_growth() -> void:
 	var c := CreatureInstance.create(db, "tidepup", 15)
 	c.affinity["striker"] = 30
 	Progression.award_xp(db, c, Stats.xp_for_level(16) - c.xp)
-	var e := Progression.progress_entry(db, c, 15)
+	var e := Progression.progress_entry(db, c, 15, "")
 	assert_bool(e.growth_due).is_true()
 	assert_object(e.creature).is_same(c)
 	assert_array(e.offered_moves).is_empty()
 	# Offers: a creature with full slots that reaches level 12 is offered taunting_howl.
 	var d := CreatureInstance.create(db, "tidepup", 11, PackedStringArray(["tackle", "splash_jab", "drench", "riptide"]))
 	Progression.award_xp(db, d, Stats.xp_for_level(12) - d.xp)
-	var e2 := Progression.progress_entry(db, d, 11)
+	var e2 := Progression.progress_entry(db, d, 11, "")
 	assert_array(e2.offered_moves).contains_exactly(["taunting_howl"])
 	assert_bool(e2.growth_due).is_false()
 
 
 func test_progress_entry_empty_without_level_gain() -> void:
 	var c := CreatureInstance.create(db, "tidepup", 15)
-	assert_object(Progression.progress_entry(db, c, 15)).is_null()
+	assert_object(Progression.progress_entry(db, c, 15, "")).is_null()
 
 
 func test_backfill_skips_a_removed_species() -> void:

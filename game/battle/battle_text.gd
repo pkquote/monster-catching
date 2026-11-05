@@ -90,6 +90,10 @@ static func describe(ev: Dictionary, db: Database, names: Callable, tamer_name: 
 			return "%s learned %s!" % [_n(names, ev, "bid"), db.move(ev.move).name]
 		"move_offered":
 			return "%s wants to learn %s, but already knows %d moves." % [_n(names, ev, "bid"), db.move(ev.move).name, db.balance.max_moves]
+		"passive_triggered":
+			return "%s's %s!" % [_n(names, ev, "bid"), db.passive(ev.passive).name]
+		"passive_unlocked":
+			return "%s awakened %s!" % [_n(names, ev, "bid"), db.passive(ev.passive).name]
 		"underdog":
 			if float(ev.ratio) <= 1.0:
 				return ""

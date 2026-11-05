@@ -25,13 +25,13 @@ func after_test() -> void:
 func _offered_pup() -> ProgressEntry:
 	var c := Story.give_creature("tidepup", 14)
 	c.moves = PackedStringArray(["tackle", "splash_jab", "drench", "riptide"])
-	return Progression.progress_entry(DataRegistry.db, c, 13)
+	return Progression.progress_entry(DataRegistry.db, c, 13, "")
 
 
 ## A level-16 Tidepup, ready to grow into Torrentusk.
 func _grow_pup() -> ProgressEntry:
 	var c := Story.give_creature("tidepup", 16)
-	return Progression.progress_entry(DataRegistry.db, c, 15)
+	return Progression.progress_entry(DataRegistry.db, c, 15, "")
 
 
 func _screen(cls: Script) -> Node:
@@ -235,3 +235,95 @@ func _answer_wait(cls: Script) -> void:
 			return
 		await get_tree().process_frame
 	fail("no %s screen choosing" % cls.get_global_name())
+
+
+## A Tidepup with Tidal Heart whose Striker track just reached the threshold.
+func _unlocked_pup(level: int) -> CreatureInstance:
+	var db := DataRegistry.db
+	var c := Story.give_creature("tidepup", level)
+	c.passive = "tidal_heart"
+	c.affinity["striker"] = db.balance.growth_affinity_threshold
+	assert_str(Passives.try_unlock(db, c, "striker")).is_equal("finisher")
+	return c
+
+
+func test_unlock_screen_switch_and_keep() -> void:
+	var c := _unlocked_pup(10)
+	var done: Array = []
+	var run := func() -> void: done.append(await PassiveUnlockScreen.run(world, c))
+	run.call()
+	await _answer_wait(PassiveUnlockScreen)
+	var s := _screen(PassiveUnlockScreen) as PassiveUnlockScreen
+	assert_str(s.title_text()).is_equal("Tidepup awakened Finisher!")
+	assert_str(s.page_text()).contains("Tidal Heart")
+	assert_str(s.page_text()).contains("Water moves hit 20% harder.")
+	assert_str(s.page_text()).contains("Finisher")
+	assert_str(s.page_text()).contains("Scrap hits 50% harder.")
+	assert_array(Array(s.menu.labels())).is_equal(["Switch to it", "Keep current"])
+	await get_tree().process_frame
+	ScreenFit.check(self, s)
+	await _answer(PassiveUnlockScreen, "Keep current")
+	await _wait(done)
+	assert_array(done).is_equal([false])
+	assert_str(Passives.active_id(c)).is_equal("tidal_heart")
+	done.clear()
+	run.call()
+	await _answer(PassiveUnlockScreen, "Switch to it")
+	await _wait(done)
+	assert_array(done).is_equal([true])
+	assert_str(Passives.active_id(c)).is_equal("finisher")
+	assert_object(_screen(PassiveUnlockScreen)).is_null()
+
+
+func test_unlock_screen_cancel_keeps_current() -> void:
+	var c := _unlocked_pup(10)
+	var done: Array = []
+	var run := func() -> void: done.append(await PassiveUnlockScreen.run(world, c))
+	run.call()
+	await _answer_wait(PassiveUnlockScreen)
+	var ev := InputEventAction.new()
+	ev.action = "ui_cancel"
+	ev.pressed = true
+	await get_tree().process_frame
+	world.get_viewport().push_input(ev)
+	await _wait(done)
+	assert_array(done).is_equal([false])
+	assert_str(c.active_passive).is_equal("rolled")
+
+
+func test_unlock_runs_after_learn_move_before_grow() -> void:
+	var c := _unlocked_pup(16)
+	c.moves = PackedStringArray(["tackle", "splash_jab", "drench", "riptide"])
+	var entry := Progression.progress_entry(DataRegistry.db, c, 13, "")
+	assert_array(entry.offered_moves).is_equal(["tide_beam"])
+	assert_bool(entry.growth_due).is_true()
+	assert_str(entry.unlocked_passive).is_equal("finisher")
+	var done: Array = []
+	_run_after(BattleSummary.of("won", [entry]), done)
+	await _answer_wait(LearnMoveScreen)
+	assert_object(_screen(PassiveUnlockScreen)).is_null()
+	await _answer(LearnMoveScreen, "Keep it for later")
+	await _answer_wait(PassiveUnlockScreen)
+	assert_object(_screen(GrowScreen)).is_null()
+	await _answer(PassiveUnlockScreen, "Keep current")
+	await _answer(GrowScreen, "Not yet")
+	await _wait(done)
+	assert_array(done).is_equal([true])
+
+
+## Review Focus 5: a track crossing the threshold in a battle with no level-up still
+## brings up the screen, and the choice reaches the autosave.
+func test_unlock_screen_for_entry_without_level_gain() -> void:
+	var c := _unlocked_pup(10)
+	var entry := Progression.progress_entry(DataRegistry.db, c, 10, "")
+	assert_object(entry).is_not_null()
+	assert_array(entry.offered_moves).is_empty()
+	var done: Array = []
+	_run_after(BattleSummary.of("won", [entry]), done)
+	await _answer(PassiveUnlockScreen, "Switch to it")
+	await _wait(done)
+	assert_array(done).is_equal([true])
+	assert_str(c.active_passive).is_equal("affinity")
+	var r := GameState.store.read(GameState.current_path)
+	assert_str(r.save.party[0].active_passive).is_equal("affinity")
+	assert_str(r.save.party[0].affinity_passive).is_equal("finisher")

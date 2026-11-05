@@ -79,3 +79,48 @@ func test_custom_uneven_formats_reach_command() -> void:
 		assert_str(scene.fields[f[3]].underdog_text).contains("UNDERDOG")
 		assert_str(scene.fields[1 - f[3]].underdog_text).is_empty()
 		remove_child(scene)
+
+
+func test_passive_banner_plays() -> void:
+	var pup := CreatureInstance.create(db, "tidepup", 12)
+	pup.passive = ""
+	var pack := [CreatureInstance.create(db, "sprigling", 3)]
+	pack[0].passive = ""
+	var scene := _scene(BattleSetup.wild([pup], pack, 1, {}))
+	await _wait_phase(scene, ["command"])
+	var bid: int = scene.engine.sides[0].active()[0].bid
+	var pb := BattlePlayback.new(scene, db)
+	await pb.play({"type": BattleEvents.PASSIVE_TRIGGERED, "bid": bid, "passive": "undertow"})
+	var banner: Label = scene.last_passive_banner
+	assert_str(banner.text).is_equal("Tidepup's Undertow!")
+	assert_int(banner.get_theme_font_size("font_size")).is_less(UIKit.TITLE_SIZE)
+	assert_bool(ScreenFit.VIEW.encloses(banner.get_global_rect())).is_true()
+	# A creature that has left the field still gets a banner, kept on screen.
+	scene.release_view(bid)
+	await pb.play({"type": BattleEvents.PASSIVE_TRIGGERED, "bid": bid, "passive": "undertow"})
+	assert_bool(ScreenFit.VIEW.encloses(scene.last_passive_banner.get_global_rect())).is_true()
+	await pb.play({"type": BattleEvents.PASSIVE_TRIGGERED, "bid": 999, "passive": "undertow"})
+	assert_bool(scene._log.filter(func(ev): return ev.type == BattleEvents.PASSIVE_TRIGGERED).size() == 3).is_true()
+	remove_child(scene)
+
+
+func test_command_screen_shows_active_passive() -> void:
+	var pup := CreatureInstance.create(db, "tidepup", 12)
+	pup.passive = "tidal_heart"
+	var pack := [CreatureInstance.create(db, "sprigling", 3)]
+	pack[0].passive = ""
+	var scene := _scene(BattleSetup.wild([pup], pack, 1, {}))
+	await _wait_phase(scene, ["command"])
+	var title: Label = scene.menu._title
+	assert_str(title.text).contains("Tidepup").contains("Tidal Heart")
+	assert_bool(ScreenFit.VIEW.encloses(title.get_global_rect())).is_true()
+	remove_child(scene)
+	# No passive: no passive line.
+	var plain := CreatureInstance.create(db, "tidepup", 12)
+	plain.passive = ""
+	var pack2 := [CreatureInstance.create(db, "sprigling", 3)]
+	pack2[0].passive = ""
+	var scene2 := _scene(BattleSetup.wild([plain], pack2, 1, {}))
+	await _wait_phase(scene2, ["command"])
+	assert_str(scene2.menu._title.text).is_equal("What will Tidepup do?")
+	remove_child(scene2)

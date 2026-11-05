@@ -57,7 +57,7 @@ func test_results_write_back_items_catches_and_money() -> void:
 	var s := _save()
 	s.party = [FixtureDB.make(db, "blob", 10, ["hit"])]
 	s.inventory = {"master_cage": 1, "potion": 2}
-	var setup := BattleLauncher.wild_setup(s, [FixtureDB.make(db, "fish", 3)], 1)
+	var setup := BattleLauncher.wild_setup(db, s, [FixtureDB.make(db, "fish", 3)], 1)
 	var e := BattleEngine.new(db, RandomNumberGenerator.new(), setup)
 	e.start()
 	e.resolve_round([BattleAction.use_item(e.sides[0].active()[0].bid, "master_cage", e.sides[1].active()[0].bid)])
@@ -74,7 +74,7 @@ func test_full_party_sends_catches_to_storage() -> void:
 	for i in db.balance.party_size:
 		s.party.append(FixtureDB.make(db, "blob", 10, ["hit"]))
 	s.inventory = {"master_cage": 1}
-	var e := BattleEngine.new(db, RandomNumberGenerator.new(), BattleLauncher.wild_setup(s, [FixtureDB.make(db, "fish", 3)], 1))
+	var e := BattleEngine.new(db, RandomNumberGenerator.new(), BattleLauncher.wild_setup(db, s, [FixtureDB.make(db, "fish", 3)], 1))
 	e.start()
 	e.resolve_round([BattleAction.use_item(e.sides[0].active()[0].bid, "master_cage", e.sides[1].active()[0].bid)])
 	var summary := BattleLauncher.apply_results(db, s, e)
@@ -85,7 +85,7 @@ func test_full_party_sends_catches_to_storage() -> void:
 func test_loss_no_longer_heals() -> void:
 	var s := _save()
 	s.party = [FixtureDB.make(db, "blob", 2, ["hit"])]
-	var e := BattleEngine.new(db, RandomNumberGenerator.new(), BattleLauncher.wild_setup(s, [FixtureDB.make(db, "tank", 40, ["hit"])], 1))
+	var e := BattleEngine.new(db, RandomNumberGenerator.new(), BattleLauncher.wild_setup(db, s, [FixtureDB.make(db, "tank", 40, ["hit"])], 1))
 	e.start()
 	while not e.is_over():
 		e.resolve_round([BattleAction.pass_turn(e.sides[0].active()[0].bid)] if not e.sides[0].active().is_empty() else [])
@@ -124,7 +124,7 @@ func _levelling_engine(s: SaveGame, moves: Array, xp_gain: int) -> BattleEngine:
 	var lead := FixtureDB.make(real, "tidepup", 8, moves)
 	lead.xp = Stats.xp_for_level(9) - 1
 	s.party = [lead, FixtureDB.make(real, "emberkit", 8)]
-	var e := BattleEngine.new(real, RandomNumberGenerator.new(), BattleLauncher.wild_setup(s, [FixtureDB.make(real, "tidepup", 2)], 1))
+	var e := BattleEngine.new(real, RandomNumberGenerator.new(), BattleLauncher.wild_setup(real, s, [FixtureDB.make(real, "tidepup", 2)], 1))
 	e.start()
 	if xp_gain > 0:
 		Progression.award_xp(real, e.sides[0].battlers[0].creature, xp_gain)
@@ -146,3 +146,55 @@ func test_results_progress_empty_without_levels() -> void:
 	var e := _levelling_engine(s, ["tackle", "splash_jab", "drench", "taunting_howl"], 0)
 	var summary := BattleLauncher.apply_results(real, s, e)
 	assert_array(summary.progress).is_empty()
+
+
+func test_battle_reports_unlock_without_level_gain() -> void:
+	var s := _save()
+	var lead := FixtureDB.make(real, "tidepup", 8, ["tackle"])
+	lead.affinity["striker"] = real.balance.growth_affinity_threshold - 1
+	s.party = [lead]
+	var e := BattleEngine.new(real, RandomNumberGenerator.new(), BattleLauncher.wild_setup(real, s, [FixtureDB.make(real, "tidepup", 2)], 1))
+	e.start()
+	e.rewards.award(e.sides[0].battlers[0], "hit_dealt")
+	var summary := BattleLauncher.apply_results(real, s, e)
+	assert_int(summary.progress.size()).is_equal(1)
+	assert_object(summary.progress[0].creature).is_same(s.party[0])
+	assert_str(summary.progress[0].unlocked_passive).is_equal("finisher")
+	assert_int(s.party[0].level).is_equal(8)
+	assert_bool(summary.progress[0].growth_due).is_false()
+
+
+func test_no_entry_without_level_or_unlock() -> void:
+	var s := _save()
+	s.party = [FixtureDB.make(real, "tidepup", 8, ["tackle"])]
+	var e := BattleEngine.new(real, RandomNumberGenerator.new(), BattleLauncher.wild_setup(real, s, [FixtureDB.make(real, "tidepup", 2)], 1))
+	e.start()
+	e.rewards.award(e.sides[0].battlers[0], "hit_dealt")
+	assert_array(BattleLauncher.apply_results(real, s, e).progress).is_empty()
+
+
+func test_setups_carry_the_lead_field_multipliers() -> void:
+	var s := _save()
+	var lead := FixtureDB.make(real, "sprigling", 8)
+	lead.passive = "photosynth"  # Bond gains x1.25
+	var frost := FixtureDB.make(real, "frostling", 8)
+	frost.passive = "cold_snap"  # XP x1.1, but not the lead
+	s.party = [lead, frost]
+	var setups := [
+		BattleLauncher.wild_setup(real, s, [FixtureDB.make(real, "tidepup", 2)], 1),
+		BattleLauncher.tamer_setup(real, s, "rival_01", 1),
+		BattleLauncher.custom_setup(real, s, 1, 1, 5, true, rng),
+	]
+	for setup: BattleSetup in setups:
+		assert_float(setup.bond_gain).is_equal_approx(1.25, 0.0001)
+		assert_float(setup.xp_mult).is_equal(1.0)
+	s.party = [frost, lead]
+	var w := BattleLauncher.wild_setup(real, s, [FixtureDB.make(real, "tidepup", 2)], 1)
+	assert_float(w.xp_mult).is_equal_approx(1.1, 0.0001)
+	assert_float(w.bond_gain).is_equal(1.0)
+
+
+func test_setup_defaults_are_neutral() -> void:
+	var setup := BattleSetup.new()
+	assert_float(setup.xp_mult).is_equal(1.0)
+	assert_float(setup.bond_gain).is_equal(1.0)

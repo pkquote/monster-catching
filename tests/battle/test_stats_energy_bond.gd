@@ -222,3 +222,47 @@ func test_item_healing_raises_bond() -> void:
 	me.creature.hp -= 5
 	e.resolve_round([BattleAction.use_item(me.bid, "potion", me.bid)])
 	assert_int(me.creature.bond).is_equal(1)
+
+
+# --- Overworld field multipliers carried by the setup ---
+
+## One knockout of a level-10 blob; returns the player's battler after it.
+func _ko_with(xp_mult: float, bond_gain: float, start_xp := -1) -> Battler:
+	var e := _duel("blob", "blob", ["hit"])
+	e.setup.xp_mult = xp_mult
+	e.setup.bond_gain = bond_gain
+	var me := _me(e)
+	if start_xp >= 0:
+		me.creature.xp = start_xp
+	_foe(e).creature.hp = 1
+	_act(e, "hit")
+	return me
+
+
+func test_xp_mult_from_lead() -> void:
+	var base := _ko_with(1.0, 1.0)
+	var gained := base.creature.xp - Stats.xp_for_level(10)
+	assert_int(gained).is_greater(0)
+	var tripled := _ko_with(3.0, 1.0)
+	var amount := Stats.xp_reward(db.balance, 50, 10, true, 0.0)  # FixtureDB.engine is not wild
+	assert_int(gained).is_equal(maxi(1, int(amount)))
+	assert_int(tripled.creature.xp - Stats.xp_for_level(10)).is_equal(int(amount * 3.0))
+	# Level-ups follow from the scaled XP: just short of 11 at 1x, past it at 3x.
+	var start := Stats.xp_for_level(11) - gained - 1
+	assert_int(_ko_with(1.0, 1.0, start).creature.level).is_equal(10)
+	assert_int(_ko_with(3.0, 1.0, start).creature.level).is_equal(11)
+
+
+func test_bond_gain_only_scales_gains() -> void:
+	# Knockout +1 and win +2: x1.25 gives 1 (1.25 rounded) and 3 (2.5 rounded).
+	assert_int(_ko_with(1.0, 1.25).creature.bond).is_equal(1 + 3)
+	# A scaled positive gain is at least 1.
+	assert_int(_ko_with(1.0, 0.01).creature.bond).is_equal(1 + 1)
+	# Losses are never scaled.
+	var mine := FixtureDB.make(db, "blob", 10, ["hit"])
+	var e := FixtureDB.engine(db, [mine], [FixtureDB.make(db, "tank", 30, ["hit"])])
+	e.setup.bond_gain = 3.0
+	var me := _me(e)
+	me.creature.hp = 1
+	e.resolve_round([BattleAction.pass_turn(me.bid), BattleAction.use_move(_foe(e).bid, "hit", me.bid)])
+	assert_int(me.creature.bond).is_equal(-4)

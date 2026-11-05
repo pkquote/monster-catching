@@ -166,7 +166,7 @@ func test_v2_round_trip_keeps_position() -> void:
 	var back: SaveGame = r.save
 	assert_dict(back.position).is_equal({"map": "test_b", "x": 123.5, "y": 77.0, "facing": "left"})
 	assert_bool(back.story.is_done("test_b/Door1")).is_true()
-	assert_int(SaveGame.SCHEMA).is_equal(3)
+	assert_int(SaveGame.SCHEMA).is_equal(4)
 
 
 func test_v2_save_migrates_to_v3() -> void:
@@ -207,3 +207,49 @@ func test_loading_a_v2_save_backfills_the_move_pool() -> void:
 	assert_bool(pool.has("drench")).is_true()
 	assert_bool(pool.has("riptide")).is_true()
 	assert_bool(pool.has("tackle")).is_true()
+
+
+func test_v3_save_migrates_to_v4() -> void:
+	var dir := store.root.path_join("1700000000_abcdef")
+	DirAccess.make_dir_recursive_absolute(dir)
+	var mon := {"species": "blob", "level": 9, "xp": 0, "hp": 10, "moves": ["hit"], "move_pool": ["hit"]}
+	var v3 := {"schema": 3, "playthrough_id": "1700000000_abcdef", "kind": "manual", "player_name": "Old",
+		"created_unix": 1700000000, "saved_unix": 1700000000, "location": "Nowhere yet",
+		"party": [mon], "storage": [mon.duplicate()], "inventory": {}, "money": 5,
+		"story": {"flags": {}}, "position": {}}
+	var path := dir.path_join("save_1.json")
+	_write(path, JSON.stringify(v3))
+	var r := store.read(path)
+	assert_bool(r.ok).override_failure_message(str(r.error)).is_true()
+	var s: SaveGame = r.save
+	for c: CreatureInstance in [s.party[0], s.storage[0]]:
+		assert_str(c.passive).is_empty()
+		assert_str(c.affinity_passive).is_empty()
+		assert_str(c.active_passive).is_equal("rolled")
+
+
+## A v3 save loads end to end: known creatures get a rolled passive, an unknown species is left alone.
+func test_loading_a_v3_save_backfills_passives() -> void:
+	var old_store := GameState.store
+	GameState.store = store
+	var dir := store.root.path_join("1700000000_abcdef")
+	DirAccess.make_dir_recursive_absolute(dir)
+	var mon := {"species": "tidepup", "level": 9, "xp": 0, "hp": 10, "moves": ["tackle"], "move_pool": ["tackle"]}
+	var odd := {"species": "no_such_species", "level": 3, "xp": 0, "hp": 5, "moves": [], "move_pool": []}
+	var v3 := {"schema": 3, "playthrough_id": "1700000000_abcdef", "kind": "manual", "player_name": "Old",
+		"created_unix": 1700000000, "saved_unix": 1700000000, "location": "Nowhere yet",
+		"party": [mon], "storage": [mon.duplicate(), odd], "inventory": {}, "money": 5,
+		"story": {"flags": {}}, "position": {}}
+	var path := dir.path_join("save_1.json")
+	_write(path, JSON.stringify(v3))
+	var err := GameState.load_from(path)
+	var passives: Array = []
+	if err == "":
+		passives = [GameState.current.party[0].passive, GameState.current.storage[0].passive,
+			GameState.current.storage[1].passive]
+	GameState.close_game()
+	GameState.store = old_store
+	assert_str(err).is_empty()
+	assert_bool(DataRegistry.db.creature("tidepup").passives.has(passives[0])).is_true()
+	assert_str(passives[1]).is_equal(passives[0])
+	assert_str(passives[2]).is_empty()

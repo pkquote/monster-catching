@@ -4,9 +4,12 @@ extends RefCounted
 ## makes it disobey or lash out; high Bond earns extra XP.
 
 ## Applies a Bond change from balance.bond.changes. Returns the actual change.
-static func change(db: Database, c: CreatureInstance, happening: String) -> int:
+## `gain_mult` scales gains (rounded, at least 1); losses are never scaled.
+static func change(db: Database, c: CreatureInstance, happening: String, gain_mult := 1.0) -> int:
 	var cfg := db.balance.bond_cfg
 	var delta: int = int(cfg.changes.get(happening, 0))
+	if delta > 0 and gain_mult != 1.0:
+		delta = maxi(1, roundi(delta * gain_mult))
 	var before := c.bond
 	c.bond = clampi(c.bond + delta, cfg.min, cfg.max)
 	return c.bond - before
@@ -46,7 +49,7 @@ static func make_starter(db: Database, c: CreatureInstance) -> void:
 	c.bond = db.balance.bond_cfg.starter
 
 
-## Resting at a rest point: full HP and energy, status cleared, Bond up.
-static func rest(db: Database, c: CreatureInstance) -> int:
+## Resting at a rest point: full HP and energy, status cleared, Bond up (gain ×`gain_mult`).
+static func rest(db: Database, c: CreatureInstance, gain_mult := 1.0) -> int:
 	c.heal_full(db)
-	return change(db, c, "rested")
+	return change(db, c, "rested", gain_mult)

@@ -147,7 +147,15 @@ func _render_stats(db: Database, c: CreatureInstance) -> Array:
 	else:
 		lines.append("XP to next level: %d" % (Stats.xp_for_level(c.level + 1) - c.xp))
 	lines.append("Bond: %d" % c.bond)
+	var active := PassiveUnlockScreen.passive_line(db, Passives.active_id(c))
+	lines.append("Passive: " + (active if active != "" else "none"))
 	_body.text = "\n".join(lines)
+	var options: Array = []
+	var other := _other_passive(db, c)
+	if other.has("text"):
+		UIKit.label(_extra, other.text, UIKit.BODY_SIZE, UIKit.MUTED, true)
+	if other.has("slot"):
+		options.append({"label": "Use " + other.name, "value": {"passive": other.slot}})
 	var grid := GridContainer.new()
 	grid.columns = 2
 	grid.add_theme_constant_override("h_separation", 12)
@@ -166,10 +174,24 @@ func _render_stats(db: Database, c: CreatureInstance) -> Array:
 		row.add_child(bar)
 		UIKit.label(row, str(points), UIKit.BODY_SIZE)
 		grid.add_child(row)
-	var options: Array = []
 	if Progression.growth_target(db, c) != "":
-		options.append({"label": "Grow", "value": "grow"})
+		options.push_front({"label": "Grow", "value": "grow"})
 	return options
+
+
+## The passive that isn't active: {text} for the greyed line, plus {name, slot} when
+## the player can switch to it. {} for an empty rolled slot or an id the data lacks.
+func _other_passive(db: Database, c: CreatureInstance) -> Dictionary:
+	var slot := Passives.SLOT_ROLLED if c.active_passive == Passives.SLOT_AFFINITY else Passives.SLOT_AFFINITY
+	var id := c.passive if slot == Passives.SLOT_ROLLED else c.affinity_passive
+	if id == "":
+		if slot == Passives.SLOT_AFFINITY:
+			return {"text": "Affinity passive: unlocks when a track reaches %d" % db.balance.growth_affinity_threshold}
+		return {}
+	var def := db.passive(id)
+	if def == null:
+		return {}
+	return {"text": "%s (not active)" % def.name, "name": def.name, "slot": slot}
 
 
 func _render_moves(db: Database, c: CreatureInstance) -> Array:
@@ -205,7 +227,9 @@ func _render_training(db: Database, c: CreatureInstance) -> Array:
 
 func _act(parent: Node, db: Database, c: CreatureInstance, choice: Variant) -> void:
 	_notice = ""
-	if choice is Dictionary and choice.has("train"):
+	if choice is Dictionary and choice.has("passive"):
+		Passives.set_active(c, choice.passive)
+	elif choice is Dictionary and choice.has("train"):
 		_train(db, c, choice.train)
 	elif choice is Dictionary and choice.has("move"):
 		await LearnMoveScreen.run(parent, c, choice.move, true, _db)

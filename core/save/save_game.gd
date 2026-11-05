@@ -2,7 +2,7 @@ class_name SaveGame
 extends RefCounted
 ## Everything a save file holds. Pure data; SaveStore handles files.
 
-const SCHEMA := 3
+const SCHEMA := 4
 const KIND_MANUAL := "manual"
 const KIND_AUTO := "auto"
 ## Where a new game starts (and where a save with no usable position resumes).

@@ -46,6 +46,7 @@ static func award_affinity(db: Database, c: CreatureInstance, happening: String,
 	if award.is_empty() or award.points == 0 or times <= 0:
 		return ""
 	c.affinity[award.affinity] = int(c.affinity.get(award.affinity, 0)) + award.points * times
+	Passives.try_unlock(db, c, award.affinity)
 	return award.affinity
 
 
@@ -102,6 +103,7 @@ static func apply_growth(db: Database, c: CreatureInstance, into: String) -> Dic
 	var hp_ratio := float(c.hp) / float(c.max_hp(db))
 	var energy_ratio := float(c.energy) / float(maxi(1, c.max_energy(db)))
 	c.species = into
+	Passives.carry_over(db, c, from)
 	c.hp = maxi(1, roundi(hp_ratio * c.max_hp(db))) if c.hp > 0 else 0
 	c.energy = roundi(energy_ratio * c.max_energy(db))
 	var learned: Array[String] = []
@@ -143,11 +145,13 @@ static func set_moves(db: Database, c: CreatureInstance, slots: PackedStringArra
 	return ""
 
 
-## Summary of a level gain for the post-battle progress screen, or null if the
-## creature did not level. offered_moves are pool moves learned in the gained
-## levels that did not get a slot.
-static func progress_entry(db: Database, c: CreatureInstance, level_before: int) -> ProgressEntry:
-	if c.level <= level_before:
+## Summary of a level gain or a newly unlocked Affinity passive for the post-battle
+## progress screen, or null if neither happened. offered_moves are pool moves learned
+## in the gained levels that did not get a slot.
+static func progress_entry(db: Database, c: CreatureInstance, level_before: int,
+		passive_before: String) -> ProgressEntry:
+	var unlocked := c.affinity_passive != passive_before
+	if c.level <= level_before and not unlocked:
 		return null
 	var offered: Array[String] = []
 	for l in c.species_def(db).learnset:
@@ -155,7 +159,10 @@ static func progress_entry(db: Database, c: CreatureInstance, level_before: int)
 			continue
 		if c.move_pool.has(l.move) and not c.moves.has(l.move) and not offered.has(l.move):
 			offered.append(l.move)
-	return ProgressEntry.new(c, offered, growth_target(db, c) != "")
+	var entry := ProgressEntry.new(c, offered, growth_target(db, c) != "")
+	if unlocked:
+		entry.unlocked_passive = c.affinity_passive
+	return entry
 
 
 ## Adds every learnset move at or below the creature's level that its pool lacks

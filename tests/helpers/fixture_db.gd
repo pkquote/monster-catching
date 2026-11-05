@@ -111,6 +111,9 @@ static func raw() -> RawData:
 	for m in moves:
 		r.add_entry("moves", m)
 
+	# A harmless passive so every fixture species validates; battle-test numbers stay unchanged.
+	r.add_entry("passives", {"id": "steady", "name": "Steady", "description": "Test passive with no real effect.",
+		"effects": [{"op": "stat_mod", "stat": "patk", "mult": 1.0}]})
 	r.add_entry("creatures", _c("blob", ["neutral"], FLAT, [
 		{"level": 1, "move": "hit"}, {"level": 3, "move": "growl"}, {"level": 5, "move": "mend"},
 		{"level": 6, "move": "quick_jab"}, {"level": 8, "move": "wave"}], [
@@ -202,7 +205,8 @@ static func _side_move(id: String, type: String, state: String) -> Dictionary:
 
 static func _c(id: String, types: Array, stats: Dictionary, learnset: Array, growth: Array = []) -> Dictionary:
 	var c := {"id": id, "name": id.capitalize(), "types": types, "base_stats": stats,
-		"catch_rate": 0.5, "xp_yield": 50, "learnset": learnset}
+		"catch_rate": 0.5, "xp_yield": 50, "learnset": learnset,
+		"passives": ["steady"]}
 	if not growth.is_empty():
 		c["growth"] = growth
 	return c

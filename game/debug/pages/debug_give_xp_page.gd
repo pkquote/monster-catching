@@ -34,8 +34,9 @@ func _give_xp(index: int, to_level: int) -> void:
 		return
 	var goal: int = c.level + 1 if to_level < 0 else mini(to_level, db.balance.level_cap)
 	var before := c.level
+	var passive_before := c.affinity_passive
 	Progression.award_xp(db, c, maxi(1, Stats.xp_for_level(goal) - c.xp))
-	var entry := Progression.progress_entry(db, c, before)
+	var entry := Progression.progress_entry(db, c, before, passive_before)
 	menu.refresh_world()
 	menu.close()  # drops this page: the rest runs in a static function that doesn't need it
 	_progress_then_save(world, entry)

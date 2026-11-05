@@ -9,7 +9,7 @@ const ROLL_AVG := 0.925
 const UNDERDOG_STATS := ["patk", "pdef", "satk", "sdef"]
 
 
-## Stat after training, stages, passive stat_mods (statuses + own field) and Underdog.
+## Stat after training, stages, stat_mods (statuses, own field, creature passives) and Underdog.
 ## "acc" returns a multiplier (1.0 = normal) that also includes the Bond penalty;
 ## others return a stat value.
 static func effective_stat(engine: BattleEngine, b: Battler, stat: String) -> float:
@@ -54,8 +54,16 @@ static func damage(engine: BattleEngine, ctx: EffectContext, e: Dictionary, targ
 		if user.creature.species_def(db).types.has(type):
 			mult *= db.balance.stab
 		mult *= Bond.performance(db, user.creature)
-	for p in engine.side_passives(target.side) + engine.status_passives(target):
-		if p.op == "incoming_type_mod" and p.type == type:
+		for p in engine.passives(user):
+			if p.op == "type_power" and p.type == type:
+				mult *= float(p.mult)
+		if ctx.move != null and ctx.move.id == engine.fallback_move():
+			mult *= engine.passive_rules.scrap_mult(user)
+	elif ctx.is_reaction() and user != null:
+		mult *= engine.passive_rules.reaction_mult(user)
+	# An incoming_type_mod with no type applies to all damage.
+	for p in engine.passives(target):
+		if p.op == "incoming_type_mod" and p.get("type", type) == type:
 			mult *= float(p.mult)
 	if ctx.spread:
 		var reduction := float(engine.sides[target.side].underdog.get("spread_reduction", 0.0))

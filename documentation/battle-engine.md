@@ -58,7 +58,8 @@ engine.commit(0)               # write the player's creatures back (BattleLaunch
 2. Each action runs if its creature is still on the field and conscious. Shock-style
    `skip_chance` statuses can cancel a move.
 3. Faints are checked after every action, and the battle can end mid-round.
-4. At end of round: status effects run (e.g. Burn damage) and count down, field states count down,
+4. At end of round: status effects run (e.g. Burn damage) and count down, passive `round_end`
+   triggers fire (fastest first), field states count down,
    AI and wild sides refill empty slots, the player gets `replacement_needed`, and Underdog is
    recalculated.
 5. After `round_limit` rounds the battle ends in a draw (`reason: "round_limit"`).
@@ -73,8 +74,8 @@ engine.commit(0)               # write the player's creatures back (BattleLaunch
 | Stat stages (−6…+6) | Atk/Def/Spd: `(2+s)/2` or `2/(2−s)`. Accuracy: `(3+s)/3` or `3/(3−s)` |
 | Max energy | `2·base_stamina·Lv/100 + energy.base` (+1 per Stamina training point) |
 | Training | Each point adds +1 to a stat, +`hp_per_point` to HP |
-| Effective stat | raw (incl. training) × stage × passive `stat_mod`s (status + own side's field states) × (1 + Underdog stat bonus, P/S Atk and Def only) |
-| Damage | `((2·Lv/5 + 2) · power · A/D) / 50 + 2` × same-type bonus × type matchup × field bonus × target side's `incoming_type_mod`s × spread × Bond performance × roll(0.85–1.0), minimum 1. `A/D` is P.Atk/P.Def for physical moves and S.Atk/S.Def for special moves |
+| Effective stat | raw (incl. training) × stage × passive `stat_mod`s (status, own side's field states and creature passives) × (1 + Underdog stat bonus, P/S Atk and Def only) |
+| Damage | `((2·Lv/5 + 2) · power · A/D) / 50 + 2` × same-type bonus × type matchup × field bonus × attacker's `type_power` (and `scrap_power` for Scrap, `reaction_power` for its reactions) × target's `incoming_type_mod`s (side field states and passives) × spread × Bond performance × roll(0.85–1.0), minimum 1. `A/D` is P.Atk/P.Def for physical moves and S.Atk/S.Def for special moves |
 | Spread | Moves hitting more than one creature: × `spread_mult` × (1 − target side's Underdog spread reduction) |
 | Reaction damage | Uses the triggering creature's level with Atk/Def = 1, no same-type bonus. `scale_with_stacks` multiplies power by stacks consumed |
 | Hit chance | `accuracy × accuracy multiplier` (includes Bond performance). Moves on yourself or allies, and `always_hits` moves, never miss |
@@ -93,6 +94,9 @@ engine.commit(0)               # write the player's creatures back (BattleLaunch
 - The fallback move (`energy.fallback_move`, Scrap) costs nothing and is always usable, even
   though it is not in any learnset.
 - `BattleSetup.award_xp = false` turns off XP (the simulator does this, since only side 0 earns XP).
+- `BattleSetup.xp_mult` and `bond_gain` (default 1.0) scale side 0's XP and positive Bond changes
+  (rounded, at least 1; losses are never scaled). `BattleLauncher` sets both from the party lead's
+  overworld passive (`Passives.field_mult`).
 
 ## Bond
 
@@ -155,10 +159,73 @@ come from `balance.affinity_awards`:
 | `field_applied`, `reaction_triggered`, `field_cashed_in` | The creature whose move did it |
 | `status_inflicted`, `stat_lowered` | The creature that inflicted it on a foe |
 
+Nothing a passive trigger's effects do earns Affinity (for anyone), so a passive can't steer which
+Affinity passive unlocks or which growth branch is taken. Bond is unaffected.
+
 `Progression.growth_target(db, creature)` picks the growth branch. It uses the lowest growth level
 the creature has reached, then the branch matching its dominant Affinity if that track has at least
 `growth_affinity_threshold` points, and otherwise the default branch.
 `Progression.apply_growth` changes the species. Showing and confirming growth is M4 UI work.
+
+## Passives
+
+Every creature has a rolled passive (`CreatureInstance.passive`, picked from the species'
+`passives` list when it is made) and may unlock an Affinity passive (`affinity_passive`). The first
+time one of its Affinity tracks reaches `growth_affinity_threshold` (30) and the species lists a
+passive for that track (`affinity_passives`), `Progression.award_affinity` sets it, once per
+creature. In battle that emits `passive_unlocked`; the after-battle Passive Unlocked screen then
+offers to switch. `active_passive` (`"rolled"` or `"affinity"`) picks which one is active, and
+**only the active passive does anything** (`Passives.active_id`, `Passives.set_active`). The design
+is [documentation/specs/2026-11-04-passives-design.md](specs/2026-11-04-passives-design.md);
+the definitions live in `data/passives/*.json`.
+
+A passive definition has up to three lists:
+
+| List | What it holds |
+| --- | --- |
+| `effects` | Always-on effects, each with an optional `when` (`hp_below`, `underdog`, `field` + `side`), checked on every read. With `scope: "allies"` they are an aura on every creature on the holder's side of the field, the holder included (the `when` is checked on the holder) |
+| `triggers` | `{ on, chance?, contact?, effects }`. The effects are ordinary effect ops run with `source: "passive"` |
+| `field` | Overworld effects of the party lead's active passive: `encounter_rate`, `xp_mult`, `bond_gain` (`Passives.field_mult`) |
+
+Always-on ops: `type_power`, `stat_mod`, `incoming_type_mod`; protection: `status_immune`,
+`guard_stages` (foes only; its own side can still lower its stages), `field_shelter` (that state's
+effects skip it and its reactions don't damage it); game-specific: `field_boost`, `reaction_power`,
+`energy_discount` (never below 0; also decides which moves are affordable), `rest_bonus`,
+`scrap_power`; and `absorb_type` (damage of that type heals a share of max HP instead, even through
+a type immunity, and doesn't count as a hit). `engine.passives(b)` returns every always-on effect currently
+on `b`: its side's field states (minus any it shelters from), its status, and
+`engine.passive_rules.effects_for(b)` (its own active passive plus allied auras).
+
+| Trigger `on` | Fires | Effects land on (no `target` of their own) |
+| --- | --- | --- |
+| `enter` | Placed on the field: swap, replacement, or battle start (after both sides are placed, fastest first; ties by bid) | itself |
+| `hit` | Took damage from a foe and is still standing. `contact: true` = physical moves only | the attacker |
+| `round_end` | End of each round while on the field, before field states count down (fastest first) | itself |
+| `knockout` | It knocked out a foe | itself |
+| `faint` | It fainted | the creature that knocked it out |
+
+Rules:
+
+- Only creatures on the field and standing contribute, receive or fire anything (a `faint`
+  trigger fires as its creature goes down). Nothing fires once the battle is decided, including
+  the faint that decides it.
+- Multipliers from different sources multiply. An aura counts once per passive id, however many
+  allies hold it.
+- Effects run by a trigger never set off further passive triggers (a depth guard in
+  `PassiveRules`), and a creature a trigger's effects knock out fires no `faint` or `knockout`
+  triggers.
+- `chance` (1–100) rolls the battle RNG only when it is below 100.
+- A trigger whose effects would all do nothing (only `heal` on creatures at full HP and
+  `restore_energy` on creatures at full energy) is skipped: no banner, no events. Any other op
+  counts as doing something.
+
+`passive_triggered { bid, passive }` is emitted whenever a passive visibly acts: before a
+trigger's effects run, and when a passive **blocks or absorbs** something: `status_immune` stops
+a status, `guard_stages` stops a foe's stat drop, `field_shelter` stops a reaction's damage, or
+`absorb_type` turns a hit into healing. In a block or an aura, `bid` is the creature whose passive
+did it (the aura holder, not necessarily the protected creature). Always-on multipliers are silent.
+The battle scene shows it as a small banner over that creature ("Tidepup's Undertow!") that fades
+on its own while the effect's own events play.
 
 ## AI styles
 
@@ -181,7 +248,8 @@ engine weakly so the engine can be freed):
 | --- | --- | --- |
 | `engine.actions` | `action_runner.gd` | turn order; running moves (energy, skipped turns, Bond misbehaviour), items, swaps, Rest, fleeing |
 | `engine.field_rules` | `field_rules.gd` | applying, stacking, pushing out, expiring and cashing in field states; reactions |
-| `engine.rewards` | `battle_rewards.gd` | XP from knockouts, Bond changes, Affinity points and the per-battle Affinity log |
+| `engine.rewards` | `battle_rewards.gd` | XP from knockouts, Bond changes, Affinity points and the per-battle Affinity log (and `passive_unlocked`) |
+| `engine.passive_rules` | `passive_rules.gd` | creature passives: always-on effects and auras, `when` conditions, triggers and the depth guard, protection checks, energy and damage multipliers |
 
 ## Events
 
@@ -219,6 +287,8 @@ in `BattleText` (and `BattlePlayback` if it changes what's on screen).
 | `captured` | `bid`, `species` |
 | `faint` | `bid`, `side` |
 | `xp_gain`, `level_up`, `move_learned`, `move_offered` | `bid`, `amount` / `level` / `move` |
+| `passive_triggered` | `bid`, `passive` (a trigger fired, or a passive blocked a status, a foe's stat drop or reaction damage, or absorbed a hit; see Passives) |
+| `passive_unlocked` | `bid`, `passive` (an Affinity track first reached the threshold and unlocked the Affinity passive) |
 | `underdog` | `side`, `ratio`, `bonus_actions`, `stat_bonus`, `spread_reduction`, `xp_bonus` |
 | `replacement_needed` | `side`, `count` |
 | `pass`, `fled` | `bid` |

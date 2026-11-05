@@ -4,23 +4,44 @@ extends BattlePart
 ## pushing out, expiring, cashing in, and firing reactions.
 
 
-## Passive effects (stat_mod, incoming_type_mod...) from the states on a side.
-func side_passives(side_index: int) -> Array:
+## Passive effects (stat_mod, incoming_type_mod...) on `b` from the states on its side,
+## skipping the states it shelters from (field_shelter).
+func passives_for(b: Battler) -> Array:
 	var out: Array = []
 	var db := engine.db
-	for st in engine.sides[side_index].field.states:
-		out.append_array(db.field_state(st.id).passive)
+	for st in engine.sides[b.side].field.states:
+		if not engine.passive_rules.shelters(b, st.id):
+			out.append_array(db.field_state(st.id).passive)
 	return out
 
 
+## The creature whose field_shelter keeps reaction `r`'s damage off `target`, or null.
+func reaction_shelter(r: ReactionDef, target: Battler) -> Battler:
+	for s in r.inputs:
+		var by := engine.passive_rules.shelter(target, s)
+		if by != null:
+			return by
+	return null
+
+
 ## Applies a field state to a side. If it meets a state it reacts with (and
-## `allow_reaction`), the reaction fires instead of a normal stack.
+## `allow_reaction`), the reaction fires instead of a normal stack. The user's
+## field_boost adds stacks and turns.
 func apply(side_index: int, state_id: String, stacks: int, turns: int, user: Battler,
 		allow_reaction := true) -> void:
+	var t := turns if turns > 0 else engine.db.field_state(state_id).default_turns
+	if user != null:
+		var boost := engine.passive_rules.field_boost(user)
+		stacks += boost.x
+		t += boost.y
+	_apply(side_index, state_id, stacks, t, user, allow_reaction)
+
+
+func _apply(side_index: int, state_id: String, stacks: int, t: int, user: Battler,
+		allow_reaction: bool) -> void:
 	var e := engine
 	var field := e.sides[side_index].field
 	var fdef := e.db.field_state(state_id)
-	var t := turns if turns > 0 else fdef.default_turns
 	if allow_reaction and not field.has(state_id):
 		for existing in field.ids():
 			var r := e.db.find_reaction(existing, state_id)
@@ -82,7 +103,7 @@ func _trigger_reaction(side_index: int, r: ReactionDef, existing: String, incomi
 		e.rewards.award(user, "reaction_triggered")
 	# The incoming state still lands unless the reaction used it up.
 	if not r.consumes.has(incoming):
-		apply(side_index, incoming, incoming_stacks, turns, user, false)
+		_apply(side_index, incoming, incoming_stacks, turns, user, false)
 	var ctx := EffectContext.new()
 	ctx.engine = e
 	ctx.user = user

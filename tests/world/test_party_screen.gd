@@ -188,3 +188,24 @@ func test_long_row_text_clears_the_bars() -> void:
 		+ font.get_string_size(btn.text, HORIZONTAL_ALIGNMENT_LEFT, -1, size).x
 	for bar in _bars(btn):
 		assert_float(text_end).is_less_equal(bar.position.x)
+
+
+func test_party_lead_passive_line() -> void:
+	var lead := Story.give_creature("tidepup", 5)
+	lead.passive = "undertow"  # has a field effect (encounter rate)
+	var other := Story.give_creature("emberkit", 5)
+	other.passive = "kindling"
+	var s := await _open()
+	assert_str(s.page_text()).is_equal("Lead passive: Undertow")
+	await get_tree().process_frame
+	ScreenFit.check(self, s)
+	s.close()
+	lead.passive = "tidal_heart"  # battle effects only: no line
+	s = await _open()
+	assert_str(s.page_text()).is_empty()
+	s.close()
+	lead.affinity_passive = "finisher"
+	lead.active_passive = "affinity"
+	lead.passive = "undertow"  # not active, so it doesn't count
+	s = await _open()
+	assert_str(s.page_text()).is_empty()

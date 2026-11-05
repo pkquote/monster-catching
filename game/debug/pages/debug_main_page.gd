@@ -23,6 +23,7 @@ func build(box: VBoxContainer) -> void:
 		var can_tune := not s.party.is_empty() and not blocked
 		UIKit.button(box, "Give XP...", func(): menu.show_page(DebugGiveXpPage.new())).disabled = not can_tune
 		UIKit.button(box, "Set Affinity...", func(): menu.show_page(DebugAffinityPage.new())).disabled = not can_tune
+		UIKit.button(box, "Set passive...", func(): menu.show_page(DebugPassivePage.new())).disabled = not can_tune
 		UIKit.button(box, "Fill box", _fill_box).disabled = blocked
 		UIKit.spacer(box, 4)
 		UIKit.label(box, "Test battles", UIKit.BODY_SIZE, UIKit.MUTED)
@@ -61,7 +62,8 @@ func _fill_box() -> void:
 	var ids := db.ids("creatures")
 	var level := BattleLauncher.party_level(GameState.current)
 	for i in BOX_FILL:
-		GameState.current.storage.append(CreatureInstance.create(db, ids[menu.rng.randi() % ids.size()], level))
+		GameState.current.storage.append(CreatureInstance.create(db, ids[menu.rng.randi() % ids.size()], level,
+			PackedStringArray(), menu.rng))
 	GameState.autosave()
 	menu.show_page(DebugMainPage.new(), "Added %d creatures to the box." % BOX_FILL)
 
@@ -81,7 +83,7 @@ func _start_tamer(tamer_id: String) -> void:
 
 # Static, so the battle still starts if the page is gone by the time the count is picked.
 static func _wild_setup(count: int, pack: Array) -> BattleSetup:
-	return BattleLauncher.wild_setup(GameState.current, pack, count)
+	return BattleLauncher.wild_setup(DataRegistry.db, GameState.current, pack, count)
 
 
 static func _tamer_setup(count: int, tamer_id: String) -> BattleSetup:

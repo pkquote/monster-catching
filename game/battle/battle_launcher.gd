@@ -10,13 +10,21 @@ const TEST_FLAG := "debug_test_party_granted"
 const MAX_SIDE := 3
 
 
+## A randomized generator for creation sites that have none of their own.
+static func fresh_rng() -> RandomNumberGenerator:
+	var rng := RandomNumberGenerator.new()
+	rng.randomize()
+	return rng
+
+
 ## Debug helper until starters exist (M3): a small party and bag, once per playthrough.
 ## Returns false if this playthrough already got it.
 static func grant_test_party(db: Database, save: SaveGame) -> bool:
 	if save.story.flag(TEST_FLAG):
 		return false
+	var rng := fresh_rng()
 	for entry in TEST_PARTY:
-		var c := CreatureInstance.create(db, entry[0], entry[1])
+		var c := CreatureInstance.create(db, entry[0], entry[1], PackedStringArray(), rng)
 		if save.party.is_empty():
 			Bond.make_starter(db, c)
 		add_to_party(db, save, c)
@@ -41,16 +49,25 @@ static func roll_wild_pack(db: Database, encounter_id: String, rng: RandomNumber
 	var pack: Array = []
 	for i in rng.randi_range(enc.pack_min, enc.pack_max):
 		var row := enc.roll(rng)
-		pack.append(CreatureInstance.create(db, row.species, rng.randi_range(row.min_level, row.max_level)))
+		pack.append(CreatureInstance.create(db, row.species, rng.randi_range(row.min_level, row.max_level),
+			PackedStringArray(), rng))
 	return pack
 
 
-static func wild_setup(save: SaveGame, pack: Array, field_count: int) -> BattleSetup:
-	return BattleSetup.wild(save.party, pack, field_count, save.inventory)
+static func wild_setup(db: Database, save: SaveGame, pack: Array, field_count: int) -> BattleSetup:
+	return _with_lead_field(db, save, BattleSetup.wild(save.party, pack, field_count, save.inventory))
 
 
 static func tamer_setup(db: Database, save: SaveGame, tamer_id: String, field_count: int) -> BattleSetup:
-	return BattleSetup.vs_tamer(db, save.party, tamer_id, field_count, save.inventory)
+	return _with_lead_field(db, save,
+		BattleSetup.vs_tamer(db, save.party, tamer_id, field_count, save.inventory, fresh_rng()))
+
+
+## The party lead's overworld XP and Bond-gain multipliers, onto `setup`.
+static func _with_lead_field(db: Database, save: SaveGame, setup: BattleSetup) -> BattleSetup:
+	setup.xp_mult = Passives.field_mult(db, save, "xp_mult")
+	setup.bond_gain = Passives.field_mult(db, save, "bond_gain")
+	return setup
 
 
 ## Debug battle in any N-vs-M format. You field `player_count` (capped by healthy
@@ -63,7 +80,8 @@ static func custom_setup(db: Database, save: SaveGame, player_count: int, foe_co
 	var species := Array(db.ids("creatures"))
 	species.sort()
 	for i in clampi(foe_count, 1, MAX_SIDE):
-		foes.append(CreatureInstance.create(db, species[rng.randi_range(0, species.size() - 1)], foe_level))
+		foes.append(CreatureInstance.create(db, species[rng.randi_range(0, species.size() - 1)], foe_level,
+			PackedStringArray(), rng))
 	var mine := clampi(mini(player_count, healthy_count(save)), 1, MAX_SIDE)
 	var s := BattleSetup.new()
 	s.is_wild = wild
@@ -72,7 +90,7 @@ static func custom_setup(db: Database, save: SaveGame, player_count: int, foe_co
 	s.sides[1].is_wild = wild
 	if not wild:
 		s.foe_name = "Sparring Partner"
-	return s
+	return _with_lead_field(db, save, s)
 
 
 ## Average level of the party (1 if empty). The custom battle's default foe level.
@@ -90,15 +108,17 @@ static func party_level(save: SaveGame) -> int:
 ## Returns the summary for the results panel and the overworld.
 static func apply_results(db: Database, save: SaveGame, engine: BattleEngine) -> BattleSummary:
 	var levels_before := {}
+	var passives_before := {}
 	for b in engine.sides[0].battlers:
 		levels_before[b.source] = b.source.level
+		passives_before[b.source] = b.source.affinity_passive
 	engine.commit(0)
 	var res := engine.result()
 	var summary := BattleSummary.new()
 	summary.tamer_id = engine.setup.tamer_id
 	for c: CreatureInstance in save.party:
 		if levels_before.has(c):
-			var entry := Progression.progress_entry(db, c, levels_before[c])
+			var entry := Progression.progress_entry(db, c, levels_before[c], passives_before[c])
 			if entry != null:
 				summary.progress.append(entry)
 	save.inventory = {}

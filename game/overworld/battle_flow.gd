@@ -65,7 +65,7 @@ func start_wild(table_id: String) -> void:
 		w.roller.start_grace()
 		w.unlock(Overworld.LOCK_BATTLE)
 		return
-	await run_battle(BattleLauncher.wild_setup(GameState.current, pack, n))
+	await run_battle(BattleLauncher.wild_setup(db, GameState.current, pack, n))
 	w.unlock(Overworld.LOCK_BATTLE)
 
 

@@ -9,6 +9,8 @@ extends SceneTree
 ##                        Checks expectations and exits 1 if any fail.
 ##   --mode=progress     M4 tour: test party, Give XP to 16, Learn Move, Grow, Party reorder, Summary tabs,
 ##                        training, Reset Seed, Storage Box, unsafe zone.
+##   --mode=passives     passives tour: Set passive (Undertow), its battle-entry banner, Set Affinity
+##                        unlocks Finisher, the Passive Unlocked screen, Summary -> Use Finisher.
 ##   --mode=scene         open one scene, wait, screenshot. Use with --scene / --frames.
 ##   --scene=res://...    scene for --mode=scene (default: the project's main scene)
 ##   --frames=N           frames to wait before the screenshot in scene mode (default 60)
@@ -35,7 +37,7 @@ func _initialize() -> void:
 	match _opts.mode:
 		"scene":
 			_run_scene()
-		"battle", "overworld", "progress":
+		"battle", "overworld", "progress", "passives":
 			_tour(_opts.mode)
 		_:
 			_tour("frontend")

@@ -15,6 +15,8 @@ func _base() -> RawData:
 	raw.add_entry("reactions", {"id": "conduction", "name": "Conduction",
 		"inputs": ["charged", "soaked"], "consumes": ["charged"], "scope": "side",
 		"effects": [{"op": "damage", "power": 40, "target": "all_allies"}]})
+	raw.add_entry("passives", {"id": "steady", "name": "Steady",
+		"effects": [{"op": "stat_mod", "stat": "patk", "mult": 1.0}]})
 	raw.add_entry("moves", _move())
 	raw.add_entry("moves", _move({"id": "scrap", "name": "Scrap", "cost": 0}))  # balance fallback_move
 	raw.add_entry("creatures", _creature())
@@ -33,7 +35,7 @@ func _creature(overrides: Dictionary = {}) -> Dictionary:
 	var c := {"id": "pup", "name": "Pup", "types": ["water"],
 		"base_stats": FixtureDB.FLAT.duplicate(),
 		"catch_rate": 0.5, "xp_yield": 50,
-		"learnset": [{"level": 1, "move": "splash"}]}
+		"learnset": [{"level": 1, "move": "splash"}], "passives": ["steady"]}
 	c.merge(overrides, true)
 	return c
 

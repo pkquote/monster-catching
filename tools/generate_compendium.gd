@@ -23,6 +23,8 @@ const TARGET_LABELS := {
 	"own_side": "Own side",
 	"enemy_side": "Enemy side",
 }
+const TRIGGER_LABELS := {"enter": "entering", "hit": "being hit", "round_end": "round end",
+	"knockout": "a knockout", "faint": "fainting"}
 const STAT_LABELS := {"hp": "HP", "patk": "P.Atk", "pdef": "P.Def", "satk": "S.Atk", "sdef": "S.Def",
 	"spd": "Spd", "acc": "Acc", "luck": "Luck", "resolve": "Resolve", "stamina": "Stamina"}
 
@@ -58,7 +60,7 @@ func _build() -> void:
 	_w("| Category | Count |")
 	_w("|---|---|")
 	for cat in ["creatures", "moves", "items", "statuses", "field_states", "reactions", "types",
-			"affinities", "tamers", "encounters"]:
+			"affinities", "passives", "tamers", "encounters"]:
 		_w("| [%s](#%s) | %d |" % [_title(cat), cat.replace("_", "-"), db.count(cat)])
 	_w("")
 	_types()
@@ -66,6 +68,7 @@ func _build() -> void:
 	_field_states()
 	_reactions()
 	_affinities()
+	_passives()
 	_creatures()
 	_moves()
 	_items()
@@ -194,6 +197,42 @@ func _affinities() -> void:
 	for id in _sorted_ids("affinities"):
 		var a := db.affinity(id)
 		_w("| **%s** | `%s` | %s |" % [a.name, a.id, a.description])
+	_w("")
+
+
+func _passives() -> void:
+	_section("Passives", "Each creature rolls one of its species' passives, and unlocks an Affinity passive at the growth threshold. " +
+		"*Aura* passives apply their effects to every creature on the field's side. A `when` condition is shown in brackets.")
+	_w("| Passive | Id | Scope | Effects | Triggers | Overworld | Species |")
+	_w("|---|---|---|---|---|---|---|")
+	for id in _sorted_ids("passives"):
+		var p := db.passive(id)
+		var triggers := PackedStringArray()
+		for t in p.triggers:
+			var s := "On %s" % TRIGGER_LABELS[t.on]
+			if t.contact:
+				s += " (physical)"
+			if t.chance < 100:
+				s += " (%d%%)" % t.chance
+			triggers.append("%s: %s" % [s, _effects(t.effects)])
+		var species := PackedStringArray()
+		for cid in _sorted_ids("creatures"):
+			var c := db.creature(cid)
+			if p.id in c.passives:
+				species.append(c.name)
+			elif p.id in c.affinity_passives.values():
+				var track := ""
+				for k in c.affinity_passives:
+					if c.affinity_passives[k] == p.id:
+						track = db.affinity(k).name
+				species.append("%s (%s)" % [c.name, track])
+		_w("| **%s** | `%s` | %s | %s | %s | %s | %s |" % [p.name, p.id, "Aura" if p.scope == "allies" else "Self",
+			_effects(p.effects), _or_dash("; ".join(triggers)), _effects(p.field), ", ".join(species)])
+	_w("")
+	for id in _sorted_ids("passives"):
+		var p := db.passive(id)
+		if not p.description.is_empty():
+			_w("- **%s:** %s" % [p.name, p.description])
 	_w("")
 
 
@@ -447,7 +486,38 @@ func _effect(e: Dictionary) -> String:
 		"stat_mod":
 			s = "%s x%s" % [STAT_LABELS[e.stat], _num(e.mult)]
 		"incoming_type_mod":
-			s = "%s damage taken x%s" % [db.type_def(e.type).name, _num(e.mult)]
+			s = "%s damage taken x%s" % [db.type_def(e.type).name if e.has("type") else "All", _num(e.mult)]
+		"type_power":
+			s = "%s moves x%s" % [db.type_def(e.type).name, _num(e.mult)]
+		"absorb_type":
+			s = "%s damage heals %s max HP instead" % [db.type_def(e.type).name, _pct(e.fraction)]
+		"status_immune":
+			s = "Can't be %s" % ("given %s" % db.status(e.status).name if e.has("status") else "given a status")
+		"guard_stages":
+			s = "Foes can't lower its %s" % (STAT_LABELS[e.stat] if e.has("stat") else "stats")
+		"field_shelter":
+			s = "Sheltered from %s" % _state_name(e.state)
+		"field_boost":
+			var extra := PackedStringArray()
+			if e.has("stacks"):
+				extra.append("+%d stack(s)" % e.stacks)
+			if e.has("turns"):
+				extra.append("+%d round(s)" % e.turns)
+			s = "Its field states get %s" % " and ".join(extra)
+		"reaction_power":
+			s = "Reactions it triggers x%s" % _num(e.mult)
+		"energy_discount":
+			s = "%s moves cost %d less" % [db.type_def(e.type).name if e.has("type") else "All", e.amount]
+		"rest_bonus":
+			s = "Rest restores +%s max energy" % _pct(e.fraction)
+		"scrap_power":
+			s = "Scrap x%s" % _num(e.mult)
+		"encounter_rate":
+			s = "Wild encounter rate x%s" % _num(e.mult)
+		"xp_mult":
+			s = "XP earned x%s" % _num(e.mult)
+		"bond_gain":
+			s = "Bond gains x%s" % _num(e.mult)
 		"restore_energy":
 			s = "Restores %s max energy" % _pct(e.fraction)
 		"capture":
@@ -457,9 +527,22 @@ func _effect(e: Dictionary) -> String:
 				s += ", x%s on %s" % [_num(bonus[st]), _state_name(st)]
 		_:
 			s = e.op
+	if e.has("when"):
+		s += " [%s]" % _when(e.when)
 	if e.has("target"):
 		s += " → %s" % TARGET_LABELS[e.target].to_lower()
 	return s
+
+
+func _when(w: Dictionary) -> String:
+	var parts := PackedStringArray()
+	if w.has("hp_below"):
+		parts.append("HP below %s" % _pct(w.hp_below))
+	if w.get("underdog", false):
+		parts.append("outnumbered")
+	if w.has("field"):
+		parts.append("%s on %s" % [_state_name(w.field), SIDE_LABELS[w.side]])
+	return ", ".join(parts)
 
 
 # --- Helpers ----------------------------------------------------------------

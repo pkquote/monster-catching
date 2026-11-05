@@ -22,6 +22,7 @@ static func _builders() -> Dictionary:
 		"reactions": ReactionDef,
 		"affinities": AffinityDef,
 		"minigames": MinigameDef,
+		"passives": PassiveDef,
 	}
 
 
@@ -66,6 +67,7 @@ func field_state(id: String) -> FieldStateDef: return get_def("field_states", id
 func reaction(id: String) -> ReactionDef: return get_def("reactions", id)
 func affinity(id: String) -> AffinityDef: return get_def("affinities", id)
 func minigame(id: String) -> MinigameDef: return get_def("minigames", id)
+func passive(id: String) -> PassiveDef: return get_def("passives", id)
 
 
 ## Reaction triggered by `incoming` meeting `existing`, or null.

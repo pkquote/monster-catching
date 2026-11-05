@@ -7,15 +7,19 @@ extends BattlePart
 var affinity_log: Dictionary = {}
 
 
-## Affinity points for something `b` did (see balance.affinity_awards).
+## Affinity points for something `b` did (see balance.affinity_awards). Nothing a
+## passive trigger's effects do earns any (PassiveRules.running).
 func award(b: Battler, happening: String, times := 1) -> void:
-	if b == null:
+	if b == null or engine.passive_rules.running():
 		return
 	var e := engine
 	var points: Dictionary = e.db.balance.affinity_awards.get(happening, {})
+	var before := b.creature.affinity_passive
 	var aff := Progression.award_affinity(e.db, b.creature, happening, times)
 	if aff == "":
 		return
+	if before == "" and b.creature.affinity_passive != "":
+		e.emit({"type": BattleEvents.PASSIVE_UNLOCKED, "bid": b.bid, "passive": b.creature.affinity_passive})
 	if not affinity_log.has(b.bid):
 		affinity_log[b.bid] = {}
 	affinity_log[b.bid][aff] = int(affinity_log[b.bid].get(aff, 0)) + int(points.points) * times
@@ -23,7 +27,7 @@ func award(b: Battler, happening: String, times := 1) -> void:
 
 func bond(b: Battler, happening: String) -> void:
 	var e := engine
-	var change := Bond.change(e.db, b.creature, happening)
+	var change := Bond.change(e.db, b.creature, happening, e.setup.bond_gain if b.side == 0 else 1.0)
 	if change != 0:
 		e.emit({"type": BattleEvents.BOND, "bid": b.bid, "change": change, "bond": b.creature.bond,
 			"reason": happening})
@@ -70,6 +74,6 @@ func _award_xp_for(defeated: Battler) -> void:
 		defeated.creature.level, not e.setup.is_wild, bonus)
 	for p in e.sides[0].battlers:
 		if p.participated and p.alive():
-			var share := maxi(1, int(amount * Bond.xp_mult(e.db, p.creature)))
+			var share := maxi(1, int(amount * Bond.xp_mult(e.db, p.creature) * e.setup.xp_mult))
 			for ev in Progression.award_xp(e.db, p.creature, share, p.bid):
 				e.emit(ev)

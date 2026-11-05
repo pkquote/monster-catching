@@ -13,6 +13,10 @@ var xp_yield: int
 var learnset: Array
 ## Array of { level: int, affinity: String (or ""), default: bool, into: String }
 var growth: Array
+## Possible rolled passive ids (one is chosen per creature).
+var passives: PackedStringArray
+## Affinity track id -> passive id.
+var affinity_passives: Dictionary
 
 
 static func from_dict(d: Dictionary) -> CreatureDef:
@@ -38,6 +42,8 @@ static func from_dict(d: Dictionary) -> CreatureDef:
 			"default": g.get("default", false),
 			"into": g.into,
 		})
+	c.passives = PackedStringArray(d.passives)
+	c.affinity_passives = d.get("affinity_passives", {}).duplicate()
 	return c
 
 

@@ -370,3 +370,70 @@ func test_summary_reads_the_bag_of_the_save_it_is_given() -> void:
 	await get_tree().process_frame
 	assert_bool(s.menu.labels().has("Use a Reset Seed (you have 4)")).is_true()
 	s.close()
+
+
+## Every Label text on the screen (the page, the greyed lines under it).
+func _texts(s: SummaryScreen) -> Array:
+	return s.find_children("*", "Label", true, false).map(func(l: Label): return l.text)
+
+
+func _pup_with_passives(unlocked: bool) -> CreatureInstance:
+	var c := Story.give_creature("tidepup", 10)
+	c.passive = "tidal_heart"
+	if unlocked:
+		c.affinity_passive = "finisher"
+	return c
+
+
+func test_summary_shows_passives_and_switches() -> void:
+	var c := _pup_with_passives(true)
+	var s := await _open()
+	await get_tree().process_frame
+	assert_str(s.page_text()).contains("Passive: Tidal Heart — Water moves hit 20% harder.")
+	assert_bool(_texts(s).has("Finisher (not active)")).is_true()
+	await _assert_fits(s)
+	await _pick(s, "Use Finisher")
+	assert_str(c.active_passive).is_equal("affinity")
+	assert_str(s.page_text()).contains("Passive: Finisher — ")
+	assert_bool(_texts(s).has("Tidal Heart (not active)")).is_true()
+	assert_bool(s.menu.labels().has("Use Tidal Heart")).is_true()
+	# The switch is made on the save's own creature, so the next autosave carries it.
+	GameState.autosave()
+	var r := GameState.store.read(GameState.current_path)
+	assert_str(r.save.party[0].active_passive).is_equal("affinity")
+	await _pick(s, "Use Tidal Heart")
+	assert_str(c.active_passive).is_equal("rolled")
+
+
+func test_summary_locked_hint() -> void:
+	_pup_with_passives(false)
+	var s := await _open()
+	await get_tree().process_frame
+	assert_str(s.page_text()).contains("Passive: Tidal Heart — ")
+	var hint := "Affinity passive: unlocks when a track reaches %d" % DataRegistry.db.balance.growth_affinity_threshold
+	assert_bool(_texts(s).has(hint)).is_true()
+	for label in s.menu.labels():
+		assert_bool(label.begins_with("Use ")).is_false()
+
+
+## A creature in storage (not in the party), or one whose passives are missing or
+## unknown, can be shown without errors.
+func test_summary_of_a_stored_creature_with_odd_passives() -> void:
+	var save := GameState.current
+	var c := CreatureInstance.create(DataRegistry.db, "tidepup", 10)
+	c.passive = "no_such_passive"
+	c.affinity_passive = "finisher"
+	c.active_passive = "affinity"
+	save.storage.append(c)
+	var bare := CreatureInstance.create(DataRegistry.db, "emberkit", 5)
+	bare.passive = ""
+	save.storage.append(bare)
+	SummaryScreen.run(world, save.storage, 0, save)
+	await get_tree().process_frame
+	var s := _screen(SummaryScreen) as SummaryScreen
+	await get_tree().process_frame
+	assert_str(s.page_text()).contains("Passive: Finisher — ")
+	assert_bool(s.menu.labels().has("Use no_such_passive")).is_false()
+	await _pick(s, "Next creature")
+	assert_str(s.page_text()).contains("Passive: none")
+	s.close()

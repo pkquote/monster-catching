@@ -16,14 +16,15 @@ func _init(balance: BalanceDef, rng: RandomNumberGenerator) -> void:
 
 
 ## True when stepping onto this grass tile starts an encounter. Never with no
-## table (`table_id` "") or when the party has nobody who can fight.
-func on_grass_tile(table_id: String, can_fight: bool) -> bool:
+## table (`table_id` "") or when the party has nobody who can fight. `rate_mult` scales
+## the rate (the party lead's `encounter_rate` passive).
+func on_grass_tile(table_id: String, can_fight: bool, rate_mult := 1.0) -> bool:
 	if table_id == "" or not can_fight:
 		return false
 	if _grace > 0:
 		_grace -= 1
 		return false
-	return _rng.randf() < _rate
+	return _rng.randf() < _rate * rate_mult
 
 
 func start_grace() -> void:

@@ -1,0 +1,65 @@
+# Passives — handoff (rulings and deferred minors)
+
+## Rulings I made
+- Ruling: work in place on master, uncommitted — user rule "never commit" — cost if wrong: none.
+- Ruling A: T2's backfill fills only the rolled passive; T3 adds the Affinity unlock to backfill (and its test test_backfill_unlocks_highest_track_at_30 moves to T3) — keeps tasks in dependency order — cost if wrong: none.
+- Ruling B: T3 adds the PASSIVE_UNLOCKED event constant (BattleEvents.ALL) and its BattleText line; T5 adds PASSIVE_TRIGGERED — the emitting task owns its event — cost if wrong: none.
+- Ruling C: absorb_type stays registered on op_passive (a marker read by PassiveRules.absorbs); no op_absorb_type.gd — it is never run through run_effects — cost if wrong: none.
+- Task 1: Ruling: 19 passive definitions, not 20 — Tidal Heart is shared by Tidepup and Torrentusk (spec §6), so 15 unique rolled + 4 affinity; the plan's '20' miscounted — cost if wrong: none.
+- Task 4: Ruling: an aura's `when` is evaluated on the aura holder, not the receiving ally — spec §3 is silent; the holder's state is what the passive describes — cost if wrong: one-line change in effects_for.
+- Task 4: Ruling: `underdog` compares live standing on-field counts per side — spec "its side is outnumbered" — cost if wrong: count bench too, small change.
+- Task 5: Ruling: faint/knockout triggers do not fire when that faint decides the battle — Review Focus 2 "never after the battle is over"; the result is already settled — cost if wrong: drop the defeated() guard in check_faints.
+- Task 5: Ruling: speed ties for enter/round_end triggers break by battler id, not RNG — keeps existing RNG sequences stable — cost if wrong: small, order of tied triggers.
+- Task 5: Ruling: added DataSchemas.TRIGGER_TARGETS and a validator trigger rule so trigger effects may target "attacker" — spec §3.2 requires it — cost if wrong: none.
+- Task 6: Ruling: scrap_power and reaction_power apply in BattleMath.damage (not ActionRunner/FieldRules) — AI estimates and lash-out Scrap then match real damage — cost if wrong: move two multipliers.
+- Task 6: Ruling: shelter skips reaction damage in op_damage via FieldRules.reaction_shelter, and emits PASSIVE_TRIGGERED when it blocks — one choke point for reaction damage — cost if wrong: an extra banner.
+- Task 6: Ruling: unused FieldRules.side_passives removed — dead after the effects_for-aware variant — cost if wrong: none.
+- Task 7: Ruling: BattleLauncher.wild_setup now takes db first (needs the lead's passive def); all callers updated — cost if wrong: none.
+- Task 7: Ruling: Bond scaling via optional gain_mult on Bond.change/Bond.rest (files outside the brief) — single place gains are computed — cost if wrong: none.
+- Task 7: Ruling: test_grass_starts_a_wild_battle sets passive = "" — its Tidepup could roll an encounter_rate passive, making it flaky (Review Focus 1) — cost if wrong: none.
+- Task 9: Ruling: test_set_active_refuses_locked lives in tests/progress/test_passives.gd (it tests core) — cost if wrong: none.
+- Task 9: Ruling: unlock screen adds the line "Only one passive is active at a time. You can switch later from the Summary." — spec gives no body copy beyond both passives; tells the player the choice is reversible — cost if wrong: a copy edit.
+- Task 10: Ruling: Set passive page offers "(none)" so a slot can be emptied; emptying the active slot is allowed and leaves no active passive (no auto-switch) — debug tool, by design sets anything — cost if wrong: small page tweak.
+- Task 11: Ruling: the tour opens PassiveUnlockScreen directly after the debug Set Affinity unlock (the debug path does not run the after-battle flow) — cost if wrong: none, tests cover the flow.
+- Final: Ruling: Important 1 is fixed by awarding no Affinity for actions whose source is a passive (EffectContext source "passive" / PassiveRules depth > 0); Bond and other rewards unchanged — Affinity is meant to reflect the player's choices, and absorb heals already earn nothing — cost if wrong: re-enable by deleting one guard.
+- Final: Ruling: Important 2 is fixed by skipping a trigger (no banner, no effects) when every effect would do nothing (heal at full HP, restore_energy at full energy) — cost if wrong: banner returns at full HP.
+- Final: Ruling: a passive's damage no longer earns the victim hit_survived Warden (all awards blocked while a trigger runs) — consistent with "passives earn no Affinity" — cost if wrong: narrow the guard to the holder.
+
+## Deferred minors
+- Task 1: minor (deferred): only 3 of 19 passives have content assertions (table-driven test would catch drift); blank line in core.json. (Reviewer's Kindling 0.34 note is wrong: 1/3 < 0.34 qualifies.)
+- Task 2: minor (deferred→T3): no end-to-end load_from test of passive backfill for storage + unknown species — handed to Task 3 (it extends backfill)
+- Task 2: minor (deferred): fixed tamer passive not validated against the species' list; tools/simulate.gd uses first-passive default
+- Task 3: minor (deferred): Passives.backfill tries only the single highest track at 30+, not each in descending order.
+- Task 3: minor (deferred): Passives.carry_over maps a rolled passive missing from the old species list to index 0 (idx -1 clamps).
+- Task 3: minor (deferred): the save-store v3->v4 test was written with no RED run recorded.
+- Task 4: minor (deferred): cross-source stacking (own incoming_type_mod + aura, passive + status/field of same op) not tested.
+- Task 4: minor (deferred): aura-when-on-holder ruling has no pinning test.
+- Task 4: minor (deferred): when_holds treats any non-"own" side as enemy (validator enum guards it).
+- Task 5: minor (deferred): knockout credit uses last_hit_by, so tick faints credit a stale attacker; faint-trigger creature effects could land on a benched attacker (no shipped content).
+- Task 5: minor (deferred): absorb banner names the target's own passive (wrong if an aura ever carries absorb_type).
+- Task 5: minor (deferred): an absorbed move's secondary effects still land on the absorber (same as existing immunity behaviour).
+- Task 5: minor (deferred): absorb at full HP emits PASSIVE_TRIGGERED + HEAL 0.
+- Task 5: minor (deferred): no test that a chance-less trigger consumes no RNG, that "attacker" is rejected outside triggers, or the 2v2 faint-decides-battle case.
+- Task 5: minor (deferred): replace() may emit a stray UNDERDOG after BATTLE_END when the replace decides the battle.
+- Task 5: minor (deferred): a foe on an auto-replace side KO'd during the player's replace() is refilled only at the next round end (existing refill timing).
+- Task 6: minor (deferred): no test for a status blocked inside a trigger's effects (two banners, no STATUS_APPLIED).
+- Task 6: minor (deferred): guard tests miss foe raises and same-side ally drops; aura test covers status+guard only.
+- Task 6: minor (deferred): battle AI ignores protection passives (values burns into fireproof, drops into guard, sheltered states).
+- Task 6: minor (deferred): passives_for calls shelters (full _collect) per field state on every passives() call — fine at current scale.
+- Task 7: minor (deferred): encounter-rate test only checks 1..39 of 40 rolled; could pin a seeded count.
+- Task 7: minor (deferred): no test that rate_mult 0 still draws one randf per tile, or that foe-side Bond stays unscaled.
+- Task 8: minor (deferred): two passive banners on the same creature within ~1.1s overprint at the same spot (banner lives 1.12s, playback waits 0.4s).
+- Task 8: minor (deferred): BattleText dereferences db.passive(ev.passive).name without a null guard (validator prevents bad ids).
+- Task 8: minor (deferred): command-title "fits" test checks the label rect, not text width; affinity-active title untested.
+- Task 9: minor (deferred): ScreenFit checks use short descriptions only; the longest pair (~110 chars each) is untested (screen scrolls, not clips).
+- Task 9: minor (deferred): set_active accepts a slot holding an unknown id; unlock screen shows an empty "New:" line for an unknown affinity id.
+- Task 9: minor (deferred): test_party_lead_passive_line leaves its last screen open.
+- Task 10: minor (deferred): Set passive page writes the slot and autosaves before reporting a "can't make empty slot active" refusal.
+- Task 10: minor (deferred): refresh_world() not asserted; tests pick drop-downs by position.
+- Final: minor (deferred): battle-engine.md:238 and battle_engine.gd:20 say "three parts" but list four.
+- Final: minor (deferred): start() does not refill/offer replacement after an entry-trigger KO at battle start (unreachable with shipped content).
+- Final: minor (deferred): Guardian Aura copy says "take 10% less damage" but damage_fraction ticks are not reduced.
+- Final: minor (deferred): Passives.backfill runs on every load, so a slot emptied with debug "(none)" refills on next load.
+- Final: minor (deferred): PassiveUnlockScreen "Current:" shows c.passive, not active_id (only reachable via debug/hand-edited saves).
+- Final: minor (deferred): foes can emit PASSIVE_UNLOCKED ("Wild X awakened Y!") in long battles.
+- Final: minor (deferred): an unlock-only entry for a creature already growth-ready re-shows the Grow prompt.

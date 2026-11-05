@@ -11,6 +11,9 @@ var tamer_id := ""
 var foe_name := ""
 ## Side 0 earns XP from knockouts. Off for simulations and exhibition battles.
 var award_xp := true
+## Side 0's XP and Bond-gain multipliers (the party lead's overworld passive).
+var xp_mult := 1.0
+var bond_gain := 1.0
 
 
 func add_side(party: Array, max_active: int, field_count: int = -1, items: Dictionary = {},
@@ -40,14 +43,19 @@ static func wild(player_party: Array, wild_pack: Array, player_field_count: int 
 
 
 ## Player vs an NPC tamer from data. The tamer's max_active sets the format.
+## Party entries without a fixed `passive` roll theirs with `rng`.
 static func vs_tamer(db: Database, player_party: Array, tamer_id_: String,
-		player_field_count: int = -1, player_items: Dictionary = {}) -> BattleSetup:
+		player_field_count: int = -1, player_items: Dictionary = {},
+		rng: RandomNumberGenerator = null) -> BattleSetup:
 	var t := db.tamer(tamer_id_)
 	var s := BattleSetup.new()
 	s.tamer_id = tamer_id_
 	var party: Array = []
 	for p in t.party:
-		party.append(CreatureInstance.create(db, p.species, p.level, p.moves))
+		var c := CreatureInstance.create(db, p.species, p.level, p.moves, rng)
+		if not p.passive.is_empty():
+			c.passive = p.passive
+		party.append(c)
 	var bag := {}
 	for it in t.items:
 		bag[it.item] = it.count

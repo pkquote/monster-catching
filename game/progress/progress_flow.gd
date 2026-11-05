@@ -1,7 +1,8 @@
 class_name ProgressFlow
 extends RefCounted
-## The after-battle step: for each creature that levelled, a Learn Move screen
-## per offered move, then the Grow screen if it is ready.
+## The after-battle step: for each creature in the battle's progress, a Learn Move
+## screen per offered move, the Passive Unlocked screen if it unlocked one, then the
+## Grow screen if it is ready.
 
 
 static func run(parent: Node, progress: Array[ProgressEntry]) -> void:
@@ -9,5 +10,7 @@ static func run(parent: Node, progress: Array[ProgressEntry]) -> void:
 		var c: CreatureInstance = entry.creature
 		for move in entry.offered_moves:
 			await LearnMoveScreen.run(parent, c, move)
+		if entry.unlocked_passive != "":
+			await PassiveUnlockScreen.run(parent, c)
 		if entry.growth_due:
 			await GrowScreen.run(parent, c)

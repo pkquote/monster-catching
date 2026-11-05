@@ -1,14 +1,15 @@
 # Monster Catching Game
 
 A top-down monster-catching RPG in Godot 4.7 (typed GDScript). Its signature mechanics are
-field states with combo reactions, behavior-shaped growth, and N-vs-M battles with Underdog compensation.
+field states with combo reactions, behavior-shaped growth, N-vs-M battles with Underdog compensation,
+and creature passives (a rolled passive for life plus one unlocked through Affinity; one is active at a time).
 
 Design spec: [documentation/specs/2026-11-03-monster-rpg-design.md](documentation/specs/2026-11-03-monster-rpg-design.md)
 
-Content reference (every creature, move, item, status, field state, reaction, tamer and encounter):
+Content reference (every creature, move, item, status, field state, reaction, passive, tamer and encounter):
 [documentation/compendium.md](documentation/compendium.md). It is generated from `data/`, so don't edit it by hand.
 
-Battle engine reference (API, round order, formulas, events, AI):
+Battle engine reference (API, round order, formulas, passives and their triggers, events, AI):
 [documentation/battle-engine.md](documentation/battle-engine.md)
 
 Building maps (painting tiles, placing doors, NPCs, items, tamers, triggers; checking them):
@@ -19,14 +20,14 @@ Building maps (painting tiles, placing doors, NPCs, items, tamers, triggers; che
 | Folder | Contents |
 |---|---|
 | `core/data/` | JSON loader, schemas, validator, typed definitions. |
-| `core/progress/` | Creature instances, stat/XP formulas, Affinity and growth. |
+| `core/progress/` | Creature instances, stat/XP formulas, Affinity and growth, passives (rolling, unlocking, the active slot). |
 | `core/battle/` | Headless battle engine, effect ops, AI. |
 | `core/` | All of `core/` is pure game logic. It never touches nodes, scenes, or autoloads. |
 | `core/save/`, `core/settings/` | Save format and file store; settings model and input bindings. |
 | `core/story/`, `core/world/`, `core/minigames/` | Story state; overworld rules (encounters, sight lines, shop, defeat, map checks); minigame rules. |
 | `game/` | Scenes and autoloads that present `core/`: splash, menus, overworld, battle, `SceneRouter`, `GameState`, `Story`, `Cutscene`, `Settings`, `DebugMenu`. |
 | `game/maps/` | One scene per map (built in the Godot editor; see the map-building guide). |
-| `data/` | All content as JSON (creatures, moves, items, tamers, encounters, ...). |
+| `data/` | All content as JSON (creatures, moves, items, passives, tamers, encounters, ...). |
 | `dialogue/` | Dialogue Manager `.dialogue` files for conversations and cutscenes. |
 | `tests/` | gdUnit4 suites. |
 | `tools/` | Data validator, dialogue checker, map checker, map builder, tileset generator, compendium generator, battle simulator. |
@@ -37,8 +38,8 @@ Building maps (painting tiles, placing doors, NPCs, items, tamers, triggers; che
 Press F5 in the editor (or run the project). The game boots to a splash screen, then the title
 menu: Resume, New Game, Load Game, Settings, Quit. A new game starts at home in Fernmoor Town; walk
 out to meet the professor and pick a starter. Arrow keys / WASD move, Shift runs, Z / Enter talks and
-confirms, C / Tab opens the menu (Party, Bag, Save, Settings, Quit). Party shows each creature's Summary (stats, moves, training), lets you reorder the team and, outside unsafe areas, reach the creature box; storage boxes in buildings do the same. Press **F1** on any screen (debug
-builds only) for the debug tools: **Get test party**, **Heal party**, **Give XP**, **Set Affinity**, **Fill box**, and test battles (wild Route 1,
+confirms, C / Tab opens the menu (Party, Bag, Save, Settings, Quit). Party shows each creature's Summary (stats and passives, with a **Use …** option that switches the active one; moves; training), lets you reorder the team and, outside unsafe areas, reach the creature box; storage boxes in buildings do the same. Press **F1** on any screen (debug
+builds only) for the debug tools: **Get test party**, **Heal party**, **Give XP**, **Set Affinity** (also unlocks the Affinity passive), **Set passive** (any passive in either slot), **Fill box**, and test battles (wild Route 1,
 Scout Ana 1v1, Rival 2v2, and a **Custom battle** panel for any format up to 3v3, such as 1v3 or 3v1). Player data lives in Godot's user folder
 (`%APPDATA%/Godot/app_userdata/Monster Catching Game/` on Windows):
 

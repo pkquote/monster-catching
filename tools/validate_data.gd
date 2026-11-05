@@ -8,9 +8,9 @@ func _init() -> void:
 	var result := DataLoader.load_database("res://data", "res://dialogue")
 	if result.ok():
 		var db := result.db
-		print("Data OK: %d creatures, %d moves, %d items, %d tamers, %d encounters, %d field states, %d reactions" % [
+		print("Data OK: %d creatures, %d moves, %d items, %d tamers, %d encounters, %d field states, %d reactions, %d passives" % [
 			db.count("creatures"), db.count("moves"), db.count("items"), db.count("tamers"),
-			db.count("encounters"), db.count("field_states"), db.count("reactions")])
+			db.count("encounters"), db.count("field_states"), db.count("reactions"), db.count("passives")])
 		quit(0)
 	else:
 		for e in result.errors:

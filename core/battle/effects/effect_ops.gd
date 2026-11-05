@@ -24,6 +24,19 @@ static func get_op(op: String) -> EffectOp:
 			"incoming_type_mod": preload("op_passive.gd").new(),
 			"skip_chance": preload("op_passive.gd").new(),
 			"reset_training": preload("op_passive.gd").new(),
+			"type_power": preload("op_passive.gd").new(),
+			"absorb_type": preload("op_passive.gd").new(),
+			"status_immune": preload("op_passive.gd").new(),
+			"guard_stages": preload("op_passive.gd").new(),
+			"field_shelter": preload("op_passive.gd").new(),
+			"field_boost": preload("op_passive.gd").new(),
+			"reaction_power": preload("op_passive.gd").new(),
+			"energy_discount": preload("op_passive.gd").new(),
+			"rest_bonus": preload("op_passive.gd").new(),
+			"scrap_power": preload("op_passive.gd").new(),
+			"encounter_rate": preload("op_passive.gd").new(),
+			"xp_mult": preload("op_passive.gd").new(),
+			"bond_gain": preload("op_passive.gd").new(),
 		}
 	return _registry.get(op)
 

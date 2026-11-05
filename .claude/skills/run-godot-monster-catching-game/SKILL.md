@@ -79,6 +79,19 @@ Menu choices use `pick_menu(label)` (`CommandMenu.pick_label`); tabs use real Le
 timeout 300 "$GODOT" --path . --script res://.claude/skills/run-godot-monster-catching-game/driver.gd -- --mode=progress --out="$TMPDIR/progress_shots" 2>&1 | grep "\[driver\]"
 ```
 
+Passives tour: new game → F1 → Get test party → Set passive... (Tidepup's Rolled slot = Undertow, made
+active) → a wild battle against a level-5 Pebblet, opened with `router.goto(...)` and seed 7, where
+Undertow's entry trigger shows the "Tidepup's Undertow!" banner and soaks the foe side → back to the
+world → Set Affinity (Striker), which unlocks Finisher → the Passive Unlocked screen (Keep current) →
+Menu → Party → Tidepup → Summary (Stats shows both passives) → Use Finisher. It checks 14 expectations
+and takes about 10 s. The banner fades on its own, so the tour polls `last_passive_banner` every frame
+and screenshots it once it is fully shown. The Passive Unlocked screen normally appears after a battle;
+the tour calls `PassiveUnlockScreen.run(ow, creature, db)` directly after the debug unlock.
+
+```bash
+timeout 240 "$GODOT" --path . --script res://.claude/skills/run-godot-monster-catching-game/driver.gd -- --mode=passives --out="$TMPDIR/passives_shots" 2>&1 | grep "\[driver\]"
+```
+
 Screenshot a single scene:
 
 ```bash
@@ -91,10 +104,12 @@ timeout 60 "$GODOT" --path . --script res://.claude/skills/run-godot-monster-cat
 | `--mode=battle` | the battle tour above (`b00_…` to `b13_…` screenshots) |
 | `--mode=overworld` | the overworld tour above (`o01_…` to `o16_…` screenshots) |
 | `--mode=progress` | the progress tour above (`p01_…` to `p21_…` screenshots) |
+| `--mode=passives` | the passives tour above (`x01_…` to `x08_…` screenshots) |
 | `--mode=scene` | open `--scene` (default: main scene), wait `--frames` (default 60), screenshot |
 | `--out=<dir>` | screenshot folder; `user://` paths allowed (default `user://run_shots`) |
 
-Each tour is its own file in `tours/` (`frontend.gd`, `battle.gd`, `overworld.gd`, `progress.gd`):
+Each tour is its own file in `tours/` (`frontend.gd`, `battle.gd`, `overworld.gd`, `progress.gd`,
+`passives.gd`):
 a `RefCounted` with `var d` (the driver) and `func run()`. To drive a new flow, add
 `tours/<name>.gd`, add `<name>` to the `match` in `driver.gd`'s `_initialize`, and call the
 driver's helpers through `d.`: `wait_scene(name, max_frames)`,
@@ -120,7 +135,7 @@ bash scripts/check.sh
 ```
 
 This validates the JSON content, compiles the dialogue, runs every gdUnit4 suite and regenerates
-`documentation/compendium.md`. Expected: `All checks passed.` with 49 `Statistics:` lines, all
+`documentation/compendium.md`. Expected: `All checks passed.` with 58 `Statistics:` lines, all
 `PASSED`.
 
 ## Gotchas

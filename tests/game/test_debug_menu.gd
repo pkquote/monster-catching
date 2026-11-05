@@ -108,6 +108,108 @@ func test_set_affinity_steers_growth() -> void:
 	WorldTest.close(world)
 
 
+## The page's drop-downs in tree order: creature, then (on the passive page) passive and slot.
+func _options() -> Array[Node]:
+	return DebugMenu.find_children("*", "OptionButton", true, false)
+
+
+func _status_text() -> String:
+	return DebugMenu._status.text
+
+
+func test_set_affinity_unlocks_passive() -> void:
+	var db := DataRegistry.db
+	var c := CreatureInstance.create(db, "tidepup", 9)
+	var world := await _open_world_with(c)
+	DebugMenu.open()
+	_labels()["Set Affinity..."].pressed.emit()
+	await get_tree().process_frame
+	_labels()[db.affinity("warden").name].pressed.emit()
+	await get_tree().process_frame
+	assert_str(c.affinity_passive).is_equal("guardian_aura")
+	assert_str(_status_text()).contains(db.passive("guardian_aura").name)
+	# Already unlocked: a second track leaves the slot alone.
+	_labels()["Set Affinity..."].pressed.emit()
+	await get_tree().process_frame
+	_labels()[db.affinity("striker").name].pressed.emit()
+	await get_tree().process_frame
+	assert_str(c.affinity_passive).is_equal("guardian_aura")
+	DebugMenu.close()
+	WorldTest.close(world)
+
+
+## Opens the Set passive page and applies `passive_id` ("" = none) to `slot`.
+func _apply_passive(passive_id: String, slot: int, make_active: bool) -> void:
+	_labels()["Set passive..."].pressed.emit()
+	await get_tree().process_frame
+	var ids := DataRegistry.db.ids("passives")
+	var opts := _options()
+	opts[1].selected = ids.size() if passive_id == "" else ids.find(passive_id)
+	opts[2].selected = slot
+	(_labels()["Make active"] as CheckBox).button_pressed = make_active
+	_labels()["Apply"].pressed.emit()
+	await get_tree().process_frame
+
+
+func test_set_passive_page_sets_slot_and_active() -> void:
+	var db := DataRegistry.db
+	var c := CreatureInstance.create(db, "tidepup", 9)
+	var world := await _open_world_with(c)
+	DebugMenu.open()
+	await _apply_passive("sturdy", 1, true)
+	assert_str(c.affinity_passive).is_equal("sturdy")
+	assert_str(c.active_passive).is_equal(Passives.SLOT_AFFINITY)
+	assert_str(Passives.active_id(c)).is_equal("sturdy")
+	assert_str(_status_text()).contains(db.passive("sturdy").name)
+	await _apply_passive("kindling", 0, false)
+	assert_str(c.passive).is_equal("kindling")
+	assert_str(c.active_passive).is_equal(Passives.SLOT_AFFINITY)
+	var r := GameState.store.read(GameState.current_path)
+	assert_bool(r.ok).is_true()
+	assert_str(r.save.party[0].passive).is_equal("kindling")
+	assert_str(r.save.party[0].affinity_passive).is_equal("sturdy")
+	DebugMenu.close()
+	WorldTest.close(world)
+
+
+func test_set_passive_page_refuses_to_activate_an_empty_slot() -> void:
+	var c := CreatureInstance.create(DataRegistry.db, "tidepup", 9)
+	var world := await _open_world_with(c)
+	DebugMenu.open()
+	await _apply_passive("", 1, true)
+	assert_str(c.affinity_passive).is_empty()
+	assert_str(c.active_passive).is_equal(Passives.SLOT_ROLLED)
+	assert_str(_status_text()).contains("empty")
+	assert_bool(DebugMenu.is_open()).is_true()
+	DebugMenu.close()
+	WorldTest.close(world)
+
+
+## Any id may go in the Affinity slot; it counts as the unlock and survives growth.
+func test_debug_affinity_passive_keeps_progress_working() -> void:
+	var db := DataRegistry.db
+	var c := CreatureInstance.create(db, "tidepup", 15)
+	var world := await _open_world_with(c)
+	DebugMenu.open()
+	await _apply_passive("sturdy", 1, true)
+	_labels()["Set Affinity..."].pressed.emit()
+	await get_tree().process_frame
+	_labels()[db.affinity("catalyst").name].pressed.emit()
+	await get_tree().process_frame
+	assert_str(c.affinity_passive).is_equal("sturdy")
+	var before := c.level
+	Progression.award_xp(db, c, Stats.xp_for_level(16) - c.xp)
+	var entry := Progression.progress_entry(db, c, before, "sturdy")
+	assert_object(entry).is_not_null()
+	assert_str(entry.unlocked_passive).is_empty()
+	Progression.apply_growth(db, c, Progression.growth_target(db, c))
+	assert_str(c.species).is_equal("mistcoil")
+	assert_str(c.affinity_passive).is_equal("sturdy")
+	assert_str(Passives.active_id(c)).is_equal("sturdy")
+	DebugMenu.close()
+	WorldTest.close(world)
+
+
 func test_fill_box_adds_12() -> void:
 	var c := CreatureInstance.create(DataRegistry.db, "tidepup", 9)
 	var world := await _open_world_with(c)
@@ -154,7 +256,7 @@ func test_progress_tools_disabled_without_a_party() -> void:
 	var world := await WorldTest.open(self, "", "", WorldTest.KEEP_GAME)
 	DebugMenu.open()
 	var buttons := _labels()
-	for b in ["Give XP...", "Set Affinity..."]:
+	for b in ["Give XP...", "Set Affinity...", "Set passive..."]:
 		assert_bool(buttons[b].disabled).override_failure_message(b).is_true()
 	assert_bool(buttons["Fill box"].disabled).is_false()
 	DebugMenu.close()

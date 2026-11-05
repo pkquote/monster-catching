@@ -39,7 +39,7 @@ func test_area_overrides_default() -> void:
 
 
 func test_grass_starts_a_wild_battle() -> void:
-	Story.give_creature("tidepup", 5)
+	Story.give_creature("tidepup", 5).passive = ""  # a rolled Undertow would lower the rate
 	_enter(Vector2i(6, 6))
 	assert_array(started).is_equal(["route_01_grass"])
 	_enter(Vector2i(5, 6))  # plain grass: nothing
@@ -68,3 +68,21 @@ func test_walking_restores_energy() -> void:
 	for i in 8:
 		_enter(Vector2i(1 + i % 2, 5))  # plain grass, alternating tiles
 	assert_int(c.energy).is_equal(1)
+
+
+func test_lead_passive_scales_the_encounter_rate() -> void:
+	Story.give_creature("tidepup", 5).passive = "undertow"  # encounters x0.8
+	Story.give_creature("emberkit", 5).passive = ""
+	world.rng.seed = 5
+	for i in 40:
+		_enter(Vector2i(6, 6))
+	assert_int(started.size()).is_greater(0)
+	assert_int(started.size()).is_less(40)
+
+
+func test_non_lead_passive_leaves_the_rate_alone() -> void:
+	Story.give_creature("emberkit", 5).passive = ""
+	Story.give_creature("tidepup", 5).passive = "undertow"
+	for i in 40:
+		_enter(Vector2i(6, 6))
+	assert_int(started.size()).is_equal(40)

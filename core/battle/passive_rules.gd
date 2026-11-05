@@ -1,0 +1,246 @@
+class_name PassiveRules
+extends BattlePart
+## Creature passives in battle: the always-on effects a battler gets from its own active
+## passive and from allied auras (scope "allies"), and its triggers (enter, hit, round_end,
+## knockout, faint). Only creatures on the field and standing contribute, receive or fire
+## anything (a faint trigger fires as its creature goes down).
+##
+## Effects run by a trigger never set off further triggers: while one runs (_depth > 0),
+## fire() does nothing, and a creature it knocks out fires no faint or knockout triggers.
+## They earn no Affinity either (see running()).
+
+## Who a trigger's effects land on when an effect has no "target" of its own.
+const DEFAULT_TARGET := {"enter": "self", "hit": "attacker", "round_end": "self",
+	"knockout": "self", "faint": "attacker"}
+
+var _depth := 0
+## bids knocked out by a trigger's effects (their faint fires no triggers).
+var _silenced := {}
+
+
+## True while a trigger's effects run. Nothing earns Affinity then (BattleRewards.award).
+func running() -> bool:
+	return _depth > 0
+
+
+## Always-on effects currently on `b`: its active passive's effects whose `when` holds,
+## plus the effects of every allied aura on the field (`b` included), each passive id
+## counted once. Empty for a fainted or benched battler.
+func effects_for(b: Battler) -> Array:
+	var out: Array = []
+	_collect(b, out, [])
+	return out
+
+
+func _collect(b: Battler, out: Array, holders: Array) -> void:
+	if not b.active or not b.alive():
+		return
+	var e := engine
+	var seen := {}
+	var own_id := Passives.active_id(b.creature)
+	var own := e.db.passive(own_id) if own_id != "" else null
+	if own != null:
+		seen[own_id] = true
+		_append_holding(out, holders, b, own.effects)
+	for ally in e.sides[b.side].active():
+		var pid := Passives.active_id(ally.creature)
+		if pid == "" or seen.has(pid):
+			continue
+		var def := e.db.passive(pid)
+		if def == null or def.scope != "allies":
+			continue
+		seen[pid] = true
+		# An aura's conditions are read from the creature that carries it.
+		_append_holding(out, holders, ally, def.effects)
+
+
+## Runs each of `b`'s active passive's triggers for `on`. `attacker` is the creature that
+## set it off (the hitter for hit, the foe knocked out for knockout, the killer for faint);
+## `contact` is true for physical moves (hit triggers with "contact" need it).
+func fire(b: Battler, on: String, attacker: Battler = null, contact := false) -> void:
+	var e := engine
+	if _depth > 0 or e.is_over():
+		return
+	if on != "faint" and (not b.active or not b.alive()):
+		return
+	var pid := Passives.active_id(b.creature)
+	var def := e.db.passive(pid) if pid != "" else null
+	if def == null:
+		return
+	for t: Dictionary in def.triggers:
+		if t.on != on or (t.contact and not contact):
+			continue
+		if int(t.chance) < 100 and e.rng.randi_range(1, 100) > int(t.chance):
+			continue
+		var ctx := EffectContext.new()
+		ctx.engine = e
+		ctx.user = b
+		ctx.source = "passive"
+		ctx.attacker = attacker
+		ctx.target_side = b.side
+		var target: Battler = attacker if DEFAULT_TARGET[on] == "attacker" else b
+		if target != null:
+			ctx.targets.append(target)
+		if _does_nothing(ctx, t.effects):
+			continue
+		e.emit({"type": BattleEvents.PASSIVE_TRIGGERED, "bid": b.bid, "passive": pid})
+		_depth += 1
+		e.run_effects(ctx, t.effects)
+		_depth -= 1
+
+
+## True when every effect would change nothing: only heals on creatures at full HP and
+## energy restores on creatures at full energy. Such a trigger is skipped (no banner).
+func _does_nothing(ctx: EffectContext, effects: Array) -> bool:
+	var e := engine
+	for eff: Dictionary in effects:
+		if eff.op != "heal" and eff.op != "restore_energy":
+			return false
+		var targets: Array[Battler] = e._effect_targets(ctx, eff.target) if eff.has("target") else ctx.targets
+		for t in targets:
+			if not t.alive():
+				continue
+			if eff.op == "heal" and t.hp() < t.creature.max_hp(e.db):
+				return false
+			if eff.op == "restore_energy" and t.energy() < t.creature.max_energy(e.db):
+				return false
+	return true
+
+
+## `b` just fainted (`killer` knocked it out, or null): its faint triggers, then the
+## killer's knockout triggers, unless a trigger's effects did the knocking out.
+func on_faint(b: Battler, killer: Battler) -> void:
+	if _silenced.erase(b.bid):
+		return
+	fire(b, "faint", killer)
+	if killer != null:
+		fire(killer, "knockout", b)
+
+
+## `target` took damage. A knockout from a trigger's effects is remembered so it
+## sets off nothing (see on_faint).
+func note_damage(target: Battler) -> void:
+	if _depth > 0 and target.hp() <= 0:
+		_silenced[target.bid] = true
+
+
+## The share of max HP that damage of `type` heals `target` instead (absorb_type), or 0.
+func absorbs(target: Battler, type: String) -> float:
+	var best := 0.0
+	for eff: Dictionary in effects_for(target):
+		if eff.op == "absorb_type" and eff.type == type:
+			best = maxf(best, float(eff.fraction))
+	return best
+
+
+# --- Protection (each returns the creature whose passive protects `b`, or null) ---
+
+## status_immune: `status_id` can't be inflicted on `b`.
+func status_blocker(b: Battler, status_id: String) -> Battler:
+	return _source(b, func(eff): return eff.op == "status_immune" and eff.get("status", status_id) == status_id)
+
+
+func blocks_status(b: Battler, status_id: String) -> bool:
+	return status_blocker(b, status_id) != null
+
+
+## guard_stages: `by` (a foe) can't lower `b`'s `stat`. Its own side still can.
+func stage_guard(b: Battler, stat: String, by: Battler) -> Battler:
+	if by == null or by.side == b.side:
+		return null
+	return _source(b, func(eff): return eff.op == "guard_stages" and eff.get("stat", stat) == stat)
+
+
+func guards_stage(b: Battler, stat: String, by: Battler) -> bool:
+	return stage_guard(b, stat, by) != null
+
+
+## field_shelter: `state_id`'s passives skip `b`, and its reactions don't damage it.
+func shelter(b: Battler, state_id: String) -> Battler:
+	return _source(b, func(eff): return eff.op == "field_shelter" and eff.state == state_id)
+
+
+func shelters(b: Battler, state_id: String) -> bool:
+	return shelter(b, state_id) != null
+
+
+# --- Game-specific ---
+
+## field_boost: extra (stacks, turns) on every field state `b` applies.
+func field_boost(b: Battler) -> Vector2i:
+	var out := Vector2i.ZERO
+	for eff: Dictionary in effects_for(b):
+		if eff.op == "field_boost":
+			out += Vector2i(int(eff.get("stacks", 0)), int(eff.get("turns", 0)))
+	return out
+
+
+## reaction_power: damage multiplier for reactions `b` triggers.
+func reaction_mult(b: Battler) -> float:
+	return _product(b, "reaction_power")
+
+
+## The energy `move` costs `b`: its cost minus energy_discount (all moves, or the move's
+## type), never below 0. Used to pay for moves and to decide which ones it can afford.
+func move_cost(b: Battler, move: MoveDef) -> int:
+	var discount := 0
+	for eff: Dictionary in effects_for(b):
+		if eff.op == "energy_discount" and eff.get("type", move.type) == move.type:
+			discount += int(eff.amount)
+	return maxi(0, move.cost - discount)
+
+
+## rest_bonus: extra share of max energy that Rest restores.
+func rest_bonus(b: Battler) -> float:
+	var out := 0.0
+	for eff: Dictionary in effects_for(b):
+		if eff.op == "rest_bonus":
+			out += float(eff.fraction)
+	return out
+
+
+## scrap_power: damage multiplier for `b`'s Scrap.
+func scrap_mult(b: Battler) -> float:
+	return _product(b, "scrap_power")
+
+
+func _product(b: Battler, op: String) -> float:
+	var out := 1.0
+	for eff: Dictionary in effects_for(b):
+		if eff.op == op:
+			out *= float(eff.mult)
+	return out
+
+
+## True while every key of `when` holds for `b` (an empty `when` always holds).
+func when_holds(b: Battler, when: Dictionary) -> bool:
+	var e := engine
+	if when.has("hp_below") and float(b.hp()) >= float(when.hp_below) * float(b.creature.max_hp(e.db)):
+		return false
+	if when.get("underdog", false) \
+			and e.sides[1 - b.side].active().size() <= e.sides[b.side].active().size():
+		return false
+	if when.has("field"):
+		var side := b.side if when.get("side", "own") == "own" else 1 - b.side
+		if not e.sides[side].field.has(when.field):
+			return false
+	return true
+
+
+func _append_holding(out: Array, holders: Array, holder: Battler, effects: Array) -> void:
+	for eff: Dictionary in effects:
+		if when_holds(holder, eff.get("when", {})):
+			out.append(eff)
+			holders.append(holder)
+
+
+## The creature whose passive gives `b` the first effect matching `pred` (`b` itself, or
+## an aura holder), or null.
+func _source(b: Battler, pred: Callable) -> Battler:
+	var effs: Array = []
+	var holders: Array = []
+	_collect(b, effs, holders)
+	for i in effs.size():
+		if pred.call(effs[i]):
+			return holders[i]
+	return null

@@ -62,3 +62,8 @@ func test_every_event_from_real_battles_describes_without_error() -> void:
 			if not ev.type in BattleText.SILENT and ev.type in ["move_used", "faint", "send_out", "battle_end"]:
 				assert_str(text).is_not_empty()
 	assert_bool(seen.has("move_used") and seen.has("faint") and seen.has("battle_end")).is_true()
+
+
+func test_passive_text_lines() -> void:
+	assert_str(_say({"type": "passive_triggered", "bid": 1, "passive": "steady"})).is_equal("B1's Steady!")
+	assert_str(_say({"type": "passive_unlocked", "bid": 1, "passive": "steady"})).is_equal("B1 awakened Steady!")

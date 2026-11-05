@@ -1,6 +1,6 @@
 class_name DebugAffinityPage
 extends DebugPage
-## Pick a party creature, then the Affinity track to push to the front.
+## Pick a party creature, then the Affinity track to push to the front (unlocking its passive).
 
 
 func title() -> String:
@@ -25,5 +25,9 @@ func _set_affinity(index: int, track: String) -> void:
 		if a != track:
 			value = maxi(value, int(c.affinity.get(a, 0)) + 10)
 	c.affinity[track] = value
+	var text := "%s: %s is now %d." % [c.display_name(db), db.affinity(track).name, value]
+	var unlocked := Passives.try_unlock(db, c, track)  # as reaching the threshold in battle would
+	if unlocked != "":
+		text += " Unlocked %s." % db.passive(unlocked).name
 	GameState.autosave()
-	menu.show_page(DebugMainPage.new(), "%s: %s is now %d." % [c.display_name(db), db.affinity(track).name, value])
+	menu.show_page(DebugMainPage.new(), text)

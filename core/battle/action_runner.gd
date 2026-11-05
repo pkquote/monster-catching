@@ -7,7 +7,7 @@ const PRIORITY_FLEE := 7
 const PRIORITY_SWAP := 6
 const PRIORITY_ITEM := 5
 
-const CREATURE_TARGETS := ["self", "one_ally", "one_enemy", "all_allies", "all_enemies", "all"]
+const CREATURE_TARGETS := ["self", "one_ally", "one_enemy", "all_allies", "all_enemies", "all", "two_enemies"]
 
 
 ## Sorts this round's actions: priority, then effective Speed, then a random tie-break.
@@ -106,14 +106,14 @@ func _move(b: Battler, a: BattleAction) -> void:
 			ctx.target_side = b.side
 		"enemy_side":
 			ctx.target_side = 1 - b.side
-	var targets := e.resolve_targets(b, m.target, a.target)
+	var targets := e.resolve_targets(b, m.target, a.target, a.second_target)
 	e.emit({"type": BattleEvents.MOVE_USED, "bid": b.bid, "move": m.id,
 		"targets": targets.map(func(t): return t.bid), "side": ctx.target_side})
 	if m.target in CREATURE_TARGETS:
 		if targets.is_empty():
 			e.emit({"type": BattleEvents.NO_TARGET, "bid": b.bid})
 			return
-		ctx.spread = targets.size() > 1
+		ctx.spread_count = targets.size()
 		for t in targets:
 			if t.side == b.side or BattleMath.rolls_hit(e, b, m):
 				ctx.targets.append(t)
@@ -182,7 +182,7 @@ func _item(b: Battler, a: BattleAction) -> void:
 	ctx.user = b
 	ctx.source = "item"
 	ctx.item = it
-	ctx.targets = e.resolve_targets(b, it.target, a.target)
+	ctx.targets = e.resolve_targets(b, it.target, a.target, -1)
 	e.emit({"type": BattleEvents.ITEM_USED, "bid": b.bid, "item": it.id,
 		"targets": ctx.targets.map(func(t): return t.bid), "left": side.items[a.item]})
 	e.run_effects(ctx, it.effects)

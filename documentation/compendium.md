@@ -6,7 +6,7 @@
 | Category | Count |
 |---|---|
 | [Creatures](#creatures) | 8 |
-| [Moves](#moves) | 44 |
+| [Moves](#moves) | 47 |
 | [Items](#items) | 11 |
 | [Statuses](#statuses) | 4 |
 | [Field States](#field-states) | 12 |
@@ -370,6 +370,7 @@ Base stats. *Total* sums the six battle stats (HP to Spd); Luck, Resolve and Sta
 | 1 | Tackle | Neutral | Physical | 40 | 1 | 100% |
 | 1 | Ember Flick | Fire | Special | 40 | 2 | 100% |
 | 6 | Scorch Field | Fire | Status | — | 4 | — |
+| 9 | Crossfire | Fire | Special | 44 | 4 | 100% |
 | 11 | Flare Burst | Fire | Special | 45 | 7 | 90% |
 
 ### Frostling
@@ -438,6 +439,7 @@ Base stats. *Total* sums the six battle stats (HP to Spd); Luck, Resolve and Sta
 | 1 | Vine Lash | Grass | Physical | 45 | 3 | 100% |
 | 4 | Seed Carpet | Grass | Status | — | 4 | — |
 | 8 | Regrowth | Grass | Status | — | 6 | — |
+| 10 | Twin Lash | Grass | Physical | 42 | 4 | 100% |
 
 ### Tidepup
 
@@ -490,6 +492,7 @@ Base stats. *Total* sums the six battle stats (HP to Spd); Luck, Resolve and Sta
 |---|---|---|---|---|---|---|
 | 1 | Spark Bite | Electric | Physical | 45 | 3 | 100% |
 | 5 | Static Field | Electric | Status | — | 4 | — |
+| 9 | Arc Pair | Electric | Special | 44 | 5 | 100% |
 | 12 | Thunder Cascade | Electric | Special | 50 | 7 | 90% |
 
 ## Moves
@@ -516,6 +519,7 @@ Grouped by type. Physical moves use P.Atk vs P.Def; special moves use S.Atk vs S
 
 | Move | Id | Cat. | Power | Cost | Acc | Pri | Target | Effects | Learned by |
 |---|---|---|---|---|---|---|---|---|---|
+| **Arc Pair** | `arc_pair` | Special | 44 | 5 | 100% | 0 | Two foes | Damage; Inflicts Shock (10%)<br>*Lightning arcs between two foes of your choice.* | Voltmoth |
 | **Spark Bite** | `spark_bite` | Physical | 45 | 3 | 100% | 0 | One enemy | Damage; Inflicts Shock (15%) | Voltmoth |
 | **Static Field** | `static_field` | Status | — | 4 | — | 0 | Enemy side | Applies Charged to the enemy side<br>*Charges the air over the enemy side.* | Voltmoth |
 | **Thunder Cascade** | `thunder_cascade` | Special | 50 | 7 | 90% | 0 | All enemies | x1.4 if the target's side is Charged; Damage | Voltmoth |
@@ -524,6 +528,7 @@ Grouped by type. Physical moves use P.Atk vs P.Def; special moves use S.Atk vs S
 
 | Move | Id | Cat. | Power | Cost | Acc | Pri | Target | Effects | Learned by |
 |---|---|---|---|---|---|---|---|---|---|
+| **Crossfire** | `crossfire` | Special | 44 | 4 | 100% | 0 | Two foes | Damage<br>*Flames lash two foes of your choice.* | Emberkit |
 | **Ember Flick** | `ember_flick` | Special | 40 | 2 | 100% | 0 | One enemy | Damage; Inflicts Burn (10%) | Emberkit |
 | **Flare Burst** | `flare_burst` | Special | 45 | 7 | 90% | 0 | All enemies | x1.6 if the target's side is Scorched (consumes it); Damage<br>*Hits every foe; far stronger on a Scorched side.* | Emberkit |
 | **Scorch Field** | `scorch_field` | Status | — | 4 | — | 0 | Enemy side | Applies Scorched to the enemy side<br>*Sets the enemy side smouldering.* | Emberkit |
@@ -542,6 +547,7 @@ Grouped by type. Physical moves use P.Atk vs P.Def; special moves use S.Atk vs S
 |---|---|---|---|---|---|---|---|---|---|
 | **Regrowth** | `regrowth` | Status | — | 6 | — | 0 | Self | x1.5 if own side is Overgrown; Heals 20% max HP<br>*Heals; heals more on your own Overgrown side.* | Sprigling |
 | **Seed Carpet** | `seed_carpet` | Status | — | 4 | — | 0 | Enemy side | Applies Overgrown to the enemy side<br>*Grows a thicket on the enemy side.* | Sprigling |
+| **Twin Lash** | `twin_lash` | Physical | 42 | 4 | 100% | 0 | Two foes | Damage<br>*Two vines strike two foes of your choice.* | Sprigling |
 | **Vine Lash** | `vine_lash` | Physical | 45 | 3 | 100% | 0 | One enemy | Damage | Sprigling |
 
 ### Ice moves
@@ -721,7 +727,7 @@ Global tuning values from `data/balance.json`.
 | Party size | 6 |
 | Max moves per creature | 4 |
 | Same-type attack bonus | x1.25 |
-| Multi-target damage | x0.75 |
+| Multi-target damage | x0.85 (two) / x0.75 (three or more) |
 | Round limit (draw) | 200 |
 | XP formula | yield x level / 5, x1.5 vs tamers |
 | Catch status bonus | x1.5 |

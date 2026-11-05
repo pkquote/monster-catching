@@ -1,6 +1,6 @@
 # Handoff: godot-monster-catching-game
 
-Date: 2026-11-05. Branch: `master`. Last commit: `1cc00e9` ("Add per-species stat growth rates"). The held-items work (see "Held items" below) is uncommitted on top of it.
+Date: 2026-11-05. Branch: `master`. Last commit: `f6e69f1` ("Added held items"). The two-target-moves work (see "Two-target moves" below) is uncommitted on top of it.
 
 ## Read this first: standing rules
 - **Never commit, stage or stash.** The user writes every commit. Leave changes in the working tree.
@@ -30,7 +30,7 @@ Godot 4.7.2 (.NET build, but GDScript only) monster-catching RPG.
 
 ## How to run and test
 - Godot console: `/c/Program Files (x86)/Godot_v4.7.2-stable_mono_win64/Godot_v4.7.2-stable_mono_win64_console.exe`
-- Full check: `bash scripts/check.sh`. It covers data validation, dialogue check, map check, all 58 test suites and compendium generation, and must end with "All checks passed." It passed on 2026-11-04 against the committed passives work.
+- Full check: `bash scripts/check.sh`. It covers data validation, dialogue check, map check, all test suites and compendium generation, and must end with "All checks passed." It passed on 2026-11-05 against the two-target moves work.
 - The `.claude/skills/run-godot-monster-catching-game/` skill launches and drives the real game.
   - Tours: `--mode=frontend|battle|overworld|progress|passives|held`, each in `tours/*.gd`.
   - In tour files, `d` is untyped, so values derived from it use `=`, not `:=`.
@@ -67,12 +67,12 @@ Godot 4.7.2 (.NET build, but GDScript only) monster-catching RPG.
   - An absorbed move's other per-target effects skip the absorber (`EffectContext.absorbed`; `deal_damage` returns true when it absorbs).
   - The battle AI is passive-aware (`core/battle/ai/battle_ai.gd`, tests in `tests/battle/test_ai_passives.gd`, documented under "Passives and the AI" in `documentation/battle-engine.md`): absorb, status/stage/shelter blocks, `field_boost`, `rest_bonus`, and hit-trigger retaliation (tactician only). Faint, knockout, enter and round-end triggers are deliberately not modelled.
 
-## Stat growth rates (implemented, uncommitted)
+## Stat growth rates (implemented, committed)
 - Level cap is 99; `CreatureInstance.grown(db, stat)` is the level-derived growth (max HP, energy and stats are built from it); the Summary Stats tab shows `total (growth+trained)`. These were committed in `283a19e`.
 - New, uncommitted: each species can give any base stat a growth tier via `growth_rates` (`slow`/`steady`/`fast`, multipliers in `balance.json` `growth_tiers`: 0.8/1.0/1.2). `Stats.hp_at/stat_at/energy_at` take a percent (default 100); `BalanceDef.growth_percent`, `CreatureDef.growth_tier`. Validated in the validator and `tools/validate_data.gd`; the Summary marks non-steady stats with ▲/▼ (checked in the real window); the compendium shows a `Growth:` bullet (non-steady only) and a Lv 99 stats line per species. Spec: `documentation/specs/2026-11-04-stat-growth-rates-design.md`; plan: `documentation/plans/2026-11-04-stat-growth-rates.md`.
 - Follow-up content pass (not started): mark the shipped species with growth tiers. All 8 are still all-steady, so nothing changes in play until that is done.
 
-## Held items (implemented, uncommitted)
+## Held items (implemented, committed)
 - **Spec:** `documentation/specs/2026-11-05-held-items-design.md` (Implemented); **plan:** `documentation/plans/2026-11-05-held-items.md`.
 - **What it does:** a creature holds one item (`CreatureInstance.held_item`, save schema 5; tamer party members can set `held_item`). An item with category `held` has a `held` block shaped like a passive (`effects`, `triggers` with an optional `when`, `field`, `scope: allies` for auras) and a usage kind `use`: `permanent` (default), `consumed` (gone after it fires; `ITEM_CONSUMED`, "<Name>'s <Item> was used up.") or `per_battle` (fires once per battle). Banners name the item.
 - **Key code:** `core/progress/held_items.gd` (`HeldItems.give/take/def_of`), `PassiveRules` (`held_def`, `fire`, `_use_up`, held effects and auras), `Passives.field_mult` (lead's held `field` ops), `ItemDef.held/held_use`, tactician AI retaliation reads held `hit` triggers, Summary Stats tab Give held item / Swap / Take back (`game/progress/summary_screen.gd`), bag note "Give it from the Summary."
@@ -80,7 +80,15 @@ Godot 4.7.2 (.NET build, but GDScript only) monster-catching RPG.
 - **Tour:** `--mode=held` (Give held item, a battle where the berry fires, the item gone afterwards). The tour puts the berry in the bag directly: there is no F1 give-item page.
 - **Not done / out of scope:** two held slots, steal/knock-off moves, giving items in battle, trading, durability, held items on wild creatures; no held items on tamer parties in shipped data; the AI does not model enter/round-end/faint/knockout held triggers (same as passives); no F1 page to give held items; the shop menu lists all 11 items in two name-only columns, with the price and description shown on the page for the focused item (no categories).
 
+## Two-target moves (implemented, uncommitted)
+- **Spec:** `documentation/specs/2026-11-05-two-target-moves-design.md` (Implemented); **plan:** `documentation/plans/2026-11-05-two-target-moves.md`.
+- **What shipped:** move target `two_enemies` (the user picks two distinct foes; `BattleAction.second_target`; a missing or duplicate pick is replaced at random); `balance.spread_mults` is now a table keyed by number hit (`{"2": 0.85, "3": 0.75}`) with `BalanceDef.spread_mult_for(count)` and `EffectContext.spread_count`; the AI scores each pair of foes; the battle scene has a two-step target menu (`_choose_target` / `_choose_two_targets`, the second step titled with the first pick); the compendium target label is "Two foes" and the Multi-target damage line shows both values.
+- **Content:** Crossfire (fire, special, 44/4, Emberkit Lv 9), Twin Lash (grass, physical, 42/4, Sprigling Lv 10), Arc Pair (electric, special, 44/5, 10% shock, Voltmoth Lv 9); all accuracy 100. Shipped-content test: `tests/data/test_two_target_moves_data.gd`.
+- **Behaviour change:** an existing `all_enemies` / `all` move that hits exactly two creatures now takes x0.85 instead of x0.75. Three or more is unchanged.
+- **Next brainstorm:** multi-hit moves (one foe, several hits). Not started.
+
 ## Possible next steps (none requested yet)
+- Brainstorm multi-hit moves (one foe, several hits), the follow-on to the two-target moves.
 - Fix any remaining passives minors the user cares about (see the deferred list).
 - Continue the milestone roadmap in the main spec's Milestones table. M1–M4, the code audit and passives are done.
 - Ask the user what is next before starting anything. New features go through brainstorming first.

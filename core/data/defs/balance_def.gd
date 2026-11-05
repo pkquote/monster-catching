@@ -6,7 +6,8 @@ var level_cap: int
 var party_size: int
 var max_moves: int
 var stab: float
-var spread_mult: float
+## Damage multiplier by creatures hit: keys 2 and 3 (3 also covers more).
+var spread_mults: Dictionary
 var round_limit: int
 var max_field_states: int
 var growth_affinity_threshold: int
@@ -39,7 +40,7 @@ static func from_dict(d: Dictionary) -> BalanceDef:
 	b.party_size = int(d.party_size)
 	b.max_moves = int(d.max_moves)
 	b.stab = float(d.stab)
-	b.spread_mult = float(d.spread_mult)
+	b.spread_mults = {2: float(d.spread_mults["2"]), 3: float(d.spread_mults["3"])}
 	b.round_limit = int(d.round_limit)
 	b.max_field_states = int(d.max_field_states)
 	b.growth_affinity_threshold = int(d.growth_affinity_threshold)
@@ -71,3 +72,10 @@ static func from_dict(d: Dictionary) -> BalanceDef:
 ## A tier's multiplier as an exact whole percent (1.2 -> 120).
 func growth_percent(tier: String) -> int:
 	return roundi(float(growth_tiers[tier]) * 100.0)
+
+
+## Damage multiplier for a move hitting `count` creatures: 1.0 for one or fewer.
+func spread_mult_for(count: int) -> float:
+	if count <= 1:
+		return 1.0
+	return float(spread_mults[2 if count == 2 else 3])

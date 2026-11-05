@@ -30,8 +30,8 @@ func _act(e: BattleEngine, move: String) -> Array:
 
 func test_special_moves_use_special_defense() -> void:
 	var e := _duel("blob", "shell", ["hit", "blast"])
-	var physical := BattleAI.estimate_damage(e, _me(e), db.move("hit"), _foe(e), false)
-	var special := BattleAI.estimate_damage(e, _me(e), db.move("blast"), _foe(e), false)
+	var physical := BattleAI.estimate_damage(e, _me(e), db.move("hit"), _foe(e), 1)
+	var special := BattleAI.estimate_damage(e, _me(e), db.move("blast"), _foe(e), 1)
 	assert_float(special).is_greater(physical * 3.0)
 
 
@@ -153,9 +153,9 @@ func test_endure_leaves_one_hp_once() -> void:
 func test_negative_bond_weakens_damage_and_accuracy() -> void:
 	var e := _duel("blob", "tank", ["hit"])
 	var me := _me(e)
-	var normal := BattleAI.estimate_damage(e, me, db.move("hit"), _foe(e), false)
+	var normal := BattleAI.estimate_damage(e, me, db.move("hit"), _foe(e), 1)
 	me.creature.bond = -100
-	var sulking := BattleAI.estimate_damage(e, me, db.move("hit"), _foe(e), false)
+	var sulking := BattleAI.estimate_damage(e, me, db.move("hit"), _foe(e), 1)
 	assert_float(sulking).is_less(normal * 0.85)
 	assert_float(BattleMath.effective_stat(e, me, "acc")).is_equal_approx(0.8, 0.0001)
 

@@ -80,9 +80,9 @@ func test_passive_incoming_type_mod_boosts_damage() -> void:
 	var e := _duel("sparky", "tank", ["zap", "drench"])
 	var me := e.battler(_me(e))
 	var foe := e.battler(_foe(e))
-	var before := BattleAI.estimate_damage(e, me, db.move("zap"), foe, false)
+	var before := BattleAI.estimate_damage(e, me, db.move("zap"), foe, 1)
 	e.apply_field_state(1, "soaked", 1, 3, null, false)
-	var after := BattleAI.estimate_damage(e, me, db.move("zap"), foe, false)
+	var after := BattleAI.estimate_damage(e, me, db.move("zap"), foe, 1)
 	assert_float(after).is_greater(before)
 
 
@@ -98,9 +98,9 @@ func test_cash_in_move_consumes_state_for_bonus() -> void:
 	var e := _duel("fish", "tank", ["riptide", "drench"])
 	var me := e.battler(_me(e))
 	var foe := e.battler(_foe(e))
-	var plain := BattleAI.estimate_damage(e, me, db.move("riptide"), foe, false)
+	var plain := BattleAI.estimate_damage(e, me, db.move("riptide"), foe, 1)
 	e.apply_field_state(1, "soaked", 1, 3, null, false)
-	var boosted := BattleAI.estimate_damage(e, me, db.move("riptide"), foe, false)
+	var boosted := BattleAI.estimate_damage(e, me, db.move("riptide"), foe, 1)
 	assert_float(boosted).is_greater(plain * 1.8)
 	var events := _use(e, "riptide")
 	assert_bool(e.sides[1].field.has("soaked")).is_false()

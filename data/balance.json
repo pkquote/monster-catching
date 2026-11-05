@@ -5,7 +5,10 @@
     "party_size": 6,
     "max_moves": 4,
     "stab": 1.25,
-    "spread_mult": 0.75,
+    "spread_mults": {
+      "2": 0.85,
+      "3": 0.75
+    },
     "resolve": {
       "resist_cap": 0.3,
       "endure_cap": 0.1

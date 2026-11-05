@@ -179,17 +179,23 @@ func _choose_move(bid: int) -> BattleAction:
 		var mid = await menu.choose("%s: choose a move  (EN %d/%d)" % [display_name(bid), b.energy(), b.creature.max_energy(db)], options, true)
 		if mid == null:
 			return null
-		var target = await _choose_target(bid, db.move(mid).target, "Use %s on...?" % db.move(mid).name)
+		var target: Variant = await _choose_target(bid, db.move(mid).target, "Use %s on...?" % db.move(mid).name, false, mid)
+		if target is Array:
+			var pair: Array = target
+			return BattleAction.use_move(bid, mid, int(pair[0]), int(pair[1]))
 		if target != null:
-			return BattleAction.use_move(bid, mid, target)
+			return BattleAction.use_move(bid, mid, int(target))
 	return null
 
 
 ## Target bid, -1 when the move needs no choice, or null if cancelled.
-func _choose_target(bid: int, target_key: String, title: String, include_bench := false) -> Variant:
+## `two_enemies` (needs `move_id`) returns [first, second] ([that foe, -1] with a single foe).
+func _choose_target(bid: int, target_key: String, title: String, include_bench := false, move_id := "") -> Variant:
 	var pool: Array = []
 	var me := engine.battler(bid)
 	match target_key:
+		"two_enemies":
+			return await _choose_two_targets(bid, move_id, title)
 		"one_enemy":
 			pool = engine.sides[1 - me.side].active()
 		"one_ally":
@@ -203,6 +209,37 @@ func _choose_target(bid: int, target_key: String, title: String, include_bench :
 		"label": "%s · %d%% HP" % [display_name(t.bid), roundi(100.0 * t.hp() / t.creature.max_hp(db))],
 		"value": t.bid, "hint": t.bid})
 	return await menu.choose(title, options, true)
+
+
+## Two-step pick for a `two_enemies` move: [first, second], or null if cancelled.
+## With two or fewer foes standing there is nothing to choose, so no menu is shown.
+func _choose_two_targets(bid: int, move_id: String, title: String) -> Variant:
+	var me := engine.battler(bid)
+	var foes: Array = engine.sides[1 - me.side].active()
+	if foes.size() <= 2:
+		return [foes[0].bid if foes.size() > 0 else -1, foes[1].bid if foes.size() > 1 else -1]
+	while true:
+		var first: Variant = await menu.choose(title, _foe_options(foes), true)
+		if first == null:
+			return null
+		var second_pool: Array = []
+		for sbid in engine.second_targets_for(bid, move_id, int(first)):
+			second_pool.append(engine.battler(sbid))
+		var second_title := title.trim_suffix("...?") + " %s and...?" % display_name(int(first))
+		_pinned_bid = int(first)
+		_highlight(first)
+		var second: Variant = await menu.choose(second_title, _foe_options(second_pool), true)
+		_pinned_bid = -1
+		_highlight(null)
+		if second != null:
+			return [int(first), int(second)]
+	return null
+
+
+func _foe_options(pool: Array) -> Array:
+	return pool.map(func(t: Battler): return {
+		"label": "%s · %d%% HP" % [display_name(t.bid), roundi(100.0 * t.hp() / t.creature.max_hp(db))],
+		"value": t.bid, "hint": t.bid})
 
 
 func _item_choices() -> Array:
@@ -450,9 +487,13 @@ func _sync_views() -> void:
 		stage.set_tint(side, fields[side].newest_color())
 
 
+## The first foe of a two-foe pick stays highlighted while the second is chosen (-1 = none).
+var _pinned_bid := -1
+
+
 func _highlight(bid: Variant) -> void:
 	for k in views:
-		views[k].set_highlight(bid != null and k == bid)
+		views[k].set_highlight((bid != null and k == bid) or k == _pinned_bid)
 
 
 # --- UI construction ------------------------------------------------------------------

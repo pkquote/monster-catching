@@ -213,6 +213,11 @@ func _check_cross_rules() -> void:
 				var mult = tiers[tier_id]
 				if tier_id != "steady" and _is_number(mult) and roundi(float(mult) * 100.0) == 100:
 					_err("growth_tiers", "tier '%s' rounds to the same percent as steady" % tier_id)
+		_file = brec.file
+		_label = "[balance]"
+		var sm = brec.data.get("spread_mults", {})
+		if sm is Dictionary and _is_number(sm.get("2")) and _is_number(sm.get("3")) and float(sm["3"]) > float(sm["2"]):
+			_err("spread_mults", "the \"3\" value must not be greater than the \"2\" value")
 	for rec in _raw.get_entries("creatures"):
 		var c: Dictionary = rec.entry
 		_file = rec.file

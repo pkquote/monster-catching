@@ -19,6 +19,8 @@ extends RefCounted
 
 const TARGETS := ["self", "one_ally", "one_enemy", "all_allies", "all_enemies", "all",
 	"own_side", "enemy_side"]
+## Moves may also hit two chosen foes; items, effect overrides and triggers may not.
+const MOVE_TARGETS := TARGETS + ["two_enemies"]
 ## Passive trigger effects may also aim at the creature that set the trigger off.
 const TRIGGER_TARGETS := TARGETS + ["attacker"]
 ## Overworld-only ops (a passive's "field" list); everything else is for battle.
@@ -241,7 +243,7 @@ const ENTRY := {
 		"accuracy": {"t": "int", "min": 1, "max": 100},
 		"always_hits": {"t": "bool", "opt": true},
 		"priority": {"t": "int", "opt": true, "min": -3, "max": 3},
-		"target": {"t": "enum", "values": TARGETS},
+		"target": {"t": "enum", "values": MOVE_TARGETS},
 		"effects": {"t": "effects"},
 	},
 	"items": {
@@ -349,7 +351,10 @@ const ENTRY := {
 			"hp_weight": {"t": "number", "min": 0.0, "max": 1.0},
 			"status_mult": {"t": "number", "min": 1.0, "max": 5.0},
 		}},
-		"spread_mult": {"t": "number", "min": 0.0, "max": 1.0},
+		"spread_mults": {"t": "dict", "fields": {
+			"2": {"t": "number", "min": 0.0, "max": 1.0},
+			"3": {"t": "number", "min": 0.0, "max": 1.0},
+		}},
 		"resolve": {"t": "dict", "fields": {
 			"resist_cap": {"t": "number", "min": 0.0, "max": 1.0},
 			"endure_cap": {"t": "number", "min": 0.0, "max": 1.0},

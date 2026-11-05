@@ -20,6 +20,7 @@ const TARGET_LABELS := {
 	"all_allies": "All allies",
 	"all_enemies": "All enemies",
 	"all": "Everyone",
+	"two_enemies": "Two foes",
 	"own_side": "Own side",
 	"enemy_side": "Enemy side",
 	"attacker": "Attacker",
@@ -443,7 +444,7 @@ func _balance() -> void:
 	_w("| Party size | %d |" % b.party_size)
 	_w("| Max moves per creature | %d |" % b.max_moves)
 	_w("| Same-type attack bonus | x%s |" % _num(b.stab))
-	_w("| Multi-target damage | x%s |" % _num(b.spread_mult))
+	_w("| Multi-target damage | x%s (two) / x%s (three or more) |" % [_num(b.spread_mult_for(2)), _num(b.spread_mult_for(3))])
 	_w("| Round limit (draw) | %d |" % b.round_limit)
 	_w("| XP formula | yield x level / %s, x%s vs tamers |" % [_num(b.xp_cfg.divisor), _num(b.xp_cfg.tamer_mult)])
 	_w("| Catch status bonus | x%s |" % _num(b.catch_cfg.status_mult))

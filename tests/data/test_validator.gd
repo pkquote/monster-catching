@@ -332,3 +332,40 @@ func test_tamer_held_item_must_be_a_held_item() -> void:
 	assert_array(Array(DataValidator.validate(raw))).is_empty()
 	raw.entries.tamers[0].entry = tamer.call("nope")
 	assert_str(_errors_for(raw)).contains("unknown items id 'nope'")
+
+
+func test_spread_mults_rules() -> void:
+	assert_array(Array(DataValidator.validate(_base()))).is_empty()
+	var bad := {
+		"missing 2": {"3": 0.75},
+		"missing 3": {"2": 0.85},
+		"above 1": {"2": 1.5, "3": 0.75},
+		"3 above 2": {"2": 0.7, "3": 0.8},
+	}
+	for label in bad:
+		var raw := _base()
+		var b := FixtureDB.balance()
+		b["spread_mults"] = bad[label]
+		raw.set_single("balance", b)
+		assert_str(_errors_for(raw)).contains("spread_mults")
+
+
+# --- two_enemies target -----------------------------------------------------
+
+func test_two_enemies_valid_on_moves_only() -> void:
+	var ok := _base()
+	ok.add_entry("moves", _move({"id": "twin", "name": "Twin", "target": "two_enemies"}))
+	assert_array(Array(DataValidator.validate(ok))).is_empty()
+
+	var item := _heal_item()
+	item["target"] = "two_enemies"
+	assert_str(_errors_for(_with_item(item))).contains("[items:tonic] target").contains("two_enemies")
+
+	var eff := _base()
+	eff.entries.moves[0].entry = _move({"effects": [{"op": "damage", "target": "two_enemies"}]})
+	assert_str(_errors_for(eff)).contains("two_enemies")
+
+	var trig := _base()
+	trig.entries.passives[0].entry = {"id": "steady", "name": "Steady", "triggers": [{"on": "hit",
+		"effects": [{"op": "damage", "power": 10, "target": "two_enemies"}]}]}
+	assert_str(_errors_for(trig)).contains("two_enemies")

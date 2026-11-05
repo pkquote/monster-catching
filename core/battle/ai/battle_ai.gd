@@ -47,8 +47,17 @@ static func choose(engine: BattleEngine, bid: int, style: String) -> BattleActio
 		elif style == "basic" and known_affordable > 0:
 			continue  # basic AI only flails when it has nothing else
 		for t in engine.targets_for(bid, mid):
-			options.append({"action": BattleAction.use_move(bid, mid, t),
-				"score": 0.0 if style == "basic" else score(engine, b, m, t, style, ref)})
+			var seconds: Array[int] = engine.second_targets_for(bid, mid, t)
+			if m.target != "two_enemies" or seconds.is_empty():
+				options.append({"action": BattleAction.use_move(bid, mid, t),
+					"score": 0.0 if style == "basic" else score(engine, b, m, t, style, ref)})
+				continue
+			# One option per unordered pair of foes, so each pair is scored once.
+			for t2 in seconds:
+				if _foe_index(engine, b, t2) < _foe_index(engine, b, t):
+					continue
+				options.append({"action": BattleAction.use_move(bid, mid, t, t2),
+					"score": 0.0 if style == "basic" else score(engine, b, m, t, style, ref, t2)})
 	var max_e := float(b.creature.max_energy(engine.db))
 	if float(b.energy()) < max_e * LOW_ENERGY:
 		options.append({"action": BattleAction.rest(bid), "score": rest_score(engine, b)})
@@ -63,6 +72,15 @@ static func choose(engine: BattleEngine, bid: int, style: String) -> BattleActio
 	return best.action
 
 
+## Position of `foe_bid` among `b`'s active foes (orders pairs so each is scored once).
+static func _foe_index(engine: BattleEngine, b: Battler, foe_bid: int) -> int:
+	var foes := engine.sides[1 - b.side].active()
+	for i in foes.size():
+		if foes[i].bid == foe_bid:
+			return i
+	return -1
+
+
 ## What Rest is worth: REST_VALUE, scaled up by the creature's rest_bonus passive.
 static func rest_score(engine: BattleEngine, b: Battler) -> float:
 	var base := float(engine.db.balance.energy_cfg.rest_fraction)
@@ -70,17 +88,17 @@ static func rest_score(engine: BattleEngine, b: Battler) -> float:
 
 
 static func score(engine: BattleEngine, b: Battler, m: MoveDef, target_bid: int, style: String,
-		ref := -1.0) -> float:
+		ref := -1.0, second_bid := -1) -> float:
 	var db := engine.db
 	if ref < 0.0:
 		ref = best_damage(engine, b)
-	var targets := engine.resolve_targets(b, m.target, target_bid, false)
+	var targets := engine.resolve_targets(b, m.target, target_bid, second_bid, false)
 	var value := 0.0
 	for t in targets:
 		# A target whose passive absorbs the move's type is healed, not hurt.
 		var healed := _absorbed_heal(engine, m, t)
 		value += healed if t.side == b.side else -healed
-		var est := estimate_damage(engine, b, m, t, targets.size() > 1)
+		var est := estimate_damage(engine, b, m, t, targets.size())
 		if est <= 0.0:
 			continue
 		var landed := minf(est, float(t.hp()))
@@ -102,6 +120,18 @@ static func score(engine: BattleEngine, b: Battler, m: MoveDef, target_bid: int,
 	return value
 
 
+## How many creatures `m` hits when `foes` are standing: `all` also hits the user's active allies.
+static func _hit_count(engine: BattleEngine, b: Battler, m: MoveDef, foes: int) -> int:
+	match m.target:
+		"all_enemies":
+			return foes
+		"all":
+			return foes + engine.sides[b.side].active().size() - 1
+		"two_enemies":
+			return mini(2, foes)
+	return 1
+
+
 ## Highest expected damage `b` can deal to one foe right now with a usable move (min 1).
 static func best_damage(engine: BattleEngine, b: Battler) -> float:
 	var best := 1.0
@@ -111,18 +141,18 @@ static func best_damage(engine: BattleEngine, b: Battler) -> float:
 		if not m.is_damaging():
 			continue
 		for t in foes:
-			best = maxf(best, estimate_damage(engine, b, m, t, m.target in ["all_enemies", "all"] and foes.size() > 1))
+			best = maxf(best, estimate_damage(engine, b, m, t, _hit_count(engine, b, m, foes.size())))
 	return best
 
 
 ## Average expected damage of `m` from `b` against `t` (no randomness).
-static func estimate_damage(engine: BattleEngine, b: Battler, m: MoveDef, t: Battler, spread: bool) -> float:
+static func estimate_damage(engine: BattleEngine, b: Battler, m: MoveDef, t: Battler, spread_count: int) -> float:
 	var ctx := EffectContext.new()
 	ctx.engine = engine
 	ctx.user = b
 	ctx.source = "move"
 	ctx.move = m
-	ctx.spread = spread
+	ctx.spread_count = spread_count
 	ctx.targets.append(t)
 	var total := 0.0
 	for e in m.effects:

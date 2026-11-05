@@ -42,8 +42,8 @@ func test_priority_beats_speed() -> void:
 func test_type_advantage_and_stab() -> void:
 	var e := FixtureDB.engine(db, [FixtureDB.make(db, "fish")], [FixtureDB.make(db, "flame"), FixtureDB.make(db, "tank")], 2, 2)
 	var me := e.battler(_bid(e, 0))
-	var vs_fire := BattleAI.estimate_damage(e, me, db.move("splash"), e.battler(_bid(e, 1, 0)), false)
-	var vs_neutral := BattleAI.estimate_damage(e, me, db.move("splash"), e.battler(_bid(e, 1, 1)), false)
+	var vs_fire := BattleAI.estimate_damage(e, me, db.move("splash"), e.battler(_bid(e, 1, 0)), 1)
+	var vs_neutral := BattleAI.estimate_damage(e, me, db.move("splash"), e.battler(_bid(e, 1, 1)), 1)
 	assert_float(vs_fire).is_greater(vs_neutral * 1.6)
 
 
@@ -216,3 +216,65 @@ func test_ai_battles_always_finish() -> void:
 		while not e.is_over():
 			e.resolve_round([])
 		assert_bool(e.round_number <= db.balance.round_limit).is_true()
+
+
+func _tanks(n: int) -> Array:
+	var out: Array = []
+	for i in n:
+		out.append(FixtureDB.make(db, "tank", 90))
+	return out
+
+
+func test_spread_mult_for_counts() -> void:
+	assert_float(db.balance.spread_mult_for(0)).is_equal(1.0)
+	assert_float(db.balance.spread_mult_for(1)).is_equal(1.0)
+	assert_float(db.balance.spread_mult_for(2)).is_equal_approx(0.85, 0.0001)
+	for count in [3, 4, 5]:
+		assert_float(db.balance.spread_mult_for(count)).is_equal_approx(0.75, 0.0001)
+
+
+func test_damage_uses_the_count_table() -> void:
+	var e := FixtureDB.engine(db, _tanks(1), _tanks(1))
+	var me := e.battler(_bid(e, 0))
+	var foe := e.battler(_bid(e, 1))
+	var one := BattleAI.estimate_damage(e, me, db.move("hit"), foe, 1)
+	var two := BattleAI.estimate_damage(e, me, db.move("hit"), foe, 2)
+	var three := BattleAI.estimate_damage(e, me, db.move("hit"), foe, 3)
+	assert_float(two).is_equal_approx(one * 0.85, 1.0)
+	assert_float(three).is_equal_approx(one * 0.75, 1.0)
+	assert_float(two).is_greater(three)
+
+
+func test_all_enemies_against_two_foes_takes_the_two_target_value() -> void:
+	var e := FixtureDB.engine(db, [FixtureDB.make(db, "fish", 90, ["wave"])], _tanks(2), 1, 2)
+	var me := e.battler(_bid(e, 0))
+	var single := BattleAI.estimate_damage(e, me, db.move("wave"), e.battler(_bid(e, 1)), 1)
+	assert_float(BattleAI.best_damage(e, me)).is_equal(BattleAI.estimate_damage(e, me, db.move("wave"), e.battler(_bid(e, 1)), 2))
+	assert_float(BattleAI.best_damage(e, me)).is_equal_approx(single * 0.85, 2.0)
+
+
+func test_all_enemies_against_three_foes_is_unchanged() -> void:
+	var e := FixtureDB.engine(db, [FixtureDB.make(db, "fish", 90, ["wave"])], _tanks(3), 1, 3)
+	var me := e.battler(_bid(e, 0))
+	var single := BattleAI.estimate_damage(e, me, db.move("wave"), e.battler(_bid(e, 1)), 1)
+	assert_float(BattleAI.best_damage(e, me)).is_equal(BattleAI.estimate_damage(e, me, db.move("wave"), e.battler(_bid(e, 1)), 3))
+	assert_float(BattleAI.best_damage(e, me)).is_equal_approx(single * 0.75, 2.0)
+
+
+func test_all_in_a_3v3_takes_the_three_target_value() -> void:
+	# Quake hits five creatures at the three-target value: every hit lies in the roll window of base75.
+	var base_party: Array = [FixtureDB.make(db, "mole", 90, ["quake"]), FixtureDB.make(db, "tank", 90), FixtureDB.make(db, "tank", 90)]
+	var base_engine := FixtureDB.engine(db, base_party, _tanks(3), 3, 3)
+	var single := BattleAI.estimate_damage(base_engine, base_engine.battler(_bid(base_engine, 0)), db.move("quake"),
+		base_engine.battler(_bid(base_engine, 1)), 1)
+	var base75: float = single / BattleMath.ROLL_AVG * 0.75
+	var ceiling: float = base75 + 1.0
+	var floor_value: float = base75 * BattleMath.ROLL_MIN / BattleMath.ROLL_MAX - 1.0
+	for seed_value in range(1, 11):
+		var party0: Array = [FixtureDB.make(db, "mole", 90, ["quake"]), FixtureDB.make(db, "tank", 90), FixtureDB.make(db, "tank", 90)]
+		var e := FixtureDB.engine(db, party0, _tanks(3), 3, 3, seed_value)
+		var events := e.resolve_round([BattleAction.use_move(_bid(e, 0), "quake")])
+		var amounts := FixtureDB.events_of(events, "damage")
+		assert_array(amounts).has_size(5)
+		for ev in amounts:
+			assert_float(float(ev.amount)).is_between(floor_value, ceiling)

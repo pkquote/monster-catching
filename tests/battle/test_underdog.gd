@@ -81,9 +81,9 @@ func test_underdog_stat_bonus_raises_damage() -> void:
 	var even := FixtureDB.engine(db, [FixtureDB.make(db, "tank")], [FixtureDB.make(db, "tank")])
 	var outnumbered := FixtureDB.engine(db, [FixtureDB.make(db, "tank")],
 		[FixtureDB.make(db, "tank"), FixtureDB.make(db, "tank"), FixtureDB.make(db, "tank")], 1, 3)
-	var a := BattleAI.estimate_damage(even, even.sides[0].active()[0], db.move("hit"), even.sides[1].active()[0], false)
+	var a := BattleAI.estimate_damage(even, even.sides[0].active()[0], db.move("hit"), even.sides[1].active()[0], 1)
 	var b := BattleAI.estimate_damage(outnumbered, outnumbered.sides[0].active()[0], db.move("hit"),
-		outnumbered.sides[1].active()[0], false)
+		outnumbered.sides[1].active()[0], 1)
 	assert_float(b).is_greater(a)
 
 
@@ -94,7 +94,19 @@ func test_underdog_takes_less_spread_damage() -> void:
 		[FixtureDB.make(db, "tank"), FixtureDB.make(db, "tank")], 1, 2)
 	# Enemy side 1 uses a spread move on side 0.
 	var wave := db.move("wave")
-	var to_even := BattleAI.estimate_damage(even, even.sides[1].active()[0], wave, even.sides[0].active()[0], true)
-	var to_under := BattleAI.estimate_damage(under, under.sides[1].active()[0], wave, under.sides[0].active()[0], true)
+	var to_even := BattleAI.estimate_damage(even, even.sides[1].active()[0], wave, even.sides[0].active()[0], 2)
+	var to_under := BattleAI.estimate_damage(under, under.sides[1].active()[0], wave, under.sides[0].active()[0], 2)
 	# Underdog also gets +Def, so damage drops for two reasons.
 	assert_float(to_under).is_less(to_even)
+
+
+func test_underdog_spread_reduction_stacks_for_two_and_three() -> void:
+	var even := FixtureDB.engine(db, [FixtureDB.make(db, "tank"), FixtureDB.make(db, "tank")],
+		[FixtureDB.make(db, "tank"), FixtureDB.make(db, "tank")], 2, 2)
+	var under := FixtureDB.engine(db, [FixtureDB.make(db, "tank")],
+		[FixtureDB.make(db, "tank"), FixtureDB.make(db, "tank")], 1, 2)
+	var wave := db.move("wave")
+	for count in [2, 3]:
+		var to_even := BattleAI.estimate_damage(even, even.sides[1].active()[0], wave, even.sides[0].active()[0], count)
+		var to_under := BattleAI.estimate_damage(under, under.sides[1].active()[0], wave, under.sides[0].active()[0], count)
+		assert_float(to_under).is_less(to_even)

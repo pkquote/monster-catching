@@ -17,8 +17,8 @@ var reaction: ReactionDef
 var target_side: int = -1
 ## Creature targets that were hit (after accuracy).
 var targets: Array[Battler] = []
-## True when the move hits more than one creature (spread penalty applies).
-var spread := false
+## How many creatures the move hits (more than one applies the spread penalty).
+var spread_count := 1
 ## Multiplier from bonus_if_field for the damage/heal that follows.
 var mult := 1.0
 ## Stacks used up by a reaction (for scale_with_stacks).

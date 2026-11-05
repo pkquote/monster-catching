@@ -35,5 +35,5 @@ echo "== Tests"
 	--add res://tests --ignoreHeadlessMode -c >/dev/null 2>&1
 
 echo "== Compendium"
-"$GODOT" --headless --path . --script res://tools/generate_compendium.gd 2>&1 | grep -E "^Wrote" || true
+"$GODOT" --headless --path . --script res://tools/generate_compendium.gd 2>&1 | grep -E "^Wrote" 	|| { echo "Compendium generation failed:"; "$GODOT" --headless --path . --script res://tools/generate_compendium.gd 2>&1 | tail -20; exit 1; }
 echo "All checks passed."

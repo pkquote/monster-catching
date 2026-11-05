@@ -40,11 +40,20 @@ engine.commit(0)               # write the player's creatures back (BattleLaunch
 - `BattleSetup.wild(party, pack, field_count)` and `BattleSetup.vs_tamer(db, party, tamer_id, field_count)`
   let the player field fewer creatures than the format allows, which triggers Underdog.
 
+### Targeting
+
+Move targets: `self`, `one_ally`, `one_enemy`, `two_enemies`, `all_allies`, `all_enemies`, `all`, `own_side`, `enemy_side`.
+
+- `targets_for(bid, move_id)` lists the legal first picks (the standing foes for `one_enemy` and `two_enemies`, `[-1]` when no choice is needed).
+- `two_enemies` hits two distinct standing foes: `BattleAction.target` and `BattleAction.second_target`. `second_targets_for(bid, move_id, first)` lists the legal second picks (the other standing foes).
+- `resolve_targets` keeps each valid pick (a standing, active foe), drops a missing, invalid or duplicate one, then fills the gaps at random from the remaining standing foes. With one foe left the move hits just that one (and takes no spread reduction); with none it reports `no_target`.
+- In the battle scene the player picks in two steps: `BattleScene._choose_target` shows the first menu, then `_choose_two_targets` shows a second menu titled with the first pick's name. Cancelling the second step returns to the first. With two or fewer foes standing the menu is skipped.
+
 ### Actions
 
 | Action | Constructor | Notes |
 | --- | --- | --- |
-| Move | `BattleAction.use_move(bid, move_id, target_bid)` | Target is only needed for `one_enemy` / `one_ally` moves. An invalid target is replaced with a random valid one. |
+| Move | `BattleAction.use_move(bid, move_id, target_bid, second_target_bid)` | Target is only needed for `one_enemy` / `one_ally` / `two_enemies` moves; `second_target_bid` is only read for `two_enemies`. An invalid target is replaced with a random valid one. |
 | Item | `BattleAction.use_item(bid, item_id, target_bid)` | Uses up one item from the side's bag. Capture items only work in wild battles. Healing items can target benched allies. |
 | Swap | `BattleAction.swap(bid, bench_bid)` | The creature leaving the field has its stat stages reset. |
 | Rest | `BattleAction.rest(bid)` | Restores `rest_fraction` of max energy instead of acting. |
@@ -76,7 +85,7 @@ engine.commit(0)               # write the player's creatures back (BattleLaunch
 | Training | Each point adds +1 to a stat, +`hp_per_point` to HP |
 | Effective stat | raw (incl. training) × stage × passive `stat_mod`s (status, own side's field states and creature passives) × (1 + Underdog stat bonus, P/S Atk and Def only) |
 | Damage | `((2·Lv/5 + 2) · power · A/D) / 50 + 2` × same-type bonus × type matchup × field bonus × attacker's `type_power` (and `scrap_power` for Scrap, `reaction_power` for its reactions) × target's `incoming_type_mod`s (side field states and passives) × spread × Bond performance × roll(0.85–1.0), minimum 1. `A/D` is P.Atk/P.Def for physical moves and S.Atk/S.Def for special moves |
-| Spread | Moves hitting more than one creature: × `spread_mult` × (1 − target side's Underdog spread reduction) |
+| Spread | Moves hitting more than one creature: × `spread_mult_for(count)` × (1 − target side's Underdog spread reduction). `balance.spread_mults` is a table keyed by the number of creatures hit (`{"2": 0.85, "3": 0.75}`); only keys "2" and "3" are allowed, and three or more creatures use the "3" value. `count` is the creatures the move actually hits (`ActionRunner` sets `EffectContext.spread_count`), so a `two_enemies` move with one foe left is not reduced. Underdog's reduction stacks on top. |
 | Reaction damage | Uses the triggering creature's level with Atk/Def = 1, no same-type bonus. `scale_with_stacks` multiplies power by stacks consumed |
 | Hit chance | `accuracy × accuracy multiplier` (includes Bond performance). Moves on yourself or allies, and `always_hits` moves, never miss |
 | Resolve resistance | `resist_cap × R / (R + R_avg)`; `R_avg` = Resolve of a base-50 creature at the attacker's level. Applies to statuses and to stat drops from foes |
@@ -264,6 +273,8 @@ chance), and absorb, block and own-effect estimates read the held item through t
 | `basic` | Random move and target. |
 | `aggressive` | Highest expected damage, with a bonus for knockouts. Heals when below half HP. |
 | `tactician` | Aggressive scoring plus value for setting up reactions on the enemy side, new states its team can follow up on, statuses and debuffs. Setup values are multiples of its best available damage, so they scale with level. It avoids triggering reactions on its own side. |
+
+For a `two_enemies` move the AI builds one option per unordered pair of standing foes and scores the pair as a whole: the damage estimate uses the real spread count (2), the pair's knockouts and setup values add up, and the best pair wins. `basic` picks a random pair.
 
 Every AI picks only moves it can afford, falls back on Scrap, and considers Rest below 20% energy.
 

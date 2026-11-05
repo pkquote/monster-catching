@@ -7,6 +7,8 @@ var db: Database
 
 func before() -> void:
 	var r := FixtureDB.raw()
+	r.add_entry("moves", FixtureDB._m("twin_zap", "electric", "special", 50, 100, "two_enemies",
+		[{"op": "damage"}]))
 	r.add_entry("moves", FixtureDB._m("ignite", "fire", "status", 0, 100, "one_enemy",
 		[{"op": "apply_status", "status": "burn"}], {"always_hits": true}))
 	for p in [
@@ -231,3 +233,15 @@ func test_passive_trigger_when_gates_the_estimate() -> void:
 		var f: Battler = e.sides[1].active()[0]
 		f.creature.hp = f.creature.max_hp(db) / 4
 	assert_float(_score(low, "hit", "tactician")).is_less(_score(low_plain, "hit", "tactician"))
+
+
+func test_ai_avoids_a_pair_with_an_absorber() -> void:
+	var e := FixtureDB.engine(db, [_make("sparky", "", ["twin_zap"])],
+		[_make("tank", "rod"), _make("tank", ""), _make("tank", "")], 1, 3)
+	var me: Battler = e.sides[0].active()[0]
+	var foes: Array = e.sides[1].active()
+	foes[0].creature.hp = foes[0].creature.max_hp(db) / 2
+	var a := BattleAI.choose(e, me.bid, "aggressive")
+	assert_str(a.move).is_equal("twin_zap")
+	assert_int(a.second_target).is_not_equal(-1)
+	assert_bool(a.target != foes[0].bid and a.second_target != foes[0].bid).is_true()

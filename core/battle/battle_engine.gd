@@ -139,8 +139,25 @@ func targets_for(bid: int, move_id: String) -> Array[int]:
 		"one_ally":
 			for t in sides[b.side].active():
 				out.append(t.bid)
+		"two_enemies":
+			for t in sides[1 - b.side].active():
+				out.append(t.bid)
 		_:
 			out.append(-1)
+	return out
+
+
+## Valid second picks for a "two_enemies" move once `first` is chosen: the other
+## standing active foes. Empty for any other move.
+func second_targets_for(bid: int, move_id: String, first: int) -> Array[int]:
+	var out: Array[int] = []
+	var b := battler(bid)
+	var m := db.move(move_id)
+	if b == null or m == null or m.target != "two_enemies":
+		return out
+	for t in sides[1 - b.side].active():
+		if t.bid != first:
+			out.append(t.bid)
 	return out
 
 
@@ -254,7 +271,7 @@ func passives(b: Battler) -> Array:
 
 ## Creature targets for a move/item target key. Invalid choices are re-targeted
 ## at random (when `allow_random`) so a move aimed at a fainted foe still lands.
-func resolve_targets(user: Battler, key: String, chosen: int, allow_random := true) -> Array[Battler]:
+func resolve_targets(user: Battler, key: String, chosen: int, second := -1, allow_random := true) -> Array[Battler]:
 	var own := sides[user.side]
 	var opp := sides[1 - user.side]
 	var out: Array[Battler] = []
@@ -268,6 +285,19 @@ func resolve_targets(user: Battler, key: String, chosen: int, allow_random := tr
 			elif allow_random and not opp.active().is_empty():
 				var pool := opp.active()
 				out.append(pool[rng.randi_range(0, pool.size() - 1)])
+		"two_enemies":
+			# Two distinct standing foes: keep valid picks, fill gaps from the rest.
+			for pick in [chosen, second]:
+				var c := battler(pick)
+				if c != null and c.side == opp.index and c.alive() and c.active and not out.has(c):
+					out.append(c)
+			if allow_random:
+				var pool: Array[Battler] = []
+				for t in opp.active():
+					if not out.has(t):
+						pool.append(t)
+				while out.size() < 2 and not pool.is_empty():
+					out.append(pool.pop_at(rng.randi_range(0, pool.size() - 1)))
 		"one_ally":
 			var c := battler(chosen)
 			# Items may target benched allies too.

@@ -42,6 +42,9 @@ func test_wild_battle_round_from_menus() -> void:
 	assert_bool(Array(scene.menu.labels()).any(func(l): return l.begins_with("Scrap"))).is_true()
 	assert_bool(scene.menu.pick_label("Splash Jab")).is_true()
 	await get_tree().process_frame
+	# The Underdog side gets extra actions; spend them resting so only the move under test hits.
+	while scene.menu._title.text.begins_with("What will") and scene.menu.pick_label("Rest"):
+		await get_tree().process_frame
 	if scene.menu.labels().has("Yes, go!"):
 		scene.menu.pick_label("Yes, go!")
 	await _wait_phase(scene, ["command", "results", "replace"])
@@ -157,4 +160,163 @@ func test_held_items_are_not_offered_in_the_items_menu() -> void:
 	var items := Array(scene.menu.labels())
 	assert_bool(items.any(func(l): return l.begins_with("Salve"))).is_true()
 	assert_bool(items.any(func(l): return l.begins_with("Oran Berry"))).is_false()
+	remove_child(scene)
+
+
+# --- Two-step target menu for two_enemies moves ----------------------------------------
+
+var _jab_target := ""
+
+
+## Makes Splash Jab a two_enemies move for the test (restored in after_test).
+func _make_jab_two_target() -> void:
+	_jab_target = db.move("splash_jab").target
+	db.move("splash_jab").target = "two_enemies"
+
+
+func after_test() -> void:
+	if _jab_target != "":
+		db.move("splash_jab").target = _jab_target
+		_jab_target = ""
+
+
+func _foes_scene(species: Array) -> Node:
+	var party := [CreatureInstance.create(db, "tidepup", 12)]
+	var pack: Array = species.map(func(s): return CreatureInstance.create(db, s, 3))
+	return _scene(BattleSetup.wild(party, pack, 1, {}))
+
+
+func _foe_bids(scene: Node) -> Array:
+	return scene.engine.sides[1].active().map(func(t): return t.bid)
+
+
+func _has_label(scene: Node, prefix: String) -> bool:
+	return Array(scene.menu.labels()).any(func(l): return l.begins_with(prefix))
+
+
+func _pick(scene: Node, label: String) -> void:
+	if label == "Fight":
+		# Low enough that Rest stays available for the Underdog's extra actions.
+		for b in scene.engine.sides[0].active():
+			b.creature.energy = 4
+	assert_bool(scene.menu.pick_label(label)).is_true()
+	await get_tree().process_frame
+
+
+## Confirms the turn and plays the round; returns the distinct foe bids the player's move damaged.
+func _damaged_foes(scene: Node, foes: Array) -> Array:
+	# The Underdog side gets extra actions; spend them resting so only the move under test hits.
+	while scene.menu._title.text.begins_with("What will") and scene.menu.pick_label("Rest"):
+		await get_tree().process_frame
+	if scene.menu.labels().has("Yes, go!"):
+		scene.menu.pick_label("Yes, go!")
+	await _wait_phase(scene, ["command", "results", "replace"])
+	var hit: Array = []
+	for ev in scene._log:
+		if ev.type == BattleEvents.DAMAGE and foes.has(ev.bid) and not hit.has(ev.bid):
+			hit.append(ev.bid)
+	hit.sort()
+	return hit
+
+
+func test_two_step_menu_with_three_foes() -> void:
+	_make_jab_two_target()
+	var scene := _foes_scene(["sprigling", "emberkit", "voltmoth"])
+	await _wait_phase(scene, ["command"])
+	var foes := _foe_bids(scene)
+	await _pick(scene, "Fight")
+	await _pick(scene, "Splash Jab")
+	assert_str(scene.menu._title.text).is_equal("Use Splash Jab on...?")
+	assert_int(scene.menu.labels().size()).is_equal(3)
+	await _pick(scene, "Wild Emberkit")
+	assert_str(scene.menu._title.text).is_equal("Use Splash Jab on Wild Emberkit and...?")
+	assert_int(scene.menu.labels().size()).is_equal(2)
+	assert_bool(_has_label(scene, "Wild Emberkit")).is_false()
+	await _pick(scene, "Wild Voltmoth")
+	var hit := await _damaged_foes(scene, foes)
+	var want := [foes[1], foes[2]]
+	want.sort()
+	assert_array(hit).is_equal(want)
+	remove_child(scene)
+
+
+func test_two_or_fewer_foes_skip_the_target_menu() -> void:
+	_make_jab_two_target()
+	var scene := _foes_scene(["sprigling", "emberkit"])
+	await _wait_phase(scene, ["command"])
+	var foes := _foe_bids(scene)
+	# The pick itself names both foes (the old fall-through returned -1 and left it to the engine).
+	var me: int = scene.engine.sides[0].active()[0].bid
+	var pair: Variant = await scene._choose_two_targets(me, "splash_jab", "Use Splash Jab on...?")
+	assert_array(pair).is_equal([foes[0], foes[1]])
+	await _pick(scene, "Fight")
+	await _pick(scene, "Splash Jab")
+	# No target menu: straight to the end-of-turn prompt, covering both foes.
+	assert_bool(scene.menu._title.text.begins_with("Use Splash Jab")).is_false()
+	var hit := await _damaged_foes(scene, foes)
+	var want := foes.duplicate()
+	want.sort()
+	assert_array(hit).is_equal(want)
+	remove_child(scene)
+	var one := _foes_scene(["sprigling"])
+	await _wait_phase(one, ["command"])
+	var lone := _foe_bids(one)
+	var me_one: int = one.engine.sides[0].active()[0].bid
+	var single: Variant = await one._choose_two_targets(me_one, "splash_jab", "Use Splash Jab on...?")
+	assert_array(single).is_equal([lone[0], -1])
+	await _pick(one, "Fight")
+	await _pick(one, "Splash Jab")
+	assert_bool(one.menu._title.text.begins_with("Use Splash Jab")).is_false()
+	assert_array(await _damaged_foes(one, lone)).is_equal(lone)
+	remove_child(one)
+
+
+func test_back_from_the_second_step_returns_to_the_first() -> void:
+	_make_jab_two_target()
+	var scene := _foes_scene(["sprigling", "emberkit", "voltmoth"])
+	await _wait_phase(scene, ["command"])
+	var foes := _foe_bids(scene)
+	await _pick(scene, "Fight")
+	await _pick(scene, "Splash Jab")
+	await _pick(scene, "Wild Emberkit")
+	assert_str(scene.menu._title.text).is_equal("Use Splash Jab on Wild Emberkit and...?")
+	scene.menu._finish(null)
+	await get_tree().process_frame
+	assert_str(scene.menu._title.text).is_equal("Use Splash Jab on...?")
+	assert_int(scene.menu.labels().size()).is_equal(3)
+	await _pick(scene, "Wild Sprigling")
+	assert_str(scene.menu._title.text).is_equal("Use Splash Jab on Wild Sprigling and...?")
+	await _pick(scene, "Wild Voltmoth")
+	var hit := await _damaged_foes(scene, foes)
+	var want := [foes[0], foes[2]]
+	want.sort()
+	assert_array(hit).is_equal(want)
+	remove_child(scene)
+
+
+func test_cancelling_the_first_step_cancels_the_move_choice() -> void:
+	_make_jab_two_target()
+	var scene := _foes_scene(["sprigling", "emberkit", "voltmoth"])
+	await _wait_phase(scene, ["command"])
+	await _pick(scene, "Fight")
+	await _pick(scene, "Splash Jab")
+	assert_str(scene.menu._title.text).is_equal("Use Splash Jab on...?")
+	scene.menu._finish(null)
+	await get_tree().process_frame
+	# Back on the move list.
+	assert_str(scene.menu._title.text).contains("choose a move")
+	assert_bool(_has_label(scene, "Splash Jab")).is_true()
+	remove_child(scene)
+
+
+func test_other_target_kinds_are_unchanged() -> void:
+	var scene := _foes_scene(["sprigling", "emberkit", "voltmoth"])
+	await _wait_phase(scene, ["command"])
+	var foes := _foe_bids(scene)
+	await _pick(scene, "Fight")
+	await _pick(scene, "Splash Jab")
+	assert_str(scene.menu._title.text).is_equal("Use Splash Jab on...?")
+	assert_int(scene.menu.labels().size()).is_equal(3)
+	await _pick(scene, "Wild Voltmoth")
+	assert_array(await _damaged_foes(scene, foes)).is_equal([foes[2]])
 	remove_child(scene)

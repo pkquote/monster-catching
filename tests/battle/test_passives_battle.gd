@@ -72,7 +72,7 @@ func _make(species: String, passive: String, moves: Array = ["hit"], level := 50
 
 
 func _dmg(e: BattleEngine, user: Battler, move: String, target: Battler) -> float:
-	return BattleAI.estimate_damage(e, user, db.move(move), target, false)
+	return BattleAI.estimate_damage(e, user, db.move(move), target, 1)
 
 
 func _patk(e: BattleEngine, b: Battler) -> float:

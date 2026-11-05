@@ -75,7 +75,7 @@ func _patk(e: BattleEngine, b: Battler) -> float:
 
 
 func _dmg(e: BattleEngine, user: Battler, move: String, target: Battler) -> float:
-	return BattleAI.estimate_damage(e, user, db.move(move), target, false)
+	return BattleAI.estimate_damage(e, user, db.move(move), target, 1)
 
 
 func _round(e: BattleEngine, actions: Dictionary) -> Array:

@@ -8,16 +8,19 @@ var move: String = ""
 var item: String = ""
 ## Target bid for creature-targeted moves/items (-1 = engine picks).
 var target: int = -1
+## Second target bid for "two_enemies" moves (-1 = engine picks).
+var second_target: int = -1
 ## Bench bid to bring in for "swap".
 var swap_in: int = -1
 
 
-static func use_move(actor_bid: int, move_id: String, target_bid: int = -1) -> BattleAction:
+static func use_move(actor_bid: int, move_id: String, target_bid: int = -1, second_target_bid: int = -1) -> BattleAction:
 	var a := BattleAction.new()
 	a.kind = "move"
 	a.actor = actor_bid
 	a.move = move_id
 	a.target = target_bid
+	a.second_target = second_target_bid
 	return a
 
 

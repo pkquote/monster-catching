@@ -65,9 +65,9 @@ static func damage(engine: BattleEngine, ctx: EffectContext, e: Dictionary, targ
 	for p in engine.passives(target):
 		if p.op == "incoming_type_mod" and p.get("type", type) == type:
 			mult *= float(p.mult)
-	if ctx.spread:
+	if ctx.spread_count > 1:
 		var reduction := float(engine.sides[target.side].underdog.get("spread_reduction", 0.0))
-		mult *= db.balance.spread_mult * (1.0 - reduction)
+		mult *= db.balance.spread_mult_for(ctx.spread_count) * (1.0 - reduction)
 	var r := engine.rng.randf_range(ROLL_MIN, ROLL_MAX) if roll else ROLL_AVG
 	return {"amount": maxi(1, int(base * mult * r)), "type_mult": type_mult}
 

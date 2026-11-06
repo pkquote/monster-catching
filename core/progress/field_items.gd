@@ -18,6 +18,50 @@ static func can_use(db: Database, item_id: String) -> bool:
 	return it.effects.all(func(e): return e.op in OPS and e.has("fraction"))
 
 
+## Whether `item_id` can be used from the bag right now, and why not. Returns { ok, reason }.
+## Pure and consistent with `can_use`/`use`: ok means `use` would succeed on some party member
+## (so it is false when the bag holds none of the item).
+static func usability(db: Database, save: SaveGame, item_id: String) -> Dictionary:
+	var it := db.item(item_id)
+	if it == null:
+		return _usability(false, "Unknown item.")
+	match it.category:
+		"held":
+			return _usability(false, "Give it from the Summary.")
+		"capture", "battle":
+			return _usability(false, "Used in battle.")
+		"key":
+			return _usability(false, "Can't be used.")
+	if not can_use(db, item_id):
+		return _usability(false, "Can't be used here.")
+	if int(save.inventory.get(item_id, 0)) <= 0:
+		return _usability(false, "You don't have any.")
+	if it.category == "training":
+		for m: CreatureInstance in save.party:
+			if Training.spent(m) > 0:
+				return _usability(true, "Usable now.")
+		return _usability(false, "No one has training points to return.")
+	for m: CreatureInstance in save.party:
+		if m.hp <= 0:
+			continue
+		if _would_gain(db, it, m):
+			return _usability(true, "Usable now.")
+	return _usability(false, "No one needs it right now.")
+
+
+static func _would_gain(db: Database, it: ItemDef, m: CreatureInstance) -> bool:
+	for e: Dictionary in it.effects:
+		if e.op == "heal" and m.hp < m.max_hp(db):
+			return true
+		if e.op == "restore_energy" and m.energy < m.max_energy(db):
+			return true
+	return false
+
+
+static func _usability(ok: bool, reason: String) -> Dictionary:
+	return {"ok": ok, "reason": reason}
+
+
 ## Uses one `item_id` from the bag on `c`. Returns { ok, error, healed, energy, refunded };
 ## errors: "not_usable", "none_left", "fainted", "no_effect" (nothing to restore),
 ## "nothing_to_refund" (Reset Seed on a creature with no training). A failed use spends nothing.

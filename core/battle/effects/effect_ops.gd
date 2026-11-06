@@ -2,7 +2,7 @@ class_name EffectOps
 extends RefCounted
 ## op name -> handler. To add a behavior: add an op schema in DataSchemas.EFFECT_OPS,
 ## write an op_<name>.gd handler here, register it below, and describe it in
-## tools/generate_compendium.gd.
+## EffectText.effect() in core/data/effect_text.gd.
 
 static var _registry: Dictionary = {}
 

@@ -1,7 +1,7 @@
 # Monster-Catching RPG — Design Spec
 
 Date: 2026-11-03
-Status: Approved. M0–M4, creature passives and held items implemented.
+Status: Approved. M0–M4, creature passives and held items implemented; M5–M8 planned (see the roadmap).
 
 ## 1. Intent
 
@@ -335,6 +335,10 @@ them to the engine (audio buses, window, input map). Game actions are mirrored i
 | **M4 Progression + menus** | Level-ups, one species with growth branches, party + storage menus, training-point and respec UI |
 | **Creature passives** | Rolled and Affinity passives, battle triggers and banners, the Passive Unlocked screen, switching on the Summary, the lead's overworld effects. Detailed design: [creature passives design](2026-11-04-passives-design.md) |
 | **Held items** | One held item per creature: permanent, consumed and per-battle items, auras, overworld effects, give/take on the Summary, AI awareness. Detailed design: [held items design](2026-11-05-held-items-design.md) |
+| **M5 Visual menus** | Controls-tab scrolling, compendium re-audit, bag item summary pane; shared visual pieces (creature sprite slot, stat radar with HP and Stamina bars, summary card, item icon slot); Summary redesign; box grid with sprites and a hover summary card; party view. Detailed design: [roadmap M5-M8](2026-11-05-roadmap-m5-m8.md) |
+| **M6 Engine backlog** | Multi-hit moves, a status-cure op, growth-tier content for shipped species, AI modelling of enter/round-end/faint/knockout triggers, remaining passive and held-item minors. See the [roadmap](2026-11-05-roadmap-m5-m8.md) |
+| **M7 Art and audio pipeline** | Art conventions and slots for sprites, icons and type badges, wiring placeholders to real art, audio hooks on the existing buses. See the [roadmap](2026-11-05-roadmap-m5-m8.md) |
+| **M8 Content expansion** | The real creature set, moves, maps, story and tamers; retires the test content pack. See the [roadmap](2026-11-05-roadmap-m5-m8.md) |
 
 Starter content: ~8 creatures, ~20 moves, 5 field states, 4 reactions, 3 capture items, 2 tamers, 1 encounter table (placeholders).
 

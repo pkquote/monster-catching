@@ -7,7 +7,7 @@ and creature passives (a rolled passive for life plus one unlocked through Affin
 Design spec: [documentation/specs/2026-11-03-monster-rpg-design.md](documentation/specs/2026-11-03-monster-rpg-design.md)
 
 Content reference (every creature, move, item, status, field state, reaction, passive, tamer and encounter):
-[documentation/compendium.md](documentation/compendium.md). It is generated from `data/`, so don't edit it by hand.
+[documentation/compendium.md](documentation/compendium.md). It is generated from `data/` by `tools/generate_compendium.gd` (via `tools/compendium_builder.gd`), so don't edit it by hand. Rules and Balance come first, then Types through Held items, Moves, Items, Creatures, Tamers and Encounters.
 
 Battle engine reference (API, round order, formulas, passives and their triggers, events, AI):
 [documentation/battle-engine.md](documentation/battle-engine.md)
@@ -38,7 +38,7 @@ Building maps (painting tiles, placing doors, NPCs, items, tamers, triggers; che
 Press F5 in the editor (or run the project). The game boots to a splash screen, then the title
 menu: Resume, New Game, Load Game, Settings, Quit. A new game starts at home in Fernmoor Town; walk
 out to meet the professor and pick a starter. Arrow keys / WASD move, Shift runs, Z / Enter talks and
-confirms, C / Tab opens the menu (Party, Bag, Save, Settings, Quit). Party shows each creature's Summary (stats and passives, with a **Use …** option that switches the active one; moves; training), lets you reorder the team and, outside unsafe areas, reach the creature box; storage boxes in buildings do the same. Press **F1** on any screen (debug
+confirms, C / Tab opens the menu (Party, Bag, Save, Settings, Quit). The Bag shows an item summary pane (icon, count, price, description, effect and whether it can be used now) for the focused item. Party shows each creature's Summary (stats and passives, with a **Use …** option that switches the active one; moves; training), lets you reorder the team and, outside unsafe areas, reach the creature box; storage boxes in buildings do the same. Press **F1** on any screen (debug
 builds only) for the debug tools: **Get test party**, **Heal party**, **Give XP**, **Set Affinity** (also unlocks the Affinity passive), **Set passive** (any passive in either slot, except the debug test pack's `tp_` ones), **Fill box**, and test battles (wild Route 1,
 Scout Ana 1v1, Rival 2v2, and a **Custom battle** team builder: both sides up to `party_size` creatures, each with its own species, level, moves, held item and passive, a bag editor, and any format up to 3v3 such as 1v3 or 3v1; these are exhibitions, so nothing in them is saved). Player data lives in Godot's user folder
 (`%APPDATA%/Godot/app_userdata/Monster Catching Game/` on Windows):
@@ -58,7 +58,7 @@ Drop entries into any `.json` file under a category folder, e.g. `data/moves/my_
 
 Every field is checked against `core/data/schemas.gd`. New effect behaviors are added as an `op`
 in `DataSchemas.EFFECT_OPS` (and as a handler in the battle engine). When you add an op, also give it a
-readable description in `tools/generate_compendium.gd` (`_effect()`).
+readable description in `EffectText.effect()` in `core/data/effect_text.gd`.
 
 After changing content, regenerate the compendium (`scripts/check.sh` does this too):
 

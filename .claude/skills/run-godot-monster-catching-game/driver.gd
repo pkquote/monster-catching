@@ -18,6 +18,8 @@ extends SceneTree
 ##   --mode=party         every screen that lists the party (Party, Summary, Bag targets, Storage,
 ##                        battle Swap and item targets) with a full party; --party-size=N (1-12)
 ##                        sets balance.party_size in memory only (data/balance.json is untouched).
+##   --mode=bag           Menu -> Bag: the left pane follows the focused item (heal, held, capture and a
+##                        very long description added in memory), Back shows "Pick an item.".
 ##   --mode=scene         open one scene, wait, screenshot. Use with --scene / --frames.
 ##   --scene=res://...    scene for --mode=scene (default: the project's main scene)
 ##   --frames=N           frames to wait before the screenshot in scene mode (default 60)
@@ -44,7 +46,7 @@ func _initialize() -> void:
 	match _opts.mode:
 		"scene":
 			_run_scene()
-		"battle", "overworld", "progress", "passives", "held", "builder", "party":
+		"battle", "overworld", "progress", "passives", "held", "builder", "party", "bag":
 			_tour(_opts.mode)
 		_:
 			_tour("frontend")

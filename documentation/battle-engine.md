@@ -354,7 +354,7 @@ in `BattleText` (and `BattlePlayback` if it changes what's on screen).
 2. Write `core/battle/effects/op_<name>.gd`, extending `EffectOp`. Override `per_target()` to return
    false for side-level effects.
 3. Register it in `EffectOps.get_op()`. A test fails if the schema lists an op that has no handler.
-4. Describe it in `_effect()` in `tools/generate_compendium.gd`.
+4. Describe it in `EffectText.effect()` in `core/data/effect_text.gd`.
 
 ## Balance simulator
 

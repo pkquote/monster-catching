@@ -33,8 +33,8 @@ Without it, scripts fail with `Identifier "DataLoader" not declared`:
 ## Run (agent path)
 
 Front-end tour: splash → title → New Game (types "Ana") → overworld (autosave; Menu → Save;
-Menu → Quit to title) → Load browser → every Settings tab → rebind Accept to K → Resume. It checks 6
-expectations and exits 1 if any fail. It takes about 13 s, and a game window opens while it runs.
+Menu → Quit to title) → Load browser → every Settings tab → Controls tab again with real Down keys to the last binding, which must scroll into view inside the 640x360
+window → rebind Accept to K → Resume. It checks 10 expectations and exits 1 if any fail. It takes about 13 s, and a game window opens while it runs.
 
 ```bash
 timeout 120 "$GODOT" --path . --script res://.claude/skills/run-godot-monster-catching-game/driver.gd 2>&1 | grep "\[driver\]"
@@ -122,6 +122,16 @@ to `qNN_12_...` (NN = the party size), so runs at 6 and 12 can share a folder. A
 timeout 300 "$GODOT" --path . --script res://.claude/skills/run-godot-monster-catching-game/driver.gd -- --mode=party --party-size=12 --out="$TMPDIR/party_shots" 2>&1 | grep "\[driver\]"
 ```
 
+**Bag tour** (`--mode=bag`): new game -> F1 test party (Tidepup set to 1 HP) -> a Salve, an Oran Berry, a Lure Cage
+and an item with a very long description (added to the loaded content in memory only, never to `data/`) in the bag ->
+Menu -> Bag -> real Down keys through the list: the left pane shows each focused item (icon, name, category, count,
+price, description, effect, usability line such as "Usable now." or "Can't use: ...") and must sit inside its 404x344 page; Back shows "Pick an item." ->
+Salve's "use on who?" page replaces the pane -> Back -> the pane is gone after closing the bag. 12 expectations, about 10 s.
+
+```bash
+timeout 200 "$GODOT" --path . --script res://.claude/skills/run-godot-monster-catching-game/driver.gd -- --mode=bag --out="$TMPDIR/bag_shots" 2>&1 | grep "\[driver\]"
+```
+
 Screenshot a single scene:
 
 ```bash
@@ -138,11 +148,12 @@ timeout 60 "$GODOT" --path . --script res://.claude/skills/run-godot-monster-cat
 | `--mode=held` | the held-items tour above (`h01_…` to `h06_…` screenshots) |
 | `--mode=builder` | the team-builder tour above (`t01_…` to `t12_…` screenshots) |
 | `--mode=party` | the party tour above (`qNN_01_…` to `qNN_12_…`); `--party-size=N` sets the party size in memory |
+| `--mode=bag` | the bag tour above (`bag01_…` to `bag07_…` screenshots) |
 | `--mode=scene` | open `--scene` (default: main scene), wait `--frames` (default 60), screenshot |
 | `--out=<dir>` | screenshot folder; `user://` paths allowed (default `user://run_shots`) |
 
 Each tour is its own file in `tours/` (`frontend.gd`, `battle.gd`, `overworld.gd`, `progress.gd`,
-`passives.gd`, `held.gd`, `builder.gd`, `party.gd`):
+`passives.gd`, `held.gd`, `builder.gd`, `party.gd`, `bag.gd`):
 a `RefCounted` with `var d` (the driver) and `func run()`. To drive a new flow, add
 `tours/<name>.gd`, add `<name>` to the `match` in `driver.gd`'s `_initialize`, and call the
 driver's helpers through `d.`: `wait_scene(name, max_frames)`,
@@ -169,8 +180,8 @@ bash scripts/check.sh
 ```
 
 This validates the JSON content, compiles the dialogue, runs every gdUnit4 suite and regenerates
-`documentation/compendium.md`. Expected: `All checks passed.` with 58 `Statistics:` lines, all
-`PASSED`.
+`documentation/compendium.md`. Expected: `All checks passed.` with one `Statistics:` line per test
+suite, all `PASSED`.
 
 ## Gotchas
 

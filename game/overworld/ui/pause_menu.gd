@@ -2,6 +2,8 @@ class_name PauseMenu
 extends SideMenu
 ## The Menu key on the overworld: Party, Bag, Save, Settings, Quit to title, Close.
 
+var _bag_summary: BagSummary
+
 
 ## Runs until closed (or until it leaves the overworld for Settings / the title).
 func run(world: Overworld) -> void:
@@ -40,17 +42,36 @@ func _party(world: Overworld) -> void:
 	await PartyScreen.run(world)
 
 
+## The bag's left pane while the item list is up (made on first use, kept by the page).
+func bag_summary() -> BagSummary:
+	if _bag_summary == null:
+		_bag_summary = BagSummary.new()
+	return _bag_summary
+
+
 func _bag() -> void:
 	var db := DataRegistry.db
+	var summary := bag_summary()
+	# The focused item fills the left pane; Back (no hint) shows the "Pick an item." line.
+	var show_hint := func(hint: Variant) -> void:
+		if hint != null:
+			summary.show_item(db, GameState.current, str(hint))
+		elif GameState.current.inventory.is_empty():
+			summary.show_empty("Your bag is empty.")
+		else:
+			summary.show_empty()
 	while true:
 		var inv: Dictionary = GameState.current.inventory
 		var options: Array = []
 		for id in inv:
 			var it := db.item(id)
-			options.append({"label": "%s ×%d" % [it.name if it else id, inv[id]], "value": id})
+			options.append({"label": "%s ×%d" % [it.name if it else id, inv[id]], "value": id, "hint": id})
 		options.append({"label": "Back", "value": null})
-		page("Your bag is empty." if inv.is_empty() else "Pick an item.")
+		show_hint.call(null)
+		page_control(summary)
+		menu.hovered.connect(show_hint)  # only while the list is up, as the shop does
 		var item_id = await menu.choose("", options, true, 1)
+		menu.hovered.disconnect(show_hint)
 		if item_id == null:
 			break
 		var it := db.item(item_id)

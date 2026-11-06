@@ -83,3 +83,177 @@ func test_capture_item_is_not_usable() -> void:
 	assert_bool(FieldItems.can_use(db, "lure_cage")).is_false()
 	assert_bool(FieldItems.can_use(db, "salve")).is_true()
 	assert_str(FieldItems.use(db, save, "lure_cage", c).error).is_equal("not_usable")
+
+
+func _party_of(creatures: Array) -> void:
+	save.party = creatures
+
+
+func test_usability_unknown_item() -> void:
+	var u := FieldItems.usability(db, save, "no_such_item")
+	assert_bool(u.ok).is_false()
+	assert_str(u.reason).is_equal("Unknown item.")
+
+
+func test_usability_held_item() -> void:
+	var u := FieldItems.usability(db, save, "tide_charm")
+	assert_bool(u.ok).is_false()
+	assert_str(u.reason).is_equal("Give it from the Summary.")
+
+
+func test_usability_capture_item() -> void:
+	var u := FieldItems.usability(db, save, "lure_cage")
+	assert_bool(u.ok).is_false()
+	assert_str(u.reason).is_equal("Used in battle.")
+
+
+## A fixture database (public route: raw + validate + from_raw) with extra items for categories
+## the shipped data has none of, plus a combined heal + restore_energy item.
+func _fixture_db() -> Database:
+	var r := FixtureDB.raw()
+	r.add_entry("items", {"id": "test_battle_item", "name": "Battle Thing", "category": "battle",
+		"price": 1, "target": "one_ally"})
+	r.add_entry("items", {"id": "test_key_item", "name": "Key Thing", "category": "key", "price": 0})
+	r.add_entry("items", {"id": "elixir", "name": "Elixir", "category": "heal", "price": 1,
+		"target": "one_ally",
+		"effects": [{"op": "heal", "fraction": 0.5}, {"op": "restore_energy", "fraction": 0.5}]})
+	var errors := DataValidator.validate(r)
+	assert(errors.is_empty(), "Test data invalid:\n" + "\n".join(errors))
+	return Database.from_raw(r)
+
+
+func test_usability_battle_item() -> void:
+	var u := FieldItems.usability(_fixture_db(), save, "test_battle_item")
+	assert_bool(u.ok).is_false()
+	assert_str(u.reason).is_equal("Used in battle.")
+
+
+func test_usability_key_item() -> void:
+	var u := FieldItems.usability(_fixture_db(), save, "test_key_item")
+	assert_bool(u.ok).is_false()
+	assert_str(u.reason).is_equal("Can't be used.")
+
+
+func test_usability_heal_with_hurt_creature() -> void:
+	c.hp = 1
+	_party_of([c])
+	var u := FieldItems.usability(db, save, "salve")
+	assert_bool(u.ok).is_true()
+	assert_str(u.reason).is_equal("Usable now.")
+
+
+func test_usability_heal_when_full_or_fainted() -> void:
+	var fainted: CreatureInstance = CreatureInstance.create(db, "tidepup", 10)
+	fainted.hp = 0
+	_party_of([c, fainted])
+	var u := FieldItems.usability(db, save, "salve")
+	assert_bool(u.ok).is_false()
+	assert_str(u.reason).is_equal("No one needs it right now.")
+
+
+func test_usability_heal_ignores_fainted_that_would_gain() -> void:
+	c.hp = 0
+	c.energy = 0
+	_party_of([c])
+	assert_bool(FieldItems.usability(db, save, "salve").ok).is_false()
+	assert_bool(FieldItems.usability(db, save, "tonic").ok).is_false()
+	# Control: a living creature at full HP but with no energy does gain from the tonic.
+	var living: CreatureInstance = CreatureInstance.create(db, "tidepup", 10)
+	living.energy = 0
+	_party_of([c, living])
+	assert_bool(FieldItems.usability(db, save, "tonic").ok).is_true()
+	assert_bool(FieldItems.usability(db, save, "salve").ok).is_false()
+
+
+func test_usability_energy_item() -> void:
+	c.energy = 0
+	_party_of([c])
+	var u := FieldItems.usability(db, save, "tonic")
+	assert_bool(u.ok).is_true()
+	assert_str(u.reason).is_equal("Usable now.")
+	c.energy = c.max_energy(db)
+	u = FieldItems.usability(db, save, "tonic")
+	assert_bool(u.ok).is_false()
+	assert_str(u.reason).is_equal("No one needs it right now.")
+
+
+func test_usability_reset_seed() -> void:
+	save.inventory.reset_seed = 1
+	_party_of([c])
+	var u := FieldItems.usability(db, save, "reset_seed")
+	assert_bool(u.ok).is_false()
+	assert_str(u.reason).is_equal("No one has training points to return.")
+	c.training = {"patk": 1}
+	u = FieldItems.usability(db, save, "reset_seed")
+	assert_bool(u.ok).is_true()
+	assert_str(u.reason).is_equal("Usable now.")
+
+
+func test_usability_needs_the_item_in_the_bag() -> void:
+	c.hp = 1
+	c.training = {"patk": 1}
+	_party_of([c])
+	save.inventory["salve"] = 0
+	var u := FieldItems.usability(db, save, "salve")
+	assert_bool(u.ok).is_false()
+	assert_str(u.reason).is_equal("You don't have any.")
+	# No entry at all is the same as a count of 0.
+	assert_bool(save.inventory.has("reset_seed")).is_false()
+	u = FieldItems.usability(db, save, "reset_seed")
+	assert_bool(u.ok).is_false()
+	assert_str(u.reason).is_equal("You don't have any.")
+	# Reasons for items the bag never uses do not depend on the count.
+	assert_str(FieldItems.usability(db, save, "lure_cage").reason).is_equal("Used in battle.")
+	assert_str(FieldItems.usability(db, save, "tide_charm").reason).is_equal("Give it from the Summary.")
+	assert_str(FieldItems.usability(db, save, "no_such_item").reason).is_equal("Unknown item.")
+	save.inventory["salve"] = 1
+	assert_bool(FieldItems.usability(db, save, "salve").ok).is_true()
+
+
+func test_usability_heal_item_rejected_by_can_use() -> void:
+	var local_db: Database = DataLoader.load_database("res://data").db
+	local_db.item("salve").effects = []
+	var u := FieldItems.usability(local_db, save, "salve")
+	assert_bool(u.ok).is_false()
+	assert_str(u.reason).is_equal("Can't be used here.")
+
+
+func test_usability_ok_agrees_with_use_on_some_creature() -> void:
+	_assert_usability_matches_use(db, "tidepup",
+			["salve", "tonic", "reset_seed", "lure_cage", "tide_charm", "no_such_item"])
+
+
+func test_usability_agrees_with_use_for_combined_heal_and_energy_item() -> void:
+	var fx: Database = _fixture_db()
+	_assert_usability_matches_use(fx, "blob",
+			["elixir", "potion", "tonic", "seed", "test_battle_item", "test_key_item"])
+
+
+func _assert_usability_matches_use(d: Database, species: String, ids: Array) -> void:
+	var hurt: CreatureInstance = CreatureInstance.create(d, species, 10)
+	hurt.hp = 2
+	var tired: CreatureInstance = CreatureInstance.create(d, species, 10)
+	tired.energy = 0
+	var trained: CreatureInstance = CreatureInstance.create(d, species, 10)
+	trained.training = {"hp": 1}
+	var fainted: CreatureInstance = CreatureInstance.create(d, species, 10)
+	fainted.hp = 0
+	var full: CreatureInstance = CreatureInstance.create(d, species, 10)
+	var parties: Array = [[], [full], [fainted], [full, fainted], [hurt], [tired], [trained],
+			[full, hurt, tired, trained, fainted]]
+	for id: String in ids:
+		save.inventory[id] = 1
+	for party: Array in parties:
+		save.party = party
+		for id: String in ids:
+			var u := FieldItems.usability(d, save, id)
+			var any_ok := false
+			for member: CreatureInstance in party:
+				var trial := SaveGame.new_game("Ana", 1000, RandomNumberGenerator.new())
+				trial.inventory = {id: 1}
+				if FieldItems.use(d, trial, id, member.copy()).ok:
+					any_ok = true
+					break
+			assert_bool(u.ok).override_failure_message(
+					"%s on party of %d: usability.ok=%s but use-success=%s" % [id, party.size(), u.ok, any_ok]
+			).is_equal(any_ok)

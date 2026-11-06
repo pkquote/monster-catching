@@ -49,8 +49,9 @@ func is_open() -> bool:
 	return _root.visible
 
 
+## The page's text ("" while `page_control` content is shown instead).
 func page_text() -> String:
-	return _text.text
+	return _text.text if _text.visible else ""
 
 
 func _open(title: String) -> void:
@@ -68,8 +69,25 @@ func _close() -> void:
 
 
 func page(text: String) -> void:
+	var had_content := not _text.visible
+	for c: Node in _page.get_children():
+		if c != _text:
+			(c as CanvasItem).visible = false
+	_text.visible = true
 	_text.text = text
 	_page.visible = text != ""
+	if had_content:  # shrink back from the content's size to the text's
+		_page.reset_size()
+
+
+## Shows `content` in the info page in place of the text, until the next `page()`.
+## The page keeps it as a child (added on first use) so it can be shown again.
+func page_control(content: Control) -> void:
+	if content.get_parent() != _page:
+		_page.add_child(content)
+	for c: Node in _page.get_children():
+		(c as CanvasItem).visible = c == content
+	_page.visible = true
 
 
 func _refresh_money() -> void:

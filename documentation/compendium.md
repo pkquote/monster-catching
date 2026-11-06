@@ -3,19 +3,101 @@
 > Generated from `data/` by `tools/generate_compendium.gd`. Do not edit by hand;
 > change the JSON and regenerate.
 
-| Category | Count |
+| Section | Count |
 |---|---|
-| [Creatures](#creatures) | 8 |
-| [Moves](#moves) | 47 |
-| [Items](#items) | 11 |
+| [Rules and Balance](#rules-and-balance) | — |
+| [Types](#types) | 14 |
+| [Affinities](#affinities) | 4 |
 | [Statuses](#statuses) | 4 |
 | [Field States](#field-states) | 12 |
 | [Reactions](#reactions) | 8 |
-| [Types](#types) | 14 |
-| [Affinities](#affinities) | 4 |
 | [Passives](#passives) | 19 |
+| [Held items](#held-items) | 5 |
+| [Moves](#moves) | 47 |
+| [Items](#items) | 6 |
+| [Creatures](#creatures) | 8 |
 | [Tamers](#tamers) | 4 |
 | [Encounters](#encounters) | 2 |
+
+## Rules and Balance
+
+Global rules and tuning values from `data/balance.json`. The sections after this one refer to them.
+
+| Setting | Value |
+|---|---|
+| Level cap | 99 |
+| Party size | 6 |
+| Battle format | Up to 3 active a side; in tamer battles the tamer's *Max active* sets it and the player may field fewer; in wild battles the pack size sets the foe side |
+| Max moves per creature | 4 |
+| Turn order | Fleeing (wild battles only), then swaps, then items, then moves by *Pri* (higher first, default 0); ties go to the faster creature, then at random |
+| Same-type attack bonus | x1.25 |
+| Round limit (draw) | 200 |
+| XP formula | yield x level / 5, x1.5 vs tamers |
+| Catch status bonus | x1.5 |
+| Max field states per side | 3 |
+| Growth Affinity threshold | 30 |
+| Growth tiers | Slow x0.8, Steady x1, Fast x1.2 on a stat's per-level growth |
+| Growth tier budget | 2 (each faster stat counts +1, each slower one -1) |
+| Catch HP weight | 0.8 |
+| Resolve resist cap | 30% (average creature: half that) |
+| Resolve endure cap | 10%, once per battle |
+| Energy pool | 2 x base Stamina x Lv / 100 + 20 |
+| Rest restores | 25% of max energy |
+| Training points | 1 per level, max 30 per stat, +2 HP per point |
+
+### Multi-target damage
+
+A move that hits more than one creature deals less to each. *Two foes* moves hit two foes the user picks (one foe left standing takes full damage); *All enemies*, *All allies* and *Everyone* count every creature they hit. An outnumbered side takes less of it (see [Underdog](#underdog)).
+
+| Creatures hit | Damage to each |
+|---|---|
+| 1 | x1 |
+| 2 | x0.85 |
+| 3 or more | x0.75 |
+
+### Underdog
+
+A side is *outnumbered* when the foes have more creatures active. Its *step* is foes active / own active - 1 (1 vs 2 is 1, 1 vs 3 is 2). Per step it gets 0.5 extra actions per creature each round (rounded down), P.Atk, P.Def, S.Atk, S.Def +15% (max 15%), 20% less spread damage taken (max 50%) and, on the player's side, 50% more XP. Passive `when` conditions that say *outnumbered* test the same rule.
+
+| Format | Step | Extra actions | Stat bonus | Spread damage taken | XP bonus |
+|---|---|---|---|---|---|
+| 1 vs 2 | 1 | 0 | +15% | -20% | +50% |
+| 1 vs 3 | 2 | 1 | +15% | -40% | +100% |
+| 2 vs 3 | 0.5 | 0 | +7.5% | -10% | +25% |
+
+### Bond
+
+Range -100 to 100; starters begin at 20.
+
+| Effect | At most |
+|---|---|
+| Disobey chance (negative Bond) | 40% at -100 |
+| Accuracy and damage penalty | 20% at -100 |
+| Lash out chance | 5% at -50 or below |
+| XP bonus (positive Bond) | 10% at 100 |
+
+| Happening | Bond |
+|---|---|
+| Battle Won | +2 |
+| Knockout | +1 |
+| Healed Item | +1 |
+| Rested | +2 |
+| Fainted | -4 |
+| Overworked | -2 |
+
+### Affinity awards
+
+| Happening | Affinity | Points |
+|---|---|---|
+| Hit Dealt | Striker | 1 |
+| Knockout | Striker | 3 |
+| Hit Survived | Warden | 1 |
+| Heal | Warden | 2 |
+| Field Applied | Catalyst | 2 |
+| Reaction Triggered | Catalyst | 4 |
+| Field Cashed In | Catalyst | 1 |
+| Status Inflicted | Trickster | 2 |
+| Stat Lowered | Trickster | 1 |
 
 ## Types
 
@@ -216,6 +298,17 @@ Damage multiplier when the **row** type attacks the **column** type. Blank means
 | **Dark** |  |  |  |  |  |  |  | x0.5 | x2 | x0.5 |  |  | x0.5 | x2 |
 | **Light** |  |  |  |  |  |  |  |  |  | x0.5 |  | x2 | x2 | x0.5 |
 
+## Affinities
+
+Growth tracks filled by how a creature is used in battle (points per happening are in [Rules and Balance](#rules-and-balance)). Growth branches need at least 30 points in the matching track, and the first track to reach 30 unlocks the species' Affinity passive for that track (see [Passives](#passives)).
+
+| Affinity | Id | Grows from |
+|---|---|---|
+| **Catalyst** | `catalyst` | Grows from shaping the field and triggering reactions. |
+| **Striker** | `striker` | Grows from dealing damage and landing finishing blows. |
+| **Trickster** | `trickster` | Grows from statuses, debuffs, and making foes miss. |
+| **Warden** | `warden` | Grows from absorbing hits, healing, and protecting allies. |
+
 ## Statuses
 
 Conditions on a single creature. Each lasts a set number of rounds.
@@ -283,20 +376,9 @@ Fire immediately when an incoming state meets one already on that side. "All all
 - **Steam:** A scalding cloud blankets the whole battlefield.
 - **Wildfire:** The undergrowth catches. Everything on this side burns.
 
-## Affinities
-
-Growth tracks filled by how a creature is used in battle. Growth branches need at least 30 points in the matching track.
-
-| Affinity | Id | Grows from |
-|---|---|---|
-| **Catalyst** | `catalyst` | Grows from shaping the field and triggering reactions. |
-| **Striker** | `striker` | Grows from dealing damage and landing finishing blows. |
-| **Trickster** | `trickster` | Grows from statuses, debuffs, and making foes miss. |
-| **Warden** | `warden` | Grows from absorbing hits, healing, and protecting allies. |
-
 ## Passives
 
-Each creature rolls one of its species' passives, and unlocks an Affinity passive at the growth threshold. *Aura* passives apply their effects to every creature on the field's side. A `when` condition is shown in brackets.
+Every creature has two passive slots. Its *rolled* passive is picked at random from its species' list (*Species* shows the name alone); its *Affinity* passive unlocks when its first Affinity track reaches 30 points (*Species* shows the track in brackets). Only the active slot works; the player picks it on the Summary screen. *Self* passives' effects apply only to their holder; *Aura* passives apply their effects to every active creature on the holder's side (the same aura does not stack). A trigger reads *On event (physical) (chance) [when]*: (physical) means only physical moves set it off, the percentage is its chance to fire, and it is skipped when it would only heal or restore a creature that is already full. *Overworld* effects apply while the creature leads the party (first in the party, fainted or not). A `when` condition is shown in brackets.
 
 | Passive | Id | Scope | Effects | Triggers | Overworld | Species |
 |---|---|---|---|---|---|---|
@@ -340,9 +422,161 @@ Each creature rolls one of its species' passives, and unlocks an Affinity passiv
 - **Tidal Heart:** Water moves hit 20% harder.
 - **Undertow:** On entering battle, soaks the enemy side. Wild encounters are 20% rarer while it leads.
 
+## Held items
+
+One item per creature, given and taken back on the Summary screen. *Use*: *Permanent* items stay held; *Consumed* items are used up the first time they fire; *Per battle* items fire once each battle. *Scope*: *Self* items' effects apply only to their holder; *Aura* items apply their effects to every active creature on the holder's side (the same item does not stack). Triggers read as for [Passives](#passives), and run after the holder's passive. *Overworld* effects apply while the holder leads the party (first in the party, fainted or not). A `when` condition is shown in brackets.
+
+| Item | Id | Price | Use | Scope | Effects | Triggers | Overworld |
+|---|---|---|---|---|---|---|---|
+| **Guard Banner** | `guard_banner` | 800 | Permanent | Aura | All damage taken x0.9 | — | — |
+| **Oran Berry** | `oran_berry` | 200 | Consumed | Self | — | On being hit [HP below 50%]: Heals 25% max HP → self | — |
+| **Rough Bark** | `rough_bark` | 500 | Per battle | Self | — | On being hit (physical): P.Atk -1 → attacker | — |
+| **Scout Lens** | `scout_lens` | 350 | Permanent | Self | — | — | Wild encounter rate x0.9 |
+| **Tide Charm** | `tide_charm` | 400 | Permanent | Self | Water moves x1.1 | — | — |
+
+- **Guard Banner:** Allies on the field take 10% less damage.
+- **Oran Berry:** Eaten when hurt below half HP: heals a quarter. One use.
+- **Rough Bark:** First physical hit each battle lowers the attacker's Phys. Attack.
+- **Scout Lens:** Wild encounters are 10% rarer while it leads.
+- **Tide Charm:** Water moves hit 10% harder.
+
+## Moves
+
+Grouped by type. Physical moves use P.Atk vs P.Def; special moves use S.Atk vs S.Def. *Cost* is energy spent (some passives lower it). *Pri* is turn-order priority: higher acts first, then the faster creature. Moves that hit more than one creature deal less to each; turn order, energy and the multi-target table are in [Rules and Balance](#rules-and-balance). Effects run top to bottom; `bonus_if_field` modifiers apply to the damage or heal after them. **Scrap** is always available, even without energy.
+
+### Dark moves
+
+| Move | Id | Cat. | Power | Cost | Acc | Pri | Target | Effects | Learned by |
+|---|---|---|---|---|---|---|---|---|---|
+| **Dusk Pulse** | `dusk_pulse` | Special | 40 | 2 | 100% | 0 | One enemy | Damage<br>*A ripple of cold shadow.* | — |
+| **Shadow Claw** | `shadow_claw` | Physical | 50 | 4 | 100% | 0 | One enemy | Damage<br>*A slash from the darkness.* | — |
+| **Shroud** | `shroud` | Status | — | 4 | — | 0 | Enemy side | Applies Shrouded to the enemy side<br>*Smothers the enemy side in shadow.* | — |
+
+### Earth moves
+
+| Move | Id | Cat. | Power | Cost | Acc | Pri | Target | Effects | Learned by |
+|---|---|---|---|---|---|---|---|---|---|
+| **Dust Sweep** | `dust_sweep` | Status | — | 3 | — | 0 | Own side | Clears all states from own side<br>*Clears every state from your own side.* | Pebblet |
+| **Pebble Toss** | `pebble_toss` | Physical | 40 | 2 | 100% | 0 | One enemy | Damage | Pebblet |
+| **Quake Stomp** | `quake_stomp` | Physical | 70 | 9 | 100% | 0 | Everyone | Damage<br>*Shakes the whole field, allies included.* | Pebblet, Torrentusk |
+
+### Electric moves
+
+| Move | Id | Cat. | Power | Cost | Acc | Pri | Target | Effects | Learned by |
+|---|---|---|---|---|---|---|---|---|---|
+| **Arc Pair** | `arc_pair` | Special | 44 | 5 | 100% | 0 | Two foes | Damage; Inflicts Shock (10%)<br>*Lightning arcs between two foes of your choice.* | Voltmoth |
+| **Spark Bite** | `spark_bite` | Physical | 45 | 3 | 100% | 0 | One enemy | Damage; Inflicts Shock (15%) | Voltmoth |
+| **Static Field** | `static_field` | Status | — | 4 | — | 0 | Enemy side | Applies Charged to the enemy side<br>*Charges the air over the enemy side.* | Voltmoth |
+| **Thunder Cascade** | `thunder_cascade` | Special | 50 | 7 | 90% | 0 | All enemies | x1.4 if the target's side is Charged; Damage | Voltmoth |
+
+### Fire moves
+
+| Move | Id | Cat. | Power | Cost | Acc | Pri | Target | Effects | Learned by |
+|---|---|---|---|---|---|---|---|---|---|
+| **Crossfire** | `crossfire` | Special | 44 | 4 | 100% | 0 | Two foes | Damage<br>*Flames lash two foes of your choice.* | Emberkit |
+| **Ember Flick** | `ember_flick` | Special | 40 | 2 | 100% | 0 | One enemy | Damage; Inflicts Burn (10%) | Emberkit |
+| **Flare Burst** | `flare_burst` | Special | 45 | 7 | 90% | 0 | All enemies | x1.6 if the target's side is Scorched (consumes it); Damage<br>*Hits every foe; far stronger on a Scorched side.* | Emberkit |
+| **Scorch Field** | `scorch_field` | Status | — | 4 | — | 0 | Enemy side | Applies Scorched to the enemy side<br>*Sets the enemy side smouldering.* | Emberkit |
+
+### Ghost moves
+
+| Move | Id | Cat. | Power | Cost | Acc | Pri | Target | Effects | Learned by |
+|---|---|---|---|---|---|---|---|---|---|
+| **Haunt** | `haunt` | Status | — | 4 | — | 0 | Enemy side | Applies Haunted to the enemy side<br>*Calls restless spirits onto the enemy side.* | — |
+| **Spirit Touch** | `spirit_touch` | Physical | 40 | 2 | 100% | 0 | One enemy | Damage<br>*A chilling touch from beyond.* | — |
+| **Wail** | `wail` | Special | 50 | 4 | 100% | 0 | One enemy | Damage<br>*A mournful cry that rattles the soul.* | — |
+
+### Grass moves
+
+| Move | Id | Cat. | Power | Cost | Acc | Pri | Target | Effects | Learned by |
+|---|---|---|---|---|---|---|---|---|---|
+| **Regrowth** | `regrowth` | Status | — | 6 | — | 0 | Self | x1.5 if own side is Overgrown; Heals 20% max HP<br>*Heals; heals more on your own Overgrown side.* | Sprigling |
+| **Seed Carpet** | `seed_carpet` | Status | — | 4 | — | 0 | Enemy side | Applies Overgrown to the enemy side<br>*Grows a thicket on the enemy side.* | Sprigling |
+| **Twin Lash** | `twin_lash` | Physical | 42 | 4 | 100% | 0 | Two foes | Damage<br>*Two vines strike two foes of your choice.* | Sprigling |
+| **Vine Lash** | `vine_lash` | Physical | 45 | 3 | 100% | 0 | One enemy | Damage | Sprigling |
+
+### Ice moves
+
+| Move | Id | Cat. | Power | Cost | Acc | Pri | Target | Effects | Learned by |
+|---|---|---|---|---|---|---|---|---|---|
+| **Frost Nip** | `frost_nip` | Physical | 40 | 2 | 100% | 0 | One enemy | Damage; Inflicts Chill (20%) | Frostling |
+| **Glacier Crash** | `glacier_crash` | Physical | 80 | 9 | 85% | 0 | One enemy | Damage | Frostling, Mistcoil |
+| **Rime Veil** | `rime_veil` | Status | — | 4 | — | 0 | Enemy side | Applies Frosted to the enemy side<br>*Coats the enemy side in frost.* | Frostling, Mistcoil |
+
+### Iron moves
+
+| Move | Id | Cat. | Power | Cost | Acc | Pri | Target | Effects | Learned by |
+|---|---|---|---|---|---|---|---|---|---|
+| **Iron Bash** | `iron_bash` | Physical | 50 | 4 | 95% | 0 | One enemy | Damage<br>*A heavy, armoured slam.* | — |
+| **Magnet Pulse** | `magnet_pulse` | Special | 40 | 2 | 100% | 0 | One enemy | Damage<br>*A wave of magnetic force.* | — |
+| **Magnetize** | `magnetize` | Status | — | 4 | — | 0 | Enemy side | Applies Magnetized to the enemy side<br>*Scatters iron filings across the enemy side.* | — |
+
+### Light moves
+
+| Move | Id | Cat. | Power | Cost | Acc | Pri | Target | Effects | Learned by |
+|---|---|---|---|---|---|---|---|---|---|
+| **Flash Strike** | `flash_strike` | Physical | 40 | 2 | 100% | +1 | One enemy | Damage<br>*A strike quick as a flash of light.* | — |
+| **Light Beam** | `light_beam` | Special | 50 | 4 | 100% | 0 | One enemy | Damage<br>*A focused beam of radiance.* | — |
+| **Radiance** | `radiance` | Status | — | 4 | — | 0 | Own side | Applies Radiant to own side<br>*Bathes your own side in warm light.* | — |
+
+### Magic moves
+
+| Move | Id | Cat. | Power | Cost | Acc | Pri | Target | Effects | Learned by |
+|---|---|---|---|---|---|---|---|---|---|
+| **Enchant** | `enchant` | Status | — | 4 | — | 0 | Own side | Applies Enchanted to own side<br>*Draws protective runes around your own side.* | — |
+| **Hex Bolt** | `hex_bolt` | Special | 50 | 4 | 100% | 0 | One enemy | Damage<br>*A crackling bolt of raw arcana.* | — |
+| **Rune Strike** | `rune_strike` | Physical | 40 | 2 | 100% | 0 | One enemy | Damage<br>*A blow carried by a glowing rune.* | — |
+
+### Mental moves
+
+| Move | Id | Cat. | Power | Cost | Acc | Pri | Target | Effects | Learned by |
+|---|---|---|---|---|---|---|---|---|---|
+| **Focus Palm** | `focus_palm` | Physical | 40 | 2 | 100% | 0 | One enemy | Damage<br>*A strike guided by total concentration.* | — |
+| **Mind Spike** | `mind_spike` | Special | 50 | 4 | 100% | 0 | One enemy | Damage<br>*A piercing psychic jolt.* | — |
+| **Psychic Haze** | `psychic_haze` | Status | — | 4 | — | 0 | Enemy side | Applies Hazed to the enemy side<br>*Fills the enemy side with a dulling psychic fog.* | — |
+
+### Neutral moves
+
+| Move | Id | Cat. | Power | Cost | Acc | Pri | Target | Effects | Learned by |
+|---|---|---|---|---|---|---|---|---|---|
+| **Brace** | `brace` | Status | — | 3 | — | 0 | Self | P.Def +1; S.Def +1<br>*Raises Physical and Special Defense.* | Pebblet |
+| **Scrap** | `scrap` | Physical | 25 | 0 | 100% | 0 | One enemy | Damage<br>*A desperate, free flail. Always available, even with no energy.* | Everyone (fallback) |
+| **Tackle** | `tackle` | Physical | 40 | 1 | 100% | 0 | One enemy | Damage | Emberkit, Tidepup |
+| **Taunting Howl** | `taunting_howl` | Status | — | 3 | 100% | 0 | All enemies | P.Atk -1<br>*Lowers every foe's Physical Attack.* | Tidepup |
+
+### Virtual moves
+
+| Move | Id | Cat. | Power | Cost | Acc | Pri | Target | Effects | Learned by |
+|---|---|---|---|---|---|---|---|---|---|
+| **Byte** | `byte` | Physical | 40 | 2 | 100% | 0 | One enemy | Damage<br>*A quick, glitching snap.* | — |
+| **Corrupt** | `corrupt` | Status | — | 4 | — | 0 | Enemy side | Applies Glitched to the enemy side<br>*Seeds the enemy side with corrupted data.* | — |
+| **Data Burst** | `data_burst` | Special | 50 | 4 | 100% | 0 | One enemy | Damage<br>*Floods the target with a blast of raw data.* | — |
+
+### Water moves
+
+| Move | Id | Cat. | Power | Cost | Acc | Pri | Target | Effects | Learned by |
+|---|---|---|---|---|---|---|---|---|---|
+| **Drench** | `drench` | Status | — | 4 | — | 0 | Enemy side | Applies Soaked to the enemy side<br>*Floods the enemy side.* | Mistcoil, Tidepup |
+| **Riptide** | `riptide` | Physical | 55 | 6 | 95% | 0 | One enemy | x1.5 if the target's side is Soaked (consumes it); Damage<br>*Stronger on a Soaked side, draining the water.* | Tidepup, Torrentusk |
+| **Splash Jab** | `splash_jab` | Physical | 40 | 2 | 100% | 0 | One enemy | Damage | Tidepup, Torrentusk |
+| **Tide Beam** | `tide_beam` | Special | 55 | 6 | 100% | 0 | One enemy | Damage<br>*A focused jet of water.* | Mistcoil, Tidepup |
+
+## Items
+
+Bag items, used from the bag in battle or on the field. Held items are listed under [Held items](#held-items).
+
+| Item | Id | Category | Price | Target | Effects | Description |
+|---|---|---|---|---|---|---|
+| **Lure Cage** | `lure_cage` | Capture | 100 | One enemy | Capture x1 | A plain woven cage. Works anywhere. |
+| **Reset Seed** | `reset_seed` | Training | 600 | One ally | Returns all spent training points (field use only) | Returns all of a creature's training points so they can be spent again. |
+| **Salve** | `salve` | Heal | 150 | One ally | Heals 33% max HP | Restores a third of a creature's HP. |
+| **Snare Vine** | `snare_vine` | Capture | 250 | One enemy | Capture x0.8, x2.5 on Overgrown | Far more effective on an Overgrown side. |
+| **Tide Net** | `tide_net` | Capture | 250 | One enemy | Capture x0.8, x2.5 on Soaked | Far more effective on a Soaked side. |
+| **Tonic** | `tonic` | Heal | 150 | One ally | Restores 50% max energy | Restores half of a creature's energy. |
+
 ## Creatures
 
-Base stats. *Total* sums the six battle stats (HP to Spd); Luck, Resolve and Stamina are listed separately.
+Base stats. *Total* sums the six battle stats (HP to Spd); Luck, Resolve and Stamina are listed separately. A **Growth** line lists any stat that grows faster or slower than steady (tier multipliers in [Rules and Balance](#rules-and-balance)); no species has one yet, so every stat grows at the steady rate. *Lv 99 stats* are untrained, with each stat's growth tier applied.
 
 | Creature | Types | HP | P.Atk | P.Def | S.Atk | S.Def | Spd | Luck | Resolve | Stamina | Total | Catch | XP |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|
@@ -495,161 +729,6 @@ Base stats. *Total* sums the six battle stats (HP to Spd); Luck, Resolve and Sta
 | 9 | Arc Pair | Electric | Special | 44 | 5 | 100% |
 | 12 | Thunder Cascade | Electric | Special | 50 | 7 | 90% |
 
-## Moves
-
-Grouped by type. Physical moves use P.Atk vs P.Def; special moves use S.Atk vs S.Def. *Cost* is energy spent. Effects run top to bottom; `bonus_if_field` modifiers apply to the damage or heal after them. **Scrap** is always available, even without energy.
-
-### Dark moves
-
-| Move | Id | Cat. | Power | Cost | Acc | Pri | Target | Effects | Learned by |
-|---|---|---|---|---|---|---|---|---|---|
-| **Dusk Pulse** | `dusk_pulse` | Special | 40 | 2 | 100% | 0 | One enemy | Damage<br>*A ripple of cold shadow.* | — |
-| **Shadow Claw** | `shadow_claw` | Physical | 50 | 4 | 100% | 0 | One enemy | Damage<br>*A slash from the darkness.* | — |
-| **Shroud** | `shroud` | Status | — | 4 | — | 0 | Enemy side | Applies Shrouded to the enemy side<br>*Smothers the enemy side in shadow.* | — |
-
-### Earth moves
-
-| Move | Id | Cat. | Power | Cost | Acc | Pri | Target | Effects | Learned by |
-|---|---|---|---|---|---|---|---|---|---|
-| **Dust Sweep** | `dust_sweep` | Status | — | 3 | — | 0 | Own side | Clears all states from own side<br>*Clears every state from your own side.* | Pebblet |
-| **Pebble Toss** | `pebble_toss` | Physical | 40 | 2 | 100% | 0 | One enemy | Damage | Pebblet |
-| **Quake Stomp** | `quake_stomp` | Physical | 70 | 9 | 100% | 0 | Everyone | Damage<br>*Shakes the whole field, allies included.* | Pebblet, Torrentusk |
-
-### Electric moves
-
-| Move | Id | Cat. | Power | Cost | Acc | Pri | Target | Effects | Learned by |
-|---|---|---|---|---|---|---|---|---|---|
-| **Arc Pair** | `arc_pair` | Special | 44 | 5 | 100% | 0 | Two foes | Damage; Inflicts Shock (10%)<br>*Lightning arcs between two foes of your choice.* | Voltmoth |
-| **Spark Bite** | `spark_bite` | Physical | 45 | 3 | 100% | 0 | One enemy | Damage; Inflicts Shock (15%) | Voltmoth |
-| **Static Field** | `static_field` | Status | — | 4 | — | 0 | Enemy side | Applies Charged to the enemy side<br>*Charges the air over the enemy side.* | Voltmoth |
-| **Thunder Cascade** | `thunder_cascade` | Special | 50 | 7 | 90% | 0 | All enemies | x1.4 if the target's side is Charged; Damage | Voltmoth |
-
-### Fire moves
-
-| Move | Id | Cat. | Power | Cost | Acc | Pri | Target | Effects | Learned by |
-|---|---|---|---|---|---|---|---|---|---|
-| **Crossfire** | `crossfire` | Special | 44 | 4 | 100% | 0 | Two foes | Damage<br>*Flames lash two foes of your choice.* | Emberkit |
-| **Ember Flick** | `ember_flick` | Special | 40 | 2 | 100% | 0 | One enemy | Damage; Inflicts Burn (10%) | Emberkit |
-| **Flare Burst** | `flare_burst` | Special | 45 | 7 | 90% | 0 | All enemies | x1.6 if the target's side is Scorched (consumes it); Damage<br>*Hits every foe; far stronger on a Scorched side.* | Emberkit |
-| **Scorch Field** | `scorch_field` | Status | — | 4 | — | 0 | Enemy side | Applies Scorched to the enemy side<br>*Sets the enemy side smouldering.* | Emberkit |
-
-### Ghost moves
-
-| Move | Id | Cat. | Power | Cost | Acc | Pri | Target | Effects | Learned by |
-|---|---|---|---|---|---|---|---|---|---|
-| **Haunt** | `haunt` | Status | — | 4 | — | 0 | Enemy side | Applies Haunted to the enemy side<br>*Calls restless spirits onto the enemy side.* | — |
-| **Spirit Touch** | `spirit_touch` | Physical | 40 | 2 | 100% | 0 | One enemy | Damage<br>*A chilling touch from beyond.* | — |
-| **Wail** | `wail` | Special | 50 | 4 | 100% | 0 | One enemy | Damage<br>*A mournful cry that rattles the soul.* | — |
-
-### Grass moves
-
-| Move | Id | Cat. | Power | Cost | Acc | Pri | Target | Effects | Learned by |
-|---|---|---|---|---|---|---|---|---|---|
-| **Regrowth** | `regrowth` | Status | — | 6 | — | 0 | Self | x1.5 if own side is Overgrown; Heals 20% max HP<br>*Heals; heals more on your own Overgrown side.* | Sprigling |
-| **Seed Carpet** | `seed_carpet` | Status | — | 4 | — | 0 | Enemy side | Applies Overgrown to the enemy side<br>*Grows a thicket on the enemy side.* | Sprigling |
-| **Twin Lash** | `twin_lash` | Physical | 42 | 4 | 100% | 0 | Two foes | Damage<br>*Two vines strike two foes of your choice.* | Sprigling |
-| **Vine Lash** | `vine_lash` | Physical | 45 | 3 | 100% | 0 | One enemy | Damage | Sprigling |
-
-### Ice moves
-
-| Move | Id | Cat. | Power | Cost | Acc | Pri | Target | Effects | Learned by |
-|---|---|---|---|---|---|---|---|---|---|
-| **Frost Nip** | `frost_nip` | Physical | 40 | 2 | 100% | 0 | One enemy | Damage; Inflicts Chill (20%) | Frostling |
-| **Glacier Crash** | `glacier_crash` | Physical | 80 | 9 | 85% | 0 | One enemy | Damage | Frostling, Mistcoil |
-| **Rime Veil** | `rime_veil` | Status | — | 4 | — | 0 | Enemy side | Applies Frosted to the enemy side<br>*Coats the enemy side in frost.* | Frostling, Mistcoil |
-
-### Iron moves
-
-| Move | Id | Cat. | Power | Cost | Acc | Pri | Target | Effects | Learned by |
-|---|---|---|---|---|---|---|---|---|---|
-| **Iron Bash** | `iron_bash` | Physical | 50 | 4 | 95% | 0 | One enemy | Damage<br>*A heavy, armoured slam.* | — |
-| **Magnet Pulse** | `magnet_pulse` | Special | 40 | 2 | 100% | 0 | One enemy | Damage<br>*A wave of magnetic force.* | — |
-| **Magnetize** | `magnetize` | Status | — | 4 | — | 0 | Enemy side | Applies Magnetized to the enemy side<br>*Scatters iron filings across the enemy side.* | — |
-
-### Light moves
-
-| Move | Id | Cat. | Power | Cost | Acc | Pri | Target | Effects | Learned by |
-|---|---|---|---|---|---|---|---|---|---|
-| **Flash Strike** | `flash_strike` | Physical | 40 | 2 | 100% | +1 | One enemy | Damage<br>*A strike quick as a flash of light.* | — |
-| **Light Beam** | `light_beam` | Special | 50 | 4 | 100% | 0 | One enemy | Damage<br>*A focused beam of radiance.* | — |
-| **Radiance** | `radiance` | Status | — | 4 | — | 0 | Own side | Applies Radiant to own side<br>*Bathes your own side in warm light.* | — |
-
-### Magic moves
-
-| Move | Id | Cat. | Power | Cost | Acc | Pri | Target | Effects | Learned by |
-|---|---|---|---|---|---|---|---|---|---|
-| **Enchant** | `enchant` | Status | — | 4 | — | 0 | Own side | Applies Enchanted to own side<br>*Draws protective runes around your own side.* | — |
-| **Hex Bolt** | `hex_bolt` | Special | 50 | 4 | 100% | 0 | One enemy | Damage<br>*A crackling bolt of raw arcana.* | — |
-| **Rune Strike** | `rune_strike` | Physical | 40 | 2 | 100% | 0 | One enemy | Damage<br>*A blow carried by a glowing rune.* | — |
-
-### Mental moves
-
-| Move | Id | Cat. | Power | Cost | Acc | Pri | Target | Effects | Learned by |
-|---|---|---|---|---|---|---|---|---|---|
-| **Focus Palm** | `focus_palm` | Physical | 40 | 2 | 100% | 0 | One enemy | Damage<br>*A strike guided by total concentration.* | — |
-| **Mind Spike** | `mind_spike` | Special | 50 | 4 | 100% | 0 | One enemy | Damage<br>*A piercing psychic jolt.* | — |
-| **Psychic Haze** | `psychic_haze` | Status | — | 4 | — | 0 | Enemy side | Applies Hazed to the enemy side<br>*Fills the enemy side with a dulling psychic fog.* | — |
-
-### Neutral moves
-
-| Move | Id | Cat. | Power | Cost | Acc | Pri | Target | Effects | Learned by |
-|---|---|---|---|---|---|---|---|---|---|
-| **Brace** | `brace` | Status | — | 3 | — | 0 | Self | P.Def +1; S.Def +1<br>*Raises Physical and Special Defense.* | Pebblet |
-| **Scrap** | `scrap` | Physical | 25 | 0 | 100% | 0 | One enemy | Damage<br>*A desperate, free flail. Always available, even with no energy.* | Everyone (fallback) |
-| **Tackle** | `tackle` | Physical | 40 | 1 | 100% | 0 | One enemy | Damage | Emberkit, Tidepup |
-| **Taunting Howl** | `taunting_howl` | Status | — | 3 | 100% | 0 | All enemies | P.Atk -1<br>*Lowers every foe's Physical Attack.* | Tidepup |
-
-### Virtual moves
-
-| Move | Id | Cat. | Power | Cost | Acc | Pri | Target | Effects | Learned by |
-|---|---|---|---|---|---|---|---|---|---|
-| **Byte** | `byte` | Physical | 40 | 2 | 100% | 0 | One enemy | Damage<br>*A quick, glitching snap.* | — |
-| **Corrupt** | `corrupt` | Status | — | 4 | — | 0 | Enemy side | Applies Glitched to the enemy side<br>*Seeds the enemy side with corrupted data.* | — |
-| **Data Burst** | `data_burst` | Special | 50 | 4 | 100% | 0 | One enemy | Damage<br>*Floods the target with a blast of raw data.* | — |
-
-### Water moves
-
-| Move | Id | Cat. | Power | Cost | Acc | Pri | Target | Effects | Learned by |
-|---|---|---|---|---|---|---|---|---|---|
-| **Drench** | `drench` | Status | — | 4 | — | 0 | Enemy side | Applies Soaked to the enemy side<br>*Floods the enemy side.* | Mistcoil, Tidepup |
-| **Riptide** | `riptide` | Physical | 55 | 6 | 95% | 0 | One enemy | x1.5 if the target's side is Soaked (consumes it); Damage<br>*Stronger on a Soaked side, draining the water.* | Tidepup, Torrentusk |
-| **Splash Jab** | `splash_jab` | Physical | 40 | 2 | 100% | 0 | One enemy | Damage | Tidepup, Torrentusk |
-| **Tide Beam** | `tide_beam` | Special | 55 | 6 | 100% | 0 | One enemy | Damage<br>*A focused jet of water.* | Mistcoil, Tidepup |
-
-## Items
-
-| Item | Id | Category | Price | Target | Effects | Description |
-|---|---|---|---|---|---|---|
-| **Guard Banner** | `guard_banner` | Held | 800 | — | — | Allies on the field take 10% less damage. |
-| **Lure Cage** | `lure_cage` | Capture | 100 | One enemy | Capture x1 | A plain woven cage. Works anywhere. |
-| **Oran Berry** | `oran_berry` | Held | 200 | — | — | Eaten when hurt below half HP: heals a quarter. One use. |
-| **Reset Seed** | `reset_seed` | Training | 600 | One ally | Returns all spent training points (field use only) | Returns all of a creature's training points so they can be spent again. |
-| **Rough Bark** | `rough_bark` | Held | 500 | — | — | First physical hit each battle lowers the attacker's Phys. Attack. |
-| **Salve** | `salve` | Heal | 150 | One ally | Heals 33% max HP | Restores a third of a creature's HP. |
-| **Scout Lens** | `scout_lens` | Held | 350 | — | — | Wild encounters are 10% rarer while it leads. |
-| **Snare Vine** | `snare_vine` | Capture | 250 | One enemy | Capture x0.8, x2.5 on Overgrown | Far more effective on an Overgrown side. |
-| **Tide Charm** | `tide_charm` | Held | 400 | — | — | Water moves hit 10% harder. |
-| **Tide Net** | `tide_net` | Capture | 250 | One enemy | Capture x0.8, x2.5 on Soaked | Far more effective on a Soaked side. |
-| **Tonic** | `tonic` | Heal | 150 | One ally | Restores 50% max energy | Restores half of a creature's energy. |
-
-## Held items
-
-One item per creature, given from the Summary screen. *Permanent* items stay held; *Consumed* items are used up when they fire; *Per battle* items fire once each battle. *Aura* items apply their effects to every creature on the holder's side. A `when` condition is shown in brackets.
-
-| Item | Id | Price | Use | Scope | Effects | Triggers | Overworld |
-|---|---|---|---|---|---|---|---|
-| **Guard Banner** | `guard_banner` | 800 | Permanent | Aura | All damage taken x0.9 | — | — |
-| **Oran Berry** | `oran_berry` | 200 | Consumed | Self | — | On being hit [HP below 50%]: Heals 25% max HP → self | — |
-| **Rough Bark** | `rough_bark` | 500 | Per Battle | Self | — | On being hit (physical): P.Atk -1 → attacker | — |
-| **Scout Lens** | `scout_lens` | 350 | Permanent | Self | — | — | Wild encounter rate x0.9 |
-| **Tide Charm** | `tide_charm` | 400 | Permanent | Self | Water moves x1.1 | — | — |
-
-- **Guard Banner:** Allies on the field take 10% less damage.
-- **Oran Berry:** Eaten when hurt below half HP: heals a quarter. One use.
-- **Rough Bark:** First physical hit each battle lowers the attacker's Phys. Attack.
-- **Scout Lens:** Wild encounters are 10% rarer while it leads.
-- **Tide Charm:** Water moves hit 10% harder.
-
 ## Tamers
 
 NPC opponents. *Max active* is how many creatures they field at once.
@@ -716,65 +795,3 @@ Wild encounter tables. Chance is per creature in the pack.
 | Voltmoth | 20% | 3–6 |
 | Pebblet | 15% | 3–6 |
 | Frostling | 5% | 5–7 |
-
-## Balance
-
-Global tuning values from `data/balance.json`.
-
-| Setting | Value |
-|---|---|
-| Level cap | 99 |
-| Party size | 6 |
-| Max moves per creature | 4 |
-| Same-type attack bonus | x1.25 |
-| Multi-target damage | x0.85 (two) / x0.75 (three or more) |
-| Round limit (draw) | 200 |
-| XP formula | yield x level / 5, x1.5 vs tamers |
-| Catch status bonus | x1.5 |
-| Max field states per side | 3 |
-| Growth Affinity threshold | 30 |
-| Underdog extra actions | floor(0.5 per ratio step) per creature |
-| Underdog spread reduction | 20% per ratio step, max 50% |
-| Underdog stat bonus | 15% per ratio step, max 15% |
-| Underdog XP bonus | 50% per ratio step |
-| Catch HP weight | 0.8 |
-| Resolve resist cap | 30% (average creature: half that) |
-| Resolve endure cap | 10%, once per battle |
-| Energy pool | 2 x base Stamina x Lv / 100 + 20 |
-| Rest restores | 25% of max energy |
-| Training points | 1 per level, max 30 per stat, +2 HP per point |
-
-### Bond
-
-Range -100 to 100; starters begin at 20.
-
-| Effect | At most |
-|---|---|
-| Disobey chance (negative Bond) | 40% at -100 |
-| Accuracy and damage penalty | 20% at -100 |
-| Lash out chance | 5% at -50 or below |
-| XP bonus (positive Bond) | 10% at 100 |
-
-| Happening | Bond |
-|---|---|
-| Battle Won | +2 |
-| Knockout | +1 |
-| Healed Item | +1 |
-| Rested | +2 |
-| Fainted | -4 |
-| Overworked | -2 |
-
-### Affinity awards
-
-| Happening | Affinity | Points |
-|---|---|---|
-| Hit Dealt | Striker | 1 |
-| Knockout | Striker | 3 |
-| Hit Survived | Warden | 1 |
-| Heal | Warden | 2 |
-| Field Applied | Catalyst | 2 |
-| Reaction Triggered | Catalyst | 4 |
-| Field Cashed In | Catalyst | 1 |
-| Status Inflicted | Trickster | 2 |
-| Stat Lowered | Trickster | 1 |
-

@@ -62,6 +62,34 @@ func run() -> void:
 		sm.tabs.current_tab = i
 		await d._frames(5)
 		await d.shot("1%d_settings_%s" % [i, sm.tabs.get_tab_title(i).to_lower()])
+	# Real-window scroll check: Down from the Controls tab bar must walk to the last binding and scroll it into view.
+	var tabs: TabContainer = sm.tabs
+	for i: int in tabs.get_tab_count():
+		if tabs.get_tab_title(i) == "Controls":
+			tabs.current_tab = i
+	await d._frames(5)
+	var scroll: ScrollContainer = tabs.get_current_tab_control().find_children("*", "ScrollContainer", true, false)[0]
+	var last_action: String = GameSettings.ACTIONS[GameSettings.ACTIONS.size() - 1]
+	var last_buttons: Array = [sm.bind_buttons[last_action]["keyboard"], sm.bind_buttons[last_action]["gamepad"]]
+	d.expect(scroll.get_viewport().get_visible_rect().size == Vector2(640, 360), "Settings runs in the 640x360 window")
+	tabs.get_tab_bar().grab_focus()
+	await d._frames(2)
+	await d.shot("16_settings_controls_top")
+	var presses := 0
+	while not (d.root.gui_get_focus_owner() in last_buttons) and presses < GameSettings.ACTIONS.size() + 4:
+		await d.key(KEY_DOWN)
+		await d._frames(2)
+		presses += 1
+	await d._frames(8)
+	await d.shot("17_settings_controls_last_binding")
+	var last_button: Button = d.root.gui_get_focus_owner() as Button
+	d.expect(last_button in last_buttons, "Down keys reach the last Controls binding (%d presses)" % presses)
+	if last_button == null:
+		d._finish()
+		return
+	d.expect(scroll.scroll_vertical > 0, "Controls tab scrolled (scroll_vertical %d)" % scroll.scroll_vertical)
+	d.expect(scroll.get_global_rect().encloses(last_button.get_global_rect().grow(-0.5)),
+		"The last binding %s is inside the scroll area %s" % [last_button.get_global_rect(), scroll.get_global_rect()])
 	sm.bind_buttons["accept"]["keyboard"].pressed.emit()
 	await d._frames(2)
 	await d.key(KEY_K)

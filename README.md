@@ -39,7 +39,7 @@ Press F5 in the editor (or run the project). The game boots to a splash screen, 
 menu: Resume, New Game, Load Game, Settings, Quit. A new game starts at home in Fernmoor Town; walk
 out to meet the professor and pick a starter. Arrow keys / WASD move, Shift runs, Z / Enter talks and
 confirms, C / Tab opens the menu (Party, Bag, Save, Settings, Quit). Party shows each creature's Summary (stats and passives, with a **Use …** option that switches the active one; moves; training), lets you reorder the team and, outside unsafe areas, reach the creature box; storage boxes in buildings do the same. Press **F1** on any screen (debug
-builds only) for the debug tools: **Get test party**, **Heal party**, **Give XP**, **Set Affinity** (also unlocks the Affinity passive), **Set passive** (any passive in either slot), **Fill box**, and test battles (wild Route 1,
+builds only) for the debug tools: **Get test party**, **Heal party**, **Give XP**, **Set Affinity** (also unlocks the Affinity passive), **Set passive** (any passive in either slot, except the debug test pack's `tp_` ones), **Fill box**, and test battles (wild Route 1,
 Scout Ana 1v1, Rival 2v2, and a **Custom battle** team builder: both sides up to `party_size` creatures, each with its own species, level, moves, held item and passive, a bag editor, and any format up to 3v3 such as 1v3 or 3v1; these are exhibitions, so nothing in them is saved). Player data lives in Godot's user folder
 (`%APPDATA%/Godot/app_userdata/Monster Catching Game/` on Windows):
 
@@ -82,6 +82,8 @@ godot --headless --path . -s res://addons/gdUnit4/bin/GdUnitCmdTool.gd --add res
 ```
 
 ## Notes
+
+- `data_testpack/` is a debug-only test content pack (`tp_` ids) loaded on top of `data/` in debug builds, the F1 team builder and `tools/simulate.gd`; it never reaches saves or release builds. See "Test content pack" in [documentation/battle-engine.md](documentation/battle-engine.md) (including how to remove it).
 
 - Dialogue Manager 4 syntax: mutations use `$>` (`do`/`set` are deprecated), and response conditions are
   self-closing: `- Text [if cond /]`.

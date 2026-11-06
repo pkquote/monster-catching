@@ -1,11 +1,21 @@
 class_name DebugPassivePage
 extends DebugPage
 ## Pick a party creature, any passive id (or none) and a slot, and whether to make it active.
-## Any id may go in either slot, whatever the species lists.
+## Any id may go in either slot, whatever the species lists, except debug test-pack (`tp_`)
+## passives: this page writes to the real party and autosaves.
 
 const NONE := "(none)"
 const SLOTS := [Passives.SLOT_ROLLED, Passives.SLOT_AFFINITY]
 const SLOT_NAMES := ["Rolled", "Affinity"]
+
+
+## The passives this page offers: every id except test-pack ones, in database order.
+static func save_safe_passives(db: Database) -> PackedStringArray:
+	var out: PackedStringArray = PackedStringArray()
+	for id: String in db.ids("passives"):
+		if not Database.is_test_content(id):
+			out.append(id)
+	return out
 
 
 func title() -> String:
@@ -19,7 +29,7 @@ func build(box: VBoxContainer) -> void:
 	grid.columns = 2
 	grid.add_theme_constant_override("h_separation", 12)
 	box.add_child(grid)
-	var ids := db.ids("passives")
+	var ids := save_safe_passives(db)
 	var names: Array = Array(ids).map(func(id: String): return db.passive(id).name)
 	names.append(NONE)
 	var passive: OptionButton = menu.option_row(grid, "Passive", names, 0)

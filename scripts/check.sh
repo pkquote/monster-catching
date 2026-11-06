@@ -15,7 +15,7 @@ fi
 mkdir -p reports && touch reports/.gdignore
 
 echo "== Data"
-"$GODOT" --headless --path . --script res://tools/validate_data.gd 2>&1 | grep -E "Data OK|^res://|^data/|failed" || true
+"$GODOT" --headless --path . --script res://tools/validate_data.gd 2>&1 | grep -E "Data OK|Data\+pack OK|^res://|^data/|failed" || true
 "$GODOT" --headless --path . --script res://tools/validate_data.gd >/dev/null 2>&1
 
 echo "== Dialogue"

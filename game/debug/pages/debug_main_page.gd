@@ -60,12 +60,8 @@ func _heal_party() -> void:
 
 
 func _fill_box() -> void:
-	var db := DataRegistry.db
-	var ids := db.ids("creatures")
-	var level := BattleLauncher.party_level(GameState.current)
-	for i in BOX_FILL:
-		GameState.current.storage.append(CreatureInstance.create(db, ids[menu.rng.randi() % ids.size()], level,
-			PackedStringArray(), menu.rng))
+	BattleLauncher.fill_box(DataRegistry.db, GameState.current, BOX_FILL,
+		BattleLauncher.party_level(GameState.current), menu.rng)
 	GameState.autosave()
 	menu.show_page(DebugMainPage.new(), "Added %d creatures to the box." % BOX_FILL)
 

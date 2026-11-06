@@ -4,6 +4,9 @@ extends RefCounted
 ## Built by DataLoader.build() from validated RawData. Core systems receive
 ## a Database explicitly; nothing in core/ reads a global registry.
 
+## Ids of debug-only test-pack content start with this prefix.
+const TEST_PREFIX: String = "tp_"
+
 ## category -> { id: Def }
 var _tables: Dictionary = {}
 var balance: BalanceDef
@@ -24,6 +27,10 @@ static func _builders() -> Dictionary:
 		"minigames": MinigameDef,
 		"passives": PassiveDef,
 	}
+
+
+static func is_test_content(id: String) -> bool:
+	return id.begins_with(TEST_PREFIX)
 
 
 static func from_raw(raw: RawData) -> Database:

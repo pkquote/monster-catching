@@ -17,6 +17,26 @@ static func fresh_rng() -> RandomNumberGenerator:
 	return rng
 
 
+## Creature ids a random pick may put into a real save: every species except the debug
+## test pack's (`tp_`). Use this, not `db.ids("creatures")`, for any random species that
+## ends up in a party or box. Sorted, so a seeded rng picks reproducibly.
+static func save_safe_species(db: Database) -> Array:
+	var out: Array = []
+	for id: String in db.ids("creatures"):
+		if not Database.is_test_content(id):
+			out.append(id)
+	out.sort()
+	return out
+
+
+## Debug helper: adds `count` random save-safe creatures at `level` to the box.
+static func fill_box(db: Database, save: SaveGame, count: int, level: int, rng: RandomNumberGenerator) -> void:
+	var species: Array = save_safe_species(db)
+	for i: int in count:
+		save.storage.append(CreatureInstance.create(db, species[rng.randi() % species.size()], level,
+			PackedStringArray(), rng))
+
+
 ## Debug helper until starters exist (M3): a small party and bag, once per playthrough.
 ## Returns false if this playthrough already got it.
 static func grant_test_party(db: Database, save: SaveGame) -> bool:

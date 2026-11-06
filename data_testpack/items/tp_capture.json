@@ -1,0 +1,11 @@
+{
+  "schema": 1,
+  "entries": [
+    {"id": "tp_cage_zero", "name": "TP Cage Zero", "description": "Tests the capture multiplier minimum of 0, which can never catch anything.", "category": "capture", "price": 0, "target": "one_enemy", "effects": [{"op": "capture", "mult": 0.0}]},
+    {"id": "tp_cage_strong", "name": "TP Cage Strong", "description": "Tests a capture multiplier above 1 (x3) with no field bonus.", "category": "capture", "price": 500, "target": "one_enemy", "effects": [{"op": "capture", "mult": 3.0}]},
+    {"id": "tp_cage_max_mult", "name": "TP Cage Max Mult", "description": "Tests the maximum capture multiplier (x10) with a x10 bonus on every field state.", "category": "capture", "price": 5000, "target": "one_enemy",
+      "effects": [{"op": "capture", "mult": 10.0, "field_bonus": {"soaked": 10.0, "scorched": 10.0, "overgrown": 10.0, "charged": 10.0, "frosted": 10.0, "enchanted": 10.0, "hazed": 10.0, "magnetized": 10.0, "glitched": 10.0, "haunted": 10.0, "shrouded": 10.0, "radiant": 10.0}}]},
+    {"id": "tp_cage_field", "name": "TP Cage Field", "description": "Tests a capture field_bonus map: x0.5 base, x4 on a Charged side and x0 on a Frosted side.", "category": "capture", "price": 300, "target": "one_enemy",
+      "effects": [{"op": "capture", "mult": 0.5, "field_bonus": {"charged": 4.0, "frosted": 0.0}}]}
+  ]
+}

@@ -17,9 +17,15 @@ class LoadResult:
 		return errors.is_empty() and db != null
 
 
-static func load_database(data_root: String, dialogue_root: String = "") -> LoadResult:
+## `packs` are extra content roots (same layout as `data_root`) layered on top;
+## a pack root that does not exist is skipped silently.
+static func load_database(data_root: String, dialogue_root: String = "", packs: Array = []) -> LoadResult:
 	var result := LoadResult.new()
 	var raw := read_raw(data_root, result.errors)
+	for pack in packs:
+		var pack_root: String = pack
+		if DirAccess.dir_exists_absolute(pack_root):
+			read_raw(pack_root, result.errors, raw, true)
 	if not dialogue_root.is_empty():
 		_read_dialogue(dialogue_root, raw)
 	# Parse errors make validation output noisy; stop early.
@@ -32,22 +38,46 @@ static func load_database(data_root: String, dialogue_root: String = "") -> Load
 	return result
 
 
+## True when `root` holds at least one content file for any category (a pack worth loading).
+## A missing root, or one with only empty category folders, gives false.
+static func pack_has_entries(root: String) -> bool:
+	for cat in DataSchemas.CATEGORIES:
+		var path := root.path_join(cat)
+		if DataSchemas.CATEGORIES[cat] == "folder":
+			if not _json_files(path).is_empty():
+				return true
+		elif FileAccess.file_exists(path + ".json"):
+			return true
+	return false
+
+
 ## Reads every category under `root`. Parse/shape errors go into `errors`.
-static func read_raw(root: String, errors: PackedStringArray) -> RawData:
-	var raw := RawData.new()
+## With `into`, entries are appended to that RawData. With `optional`, missing
+## category folders/files are skipped silently and "single" files already
+## loaded (balance) are never overridden: a pack's balance.json is ignored without a
+## warning.
+static func read_raw(root: String, errors: PackedStringArray, into: RawData = null, optional: bool = false) -> RawData:
+	var raw: RawData = into if into != null else RawData.new()
 	for cat in DataSchemas.CATEGORIES:
 		match DataSchemas.CATEGORIES[cat]:
 			"folder":
 				var dir_path := root.path_join(cat)
 				if not DirAccess.dir_exists_absolute(dir_path):
+					if optional:
+						continue
 					errors.append("%s: missing content folder" % dir_path)
 					continue
 				for file in _json_files(dir_path):
 					_read_entries_file(file, cat, raw, errors)
 			"file":
-				_read_entries_file(root.path_join(cat + ".json"), cat, raw, errors)
+				var file_path := root.path_join(cat + ".json")
+				if optional and not FileAccess.file_exists(file_path):
+					continue
+				_read_entries_file(file_path, cat, raw, errors)
 			"single":
 				var path := root.path_join(cat + ".json")
+				if optional and (raw.singles.has(cat) or not FileAccess.file_exists(path)):
+					continue
 				var doc = _read_doc(path, errors)
 				if doc == null:
 					continue

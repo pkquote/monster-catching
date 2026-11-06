@@ -10,13 +10,19 @@ extends SceneTree
 ##                      below the larger fielded side (with party_size 6, --party=12 runs with 6)
 ##   --level=N          level of every creature (default 10)
 ##   --ai=A,B           AI style per side: basic | aggressive | tactician (default tactician,aggressive)
+##   --pack=1|0         1 (default): also load the debug test content pack (res://data_testpack, skipped
+##                      when absent) and draw species from data/ plus the pack; 0: data/ only
 
-var _opts := {"battles": 200, "seed": 1, "format": "2v2", "party": 3, "level": 10, "ai": "tactician,aggressive"}
+const PACK_ROOT: String = "res://data_testpack"
+
+var _opts := {"battles": 200, "seed": 1, "format": "2v2", "party": 3, "level": 10, "ai": "tactician,aggressive",
+	"pack": 1}
 
 
 func _init() -> void:
 	_parse_args()
-	var result := DataLoader.load_database("res://data")
+	var packs: Array = [PACK_ROOT] if int(_opts.pack) == 1 and DirAccess.dir_exists_absolute(PACK_ROOT) else []
+	var result := DataLoader.load_database("res://data", "", packs)
 	if not result.ok():
 		for e in result.errors:
 			printerr(e)
@@ -74,7 +80,8 @@ func _init() -> void:
 					species_stats[c.species].wins += 1
 
 	var n := float(_opts.battles)
-	print("Simulated %d battles · format %s · level %d · party %d" % [_opts.battles, _opts.format, _opts.level, party_size])
+	print("Simulated %d battles · format %s · level %d · party %d · %d species (%s)" % [_opts.battles, _opts.format,
+		_opts.level, party_size, species.size(), "data/ + test pack" if not packs.is_empty() else "data/ only"])
 	print("  Side 0 (%s): %.1f%% wins" % [ais[0], 100.0 * wins[0] / n])
 	print("  Side 1 (%s): %.1f%% wins" % [ais[1 % ais.size()], 100.0 * wins[1] / n])
 	print("  Draws (round limit): %d · average rounds: %.1f" % [draws, total_rounds / n])
@@ -88,7 +95,8 @@ func _init() -> void:
 	ids.sort_custom(func(a, b): return species_stats[a].wins * species_stats[b].battles > species_stats[b].wins * species_stats[a].battles)
 	for id in ids:
 		var st: Dictionary = species_stats[id]
-		print("  %-12s %5.1f%%  (%d appearances)" % [db.creature(id).name, 100.0 * st.wins / st.battles, st.battles])
+		print("  %-28s %-24s %5.1f%%  (%d appearances)" % [id, db.creature(id).name, 100.0 * st.wins / st.battles,
+			st.battles])
 	quit(0)
 
 

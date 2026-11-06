@@ -143,7 +143,7 @@ func test_set_affinity_unlocks_passive() -> void:
 func _apply_passive(passive_id: String, slot: int, make_active: bool) -> void:
 	_labels()["Set passive..."].pressed.emit()
 	await get_tree().process_frame
-	var ids := DataRegistry.db.ids("passives")
+	var ids := DebugPassivePage.save_safe_passives(DataRegistry.db)
 	var opts := _options()
 	opts[1].selected = ids.size() if passive_id == "" else ids.find(passive_id)
 	opts[2].selected = slot
@@ -169,6 +169,27 @@ func test_set_passive_page_sets_slot_and_active() -> void:
 	assert_bool(r.ok).is_true()
 	assert_str(r.save.party[0].passive).is_equal("kindling")
 	assert_str(r.save.party[0].affinity_passive).is_equal("sturdy")
+	DebugMenu.close()
+	WorldTest.close(world)
+
+
+func test_set_passive_page_never_offers_test_pack_passives() -> void:
+	# The page writes to the real party and autosaves, so tp_ passives (loaded in debug
+	# builds when data_testpack/ exists) must not be offered; every other passive is.
+	# test_testpack_safety.gd checks the filter against a database that has pack passives.
+	var db: Database = DataRegistry.db
+	var safe: PackedStringArray = DebugPassivePage.save_safe_passives(db)
+	for id: String in db.ids("passives"):
+		assert_bool(safe.has(id)).override_failure_message(id).is_equal(not Database.is_test_content(id))
+	var c: CreatureInstance = CreatureInstance.create(db, "tidepup", 9)
+	var world: Overworld = await _open_world_with(c)
+	DebugMenu.open()
+	_labels()["Set passive..."].pressed.emit()
+	await get_tree().process_frame
+	var passive_opt: OptionButton = _options()[1]
+	assert_int(passive_opt.item_count).is_equal(safe.size() + 1)
+	for i: int in passive_opt.item_count - 1:
+		assert_str(passive_opt.get_item_text(i)).is_equal(db.passive(safe[i]).name)
 	DebugMenu.close()
 	WorldTest.close(world)
 

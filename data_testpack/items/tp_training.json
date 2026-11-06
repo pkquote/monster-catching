@@ -1,0 +1,6 @@
+{
+  "schema": 1,
+  "entries": [
+    {"id": "tp_reset_seed", "name": "TP Reset Seed", "description": "Tests a training item: refunds all of a creature's training points.", "category": "training", "price": 0, "target": "one_ally", "effects": [{"op": "reset_training"}]}
+  ]
+}

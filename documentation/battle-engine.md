@@ -367,6 +367,79 @@ species' win rate. `--party` is clamped to 1..`balance.party_size` and never bel
 fielded side (with `party_size` 6, `--party=12` runs with 6 and says so). Battle `i` uses one RNG
 seeded `seed + i` for the parties (species and rolled passives) and the battle, so a seed replays. Passives vary with the seed now (the battle RNG is passed to `CreatureInstance.create`), so numbers differ from older runs.
 
+`--pack=1` (the default) also loads the debug test content pack (`res://data_testpack`, skipped
+when the folder is missing) and draws species from `data/` plus the pack; `--pack=0` uses `data/`
+only. The species table prints each id next to its name, so `tp_` rows stand out:
+
+```bash
+godot --headless --path . --script res://tools/simulate.gd -- --battles=50 --format=2v3 --party=6 --pack=0
+```
+
+## Test content pack
+
+`data_testpack/` is a debug-only body of content (30 creatures, 92 moves, 35 passives, 27 items,
+6 tamers, 4 encounter tables) built to exercise the engine far beyond the 8 shipped creatures: every
+effect op, move target kind, trigger, `when` condition and held-item use kind, extreme stats and
+costs, and dummies named for what they test (`tp_water_wall`, `tp_chain_a`, ...). It is a scaffold
+and will be deleted as the real creature set grows. Spec:
+[2026-11-05-test-content-pack-design.md](specs/2026-11-05-test-content-pack-design.md).
+
+- **Loading.** `DataLoader.load_database(data_root, dialogue_root, packs)` reads each pack root
+  like `data/` (missing category folders are skipped, a pack `balance.json` is ignored) and merges it
+  before validation, so a clashing id or a dangling reference is an ordinary validation error.
+  `DataRegistry` passes `PACK_ROOT` (`res://data_testpack`) only when `OS.is_debug_build()` and the
+  folder exists, so release builds and clones without the folder never see it. If `data/` plus
+  the pack fails validation, `DataRegistry.load_with_fallback` logs the errors (`Log.DATA`, error)
+  and loads `data/` alone, so a broken pack can't stop a debug session.
+  `DataLoader.pack_has_entries(root)` tells whether a root holds any content.
+- **The `tp_` rule.** Every pack id starts with `tp_`; `Database.is_test_content(id)` is that prefix
+  check. The pack reuses types, statuses, field states, reactions, affinities and balance from
+  `data/`, and nothing in `data/`, maps, shops, story or the compendium refers to it.
+- **Saves.** Pack content must never reach a real save. Code that picks a random species for a
+  party or box uses `BattleLauncher.save_safe_species(db)` (sorted, no `tp_` ids), as F1 **Fill
+  box** does through `BattleLauncher.fill_box`; F1 **Set passive**, which writes to the real party,
+  lists only `DebugPassivePage.save_safe_passives(db)`. Wild and tamer rolls have no filter: they
+  read their tables, and the base-only validation pass proves shipped tables name only shipped
+  content. Any new picker that writes a content id into a save must filter with
+  `Database.is_test_content`.
+- **F1 builder.** In a debug build, F1 → **Custom battle** lists the whole database, so every pack
+  creature, move, held item and passive is pickable (the `tp_` names make them easy to spot), and
+  the foe randomiser draws from it. Custom battles are exhibitions, so nothing is saved.
+- **Simulator.** `tools/simulate.gd --pack=1` (default) includes the pack, `--pack=0` excludes it.
+- **Validation.** `tools/validate_data.gd` (and `scripts/check.sh`) prints `Data OK` for `data/`
+  alone and `Data+pack OK` for `data/` plus the pack (only when the pack has content).
+- **Coverage guard.** `tests/helpers/pack_coverage.gd` lists every op, target kind, trigger, `when`
+  key, use kind, type, status and field state in `DataSchemas` and reports what no pack entry uses;
+  `tests/data/test_testpack_coverage.gd` fails when the schemas gain one the pack doesn't cover.
+- **Suites.** `tests/data/test_testpack_*.gd` (loader, content per category, coverage, removal),
+  `tests/battle/test_testpack_mechanics.gd` (one pinned behaviour per mechanic family),
+  `tests/battle/test_testpack_simulations.gd` (seeded AI battles over the whole pack, below) and
+  `tests/game/test_testpack_safety.gd` (Fill box, wild and tamer paths never yield `tp_` content).
+
+### Removal checklist
+
+1. Delete `data_testpack/`.
+2. In `game/autoload/data_registry.gd`, delete `PACK_ROOT` and the `packs` var/if/append in
+   `_ready`, and call `DataLoader.load_database(DATA_ROOT, DIALOGUE_ROOT)` (the
+   `load_with_fallback` helper can go too).
+3. Delete `tests/data/test_testpack_*.gd`, `tests/battle/test_testpack_*.gd`,
+   `tests/game/test_testpack_safety.gd`, `tests/helpers/pack_coverage.gd` and
+   `tests/helpers/test_pack_coverage.gd` (with their `.uid` files).
+4. In `scripts/check.sh`, drop `|Data\+pack OK` from the `== Data` grep; in
+   `tools/validate_data.gd`, the pack pass (it is already skipped when the folder is missing); in
+   `tools/simulate.gd`, the `--pack` option (optional: it is a no-op without the folder).
+5. Docs: remove the `data_testpack/` bullet in `README.md` (Notes), this "Test content pack"
+   section, the `--pack` paragraph under "Balance simulator", the pack rows and paragraph under
+   "Testing", and the "Test content pack" section of `.superpowers/HANDOFF.md`.
+6. Run `bash scripts/check.sh`; it must end "All checks passed.".
+
+`Database.is_test_content`, `BattleLauncher.save_safe_species` and `DataLoader`'s `packs`
+parameter can stay: they are harmless without a pack (so can `DebugPassivePage.save_safe_passives`).
+`tests/data/test_testpack_removal.gd` checks that `data/` validates alone and that no text file under
+`data/`, `game/`, `core/` or `dialogue/` refers to the pack except `data_registry.gd`, `database.gd`,
+`battle_launcher.gd` and `debug_passive_page.gd`; it does not scan `tools/`, `scripts/`, `tests/` or
+the docs.
+
 ## Testing
 
 The engine suites live in `tests/battle/` and run headless with the rest (`bash scripts/check.sh`).
@@ -380,6 +453,8 @@ passives, held items and moves to `FixtureDB.raw()`, so real balance changes don
 | `test_targeting_matrix.gd` | Every creature target key against 1–3 standing foes and allies, with the spread multiplier each hit takes |
 | `test_multi_format_effects.gd` | In 2v2 and 3v3: auras (passive and held) cover every ally and no foe; a `consumed` item is used up once per holder when two holders fire in one round; a `per_battle` item fires once per battle across swaps; absorb on one target of a spread or `two_enemies` move spares only that target while the other takes the same spread-reduced damage; Underdog's stat bonus, spread reduction and extra actions for 1v2, 1v3 and 2v3, and none at even sizes |
 | `test_simulation_invariants.gd` | Seeded AI battles on the real data (see below) and a stalled battle that ends in a draw at exactly `round_limit` |
+| `test_testpack_mechanics.gd` | One pinned behaviour per mechanic family on the test pack: each move op, priority, accuracy, energy, every target kind in 2v3, every trigger kind, held use kinds, the depth guard, all 8 reactions, Underdog tamer content |
+| `test_testpack_simulations.gd` | Seeded AI battles over `data/` plus the test pack (see below) |
 
 `test_simulation_invariants.gd` plays formats 1v1, 2v2, 3v3, 1v3 and 2v3 × seeds 1–20 the way the
 simulator does (tactician vs aggressive, random species with rolled passives at level 5 on odd seeds
@@ -397,3 +472,15 @@ After every round it checks:
 Each run is played twice and the two event logs must be identical (`JSON.stringify`), and every
 format must have at least one battle won outright, so the simulation isn't all draws. It takes about
 25 seconds.
+
+`test_testpack_simulations.gd` runs the same checks over `data/` plus the test pack: formats 1v1,
+2v2, 3v3, 1v3, 2v3 and 3v3 with 6-creature teams × seeds 1–10, level 5 on odd seeds and 60 on even
+ones, AI styles rotating through basic, tactician and aggressive. Every creature is a pack species
+(every other one dealt in turn, the rest random pack picks, so growing `data/` doesn't shift the
+run) and pack moves, passives and held items are dealt out in turn, so the run is fixed for a given
+pack. On top of the invariants and the replay check: fewer than 5% of battles may
+draw at `round_limit` (0 of 60 do today); every pack creature, passive and held item is fielded;
+every pack move appears in a `move_used`; every pack passive or held item with triggers shows a
+`passive_triggered` banner. Misses must be listed in the suite's `EXEMPT_MOVES` (2 today: moves the
+AI scores below any attack) or `EXEMPT_TRIGGERS` (2 today: a 1% trigger and an Underdog knockout
+item), each with a reason and a cap, and the run prints them. It takes about 9 seconds.

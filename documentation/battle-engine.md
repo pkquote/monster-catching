@@ -128,11 +128,11 @@ at `lash_out_threshold` or below a `lash_out_chance` chance to Scrap itself or a
 
 ## Field states and reactions
 
-- Each side holds up to `max_field_states` states. A new state pushes out the oldest one.
+- Each side holds up to `max_field_states` states (shipped: 1). A new state that doesn't react with the current one replaces the oldest (`field_removed`, reason `replaced`). With a cap of 1 a side's state is removed by a reaction that consumes it or by a different state applied over it; setting up the next state is a choice the player makes.
 - Re-applying a state the side already has adds stacks (up to its `max_stacks`) and refreshes its duration.
 - Applying a state that reacts with one already there fires the reaction instead:
   - States listed in `consumes` are removed. Their stacks (plus the incoming stacks, if the incoming state is consumed) become `stacks_consumed`.
-  - The incoming state still lands unless the reaction consumes it.
+  - The incoming state still lands unless the reaction consumes it. Every reaction must consume at least one of its two inputs (validator), so a one-state side is never left holding both.
   - The reaction's effects run against the side it fired on (`scope: side`) or everyone (`scope: both_sides`). In reaction effects, `all_allies` means that side's creatures.
   - States that a reaction's own effects apply never trigger another reaction (no chains).
 - `bonus_if_field` multiplies the damage or heal that follows it in the same move. With `consume: true`, the state is removed after the move finishes.
@@ -285,6 +285,7 @@ Damage estimates already include stat, type-power, resistance, Scrap and reactio
 
 - **Absorb (aggressive and tactician):** damage a target's `absorb_type` passive would absorb counts as 0, and the heal it gives (capped at the target's missing HP) is subtracted for a foe or added for an ally. The AI stops hitting absorbers and may hit its own.
 - **Blocks (tactician):** `status_immune`, `guard_stages` and `field_shelter` zero the value of the statuses, stat drops and reaction damage they block, in moves and in reactions.
+- **Overwriting a state (tactician):** at the cap, a state that doesn't react pushes out the oldest one. Knocking out a state that helps the holder is worth `REPLACE` x the best damage if the holder is the enemy and costs it if the holder is the AI's own side; knocking out a state that hurts the holder is the reverse.
 - **Own passives (tactician):** `field_boost` stacks count toward a setup's reaction value, and `rest_bonus` scales Rest's value.
 - **Retaliation (tactician):** a hit that doesn't knock the target out is charged the expected cost of the target's `hit` triggers on the attacker (status, stat drop or damage, weighted by chance; `contact` triggers need a physical move), less whatever the attacker's own passive blocks.
 
@@ -334,7 +335,7 @@ in `BattleText` (and `BattlePlayback` if it changes what's on screen).
 | `action_skipped` | `bid`, `status` |
 | `stat_stage` | `bid`, `stat`, `change`, `stage` |
 | `field_applied` | `side`, `state`, `stacks`, `turns`, `by` |
-| `field_removed` | `side`, `state`, `reason`: `expired` \| `pushed_out` \| `reacted` \| `cashed_in` \| `cleared` |
+| `field_removed` | `side`, `state`, `reason`: `expired` \| `replaced` \| `reacted` \| `cashed_in` \| `cleared` |
 | `reaction` | `reaction`, `side`, `inputs`, `stacks`, `by` |
 | `capture_attempt` | `bid`, `target`, `item`, `chance`, `success` |
 | `captured` | `bid`, `species` |

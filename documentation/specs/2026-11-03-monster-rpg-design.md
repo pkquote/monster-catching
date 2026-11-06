@@ -58,7 +58,7 @@ mechanics that feel distinct from the genre's defaults.
 
 ### 2.2 Field states (per side)
 
-- Each side holds up to `max_field_states` (default 3) states. Each state has `turns` remaining and `stacks` (max from data).
+- Each side holds up to `max_field_states` (default 1; a state that doesn't react replaces the current one) states. Each state has `turns` remaining and `stacks` (max from data).
 - Initial states: **Soaked, Scorched, Overgrown, Charged, Frosted**.
 - Moves may apply, remove or consume states on **their own side or the opposing side**.
 - Applying the same state adds a stack and refreshes its duration.

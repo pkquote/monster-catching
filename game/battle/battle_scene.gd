@@ -530,14 +530,13 @@ func _build_ui() -> void:
 	_actors.size = stage.size
 	_actors.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(_actors)
+	# The foe's field view sits top-left, away from its creatures; yours hangs from the stage's
+	# bottom-right corner.
 	for side in 2:
 		var f := FieldView.new()
 		f.setup(side, db)
-		# Yours along the bottom-right edge of the stage (growing leftwards), the foe's top-left.
 		if side == 0:
-			f.position = Vector2(232, 214)
-			f.size = Vector2(400, 18)
-			f.alignment = BoxContainer.ALIGNMENT_END
+			f.anchor_bottom_right(Vector2(632, STAGE_H - 4))
 		else:
 			f.position = Vector2(8, 6)
 		add_child(f)

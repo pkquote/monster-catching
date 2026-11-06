@@ -120,3 +120,17 @@ func test_triggers_text() -> void:
 func test_empty_list_is_dash() -> void:
 	assert_str(EffectText.effects(_db, [])).is_equal("—")
 	assert_str(EffectText.triggers(_db, [])).is_equal("—")
+
+
+func test_short_text_merges_equal_damage_taken_modifiers() -> void:
+	assert_str(EffectText.short(_db, [])).is_equal("—")
+	assert_str(EffectText.short(_db, _db.field_state("radiant").passive)).is_equal("Dark & Ghost dmg taken x0.75; Acc x1.1")
+	assert_str(EffectText.short(_db, _db.field_state("soaked").passive)).is_equal("Electric dmg taken x1.25; Fire dmg taken x0.75")
+	assert_str(EffectText.short(_db, _db.field_state("hazed").passive)).is_equal("S.Def x0.9; Mental dmg taken x1.2")
+	assert_str(EffectText.short(_db, _db.field_state("haunted").passive)).is_equal("Resolve x0.8; Ghost dmg taken x1.15")
+	assert_str(EffectText.short(_db, [{"op": "incoming_type_mod", "mult": 0.9}])).is_equal("All dmg taken x0.9")
+	# Anything else reads as in effects().
+	assert_str(EffectText.short(_db, [{"op": "heal", "fraction": 0.5}])).is_equal(EffectText.effects(_db, [{"op": "heal", "fraction": 0.5}]))
+	# Every shipped field state has a non-empty short text.
+	for id: String in _db.ids("field_states"):
+		assert_str(EffectText.short(_db, _db.field_state(id).passive)).is_not_empty()

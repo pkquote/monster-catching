@@ -127,5 +127,50 @@ func run() -> void:
 	await d.shot("b13_custom_3v1_fields")
 	d.expect(d._battle().views.size() == 4 and d._battle().fields[1].underdog_text.begins_with("UNDERDOG"),
 		"custom 3v1 battle puts 4 creatures on the stage and makes the foe the Underdog")
+	# Field-state effect labels: one state per side. Soaked is replaced by Radiant (the longest text),
+	# the way the engine does it: the old state is removed, then the new one applied.
+	for side in 2:
+		d._battle().fields[side].applied("soaked", 1, 4)
+	await d._frames(8)
+	await d.shot("b14_field_state_single")
+	for side in 2:
+		d._battle().fields[side].removed("soaked")
+		d._battle().fields[side].applied("radiant", 1, 4)
+	await d._frames(8)
+	await d.shot("b14_field_effect_labels")
+	d.expect(d._battle().fields[0].effect_labels().size() == 1 and d._battle().fields[1].effect_labels().size() == 1,
+		"each side shows one field state with its effect label")
+
+	# The crowded case: 3v3 with a field state on each side.
+	router.goto(router.WORLD)
+	await d.wait_scene("Overworld", 180)
+	await d.key(KEY_F1)
+	await d._frames(5)
+	d.press("Heal party")
+	await d._frames(5)
+	d.press("Custom battle...")
+	await d._frames(5)
+	opts = d._find_all(d.root.get_node("DebugMenu"), "OptionButton")
+	opts[0].select(2)  # you field 3
+	opts[0].item_selected.emit(2)
+	await d._frames(2)
+	d.press("Foe team")
+	await d._frames(3)
+	for i in 2:  # the foe team needs three creatures before it can field three
+		d.press("Add creature")
+		await d._frames(2)
+	opts = d._find_all(d.root.get_node("DebugMenu"), "OptionButton")
+	opts[1].select(2)  # foes field 3
+	opts[1].item_selected.emit(2)
+	await d._frames(3)
+	d.press("Start")
+	await d.wait_battle_open()
+	await d.wait_battle(["command"])
+	await d._frames(240)
+	for side in 2:
+		d._battle().fields[side].applied("radiant", 1, 4)
+	await d._frames(8)
+	await d.shot("b15_field_effect_labels_3v3")
+	d.expect(d._battle().views.size() == 6, "a 3v3 battle puts 6 creatures on the stage")
 	d._clear(d.RUN_SAVES)
 	d._finish()

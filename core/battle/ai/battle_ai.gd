@@ -20,6 +20,7 @@ const NEW_STATE := 0.15  # x ref, a hostile state's passive value on its own
 const RESTACK := 0.05  # x ref
 const FOLLOW_CASH_IN := 0.3  # x ref, the team knows a move that cashes the state in
 const OWN_BUFF := 0.35  # x ref, a helpful state placed on its own side
+const REPLACE := 0.2  # x ref, knocking out the state the side already holds (the cap pushes out the oldest)
 ## A setup that enables a reaction next turn is worth this share of that reaction's value.
 const FOLLOW_DISCOUNT := 0.6
 ## Below this share of max energy, Rest becomes an option worth REST_VALUE.
@@ -311,6 +312,14 @@ static func _setup_value(engine: BattleEngine, b: Battler, m: MoveDef, targets: 
 						break
 				if fired:
 					continue
+				# At the cap the oldest state is pushed out: good if it helped the enemy or hurt us.
+				if field.size() >= db.balance.max_field_states:
+					var lost := state_benefit(engine, field.states[0].id)
+					var sign_for_us := -1.0 if s == b.side else 1.0
+					if lost > 0.0:
+						value += sign_for_us * REPLACE * ref
+					elif lost < 0.0:
+						value -= sign_for_us * REPLACE * ref
 				var benefit := state_benefit(engine, e.state)
 				if s == b.side:
 					if benefit > 0.0:

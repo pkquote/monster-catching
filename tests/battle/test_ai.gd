@@ -90,6 +90,61 @@ func test_state_benefit_sign() -> void:
 	assert_float(BattleAI.state_benefit(e, "charged")).is_equal(0.0)
 
 
+# --- overwriting a state (cap 1) --------------------------------------------------
+
+## A cap-1 database with two helpful states (warded, blessed) and moves that set a state.
+func _overwrite_engine() -> BattleEngine:
+	var r := FixtureDB.raw()
+	var b := FixtureDB.balance()
+	b["max_field_states"] = 1
+	r.set_single("balance", b)
+	r.add_entry("field_states", {"id": "warded", "name": "Warded", "max_stacks": 3, "default_turns": 3,
+		"passive": [{"op": "stat_mod", "stat": "sdef", "mult": 1.2}]})
+	r.add_entry("field_states", {"id": "blessed", "name": "Blessed", "max_stacks": 3, "default_turns": 3,
+		"passive": [{"op": "stat_mod", "stat": "patk", "mult": 1.2}]})
+	r.add_entry("moves", FixtureDB._m("ward", "neutral", "status", 0, 100, "own_side",
+		[{"op": "apply_field_state", "side": "own", "state": "warded"}], {"always_hits": true}))
+	var errors := DataValidator.validate(r)
+	assert(errors.is_empty(), "Test data invalid:
+" + "
+".join(errors))
+	var d := Database.from_raw(r)
+	return FixtureDB.engine(d, [FixtureDB.make(d, "blob", 10, ["hit", "ward", "grow"])], [FixtureDB.make(d, "tank")])
+
+
+func _setup_score(e: BattleEngine, move: String) -> float:
+	var me: Battler = e.sides[0].active()[0]
+	return BattleAI.score(e, me, e.db.move(move), -1, "tactician", 10.0)
+
+
+func test_tactician_avoids_overwriting_its_own_buff() -> void:
+	var empty := _setup_score(_overwrite_engine(), "ward")
+	var e := _overwrite_engine()
+	e.apply_field_state(0, "blessed", 1, 3, null, false)
+	assert_float(_setup_score(e, "ward")).is_less(empty)
+
+
+func test_tactician_likes_overwriting_its_own_harmful_state() -> void:
+	var empty := _setup_score(_overwrite_engine(), "ward")
+	var e := _overwrite_engine()
+	e.apply_field_state(0, "soaked", 1, 3, null, false)
+	assert_float(_setup_score(e, "ward")).is_greater(empty)
+
+
+func test_tactician_likes_overwriting_an_enemy_buff() -> void:
+	var empty := _setup_score(_overwrite_engine(), "grow")
+	var e := _overwrite_engine()
+	e.apply_field_state(1, "blessed", 1, 3, null, false)
+	assert_float(_setup_score(e, "grow")).is_greater(empty)
+
+
+func test_tactician_avoids_overwriting_an_enemy_debuff() -> void:
+	var empty := _setup_score(_overwrite_engine(), "grow")
+	var e := _overwrite_engine()
+	e.apply_field_state(1, "soaked", 1, 3, null, false)
+	assert_float(_setup_score(e, "grow")).is_less(empty)
+
+
 func test_basic_returns_a_known_move() -> void:
 	var e := FixtureDB.engine(db, [FixtureDB.make(db, "blob", 8)], [FixtureDB.make(db, "tank")])
 	var me: Battler = e.sides[0].active()[0]

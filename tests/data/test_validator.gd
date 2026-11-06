@@ -156,6 +156,14 @@ func test_reaction_consumes_must_be_inputs() -> void:
 	assert_str(_errors_for(raw)).contains("'frosted' is not one of the inputs")
 
 
+func test_reaction_must_consume_an_input() -> void:
+	var raw := _base()
+	raw.entries.reactions[0].entry.consumes = []
+	assert_str(_errors_for(raw)).contains("must consume at least one of its inputs")
+	raw.entries.reactions[0].entry.consumes = ["charged"]
+	assert_array(Array(DataValidator.validate(raw))).is_empty()
+
+
 func test_missing_balance_file() -> void:
 	var raw := _base()
 	raw.singles.erase("balance")

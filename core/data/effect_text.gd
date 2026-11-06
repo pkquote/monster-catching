@@ -34,6 +34,31 @@ static func effects(db: Database, effects: Array) -> String:
 	return "; ".join(effects.map(func(e: Dictionary) -> String: return effect(db, e)))
 
 
+## A compact `effects` for tight spaces (the battle's field-state labels): damage-taken modifiers
+## with the same multiplier merge ("Dark & Ghost dmg taken x0.75"); everything else reads as in `effect`.
+static func short(db: Database, effects: Array) -> String:
+	if effects.is_empty():
+		return "—"
+	var taken: Dictionary = {}  # multiplier text -> type names, in the order first seen
+	var order: Array = []
+	for e: Dictionary in effects:
+		if e.op == "incoming_type_mod":
+			var key: String = num(e.mult)
+			if not taken.has(key):
+				taken[key] = []
+				order.append({"taken": key})
+			taken[key].append(db.type_def(e.type).name if e.has("type") else "All")
+		else:
+			order.append({"text": effect(db, e)})
+	var parts: PackedStringArray = PackedStringArray()
+	for item: Dictionary in order:
+		if item.has("taken"):
+			parts.append("%s dmg taken x%s" % [" & ".join(taken[item.taken]), item.taken])
+		else:
+			parts.append(item.text)
+	return "; ".join(parts)
+
+
 static func effect(db: Database, e: Dictionary) -> String:
 	var s := ""
 	match e.op:

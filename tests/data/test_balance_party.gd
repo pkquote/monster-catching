@@ -54,3 +54,8 @@ func test_oversized_party_in_save_is_kept() -> void:
 	assert_bool(BattleLauncher.add_to_party(db, s, FixtureDB.make(db, "fish", 3))).is_false()
 	assert_int(s.party.size()).is_equal(5)
 	assert_int(s.storage.size()).is_equal(1)
+
+
+func test_shipped_balance_allows_one_field_state() -> void:
+	var db: Database = DataLoader.load_database("res://data").db
+	assert_int(db.balance.max_field_states).is_equal(1)

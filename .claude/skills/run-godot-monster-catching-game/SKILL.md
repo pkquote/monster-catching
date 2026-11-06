@@ -141,7 +141,7 @@ timeout 60 "$GODOT" --path . --script res://.claude/skills/run-godot-monster-cat
 | option | meaning |
 |---|---|
 | `--mode=frontend` | default; the tour above |
-| `--mode=battle` | the battle tour above (`b00_…` to `b13_…` screenshots) |
+| `--mode=battle` | the battle tour above (`b00_…` to `b15_…` screenshots; `b14` and `b15` show the field-state effect labels in a 3v1 and a crowded 3v3 battle) |
 | `--mode=overworld` | the overworld tour above (`o01_…` to `o16_…` screenshots) |
 | `--mode=progress` | the progress tour above (`p01_…` to `p21_…` screenshots) |
 | `--mode=passives` | the passives tour above (`x01_…` to `x08_…` screenshots) |

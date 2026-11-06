@@ -50,7 +50,7 @@ func _apply(side_index: int, state_id: String, stacks: int, t: int, user: Battle
 				return
 	if not field.has(state_id) and field.size() >= e.db.balance.max_field_states:
 		var old := field.pop_oldest()
-		e.emit({"type": BattleEvents.FIELD_REMOVED, "side": side_index, "state": old, "reason": "pushed_out"})
+		e.emit({"type": BattleEvents.FIELD_REMOVED, "side": side_index, "state": old, "reason": "replaced"})
 	var n := field.add(state_id, stacks, t, fdef.max_stacks)
 	e.emit({"type": BattleEvents.FIELD_APPLIED, "side": side_index, "state": state_id, "stacks": n,
 		"turns": t, "by": user.bid if user != null else -1})

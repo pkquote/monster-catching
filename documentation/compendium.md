@@ -34,7 +34,7 @@ Global rules and tuning values from `data/balance.json`. The sections after this
 | Round limit (draw) | 200 |
 | XP formula | yield x level / 5, x1.5 vs tamers |
 | Catch status bonus | x1.5 |
-| Max field states per side | 3 |
+| Max field states per side | 1 |
 | Growth Affinity threshold | 30 |
 | Growth tiers | Slow x0.8, Steady x1, Fast x1.2 on a stat's per-level growth |
 | Growth tier budget | 2 (each faster stat counts +1, each slower one -1) |
@@ -322,7 +322,7 @@ Conditions on a single creature. Each lasts a set number of rounds.
 
 ## Field States
 
-Held per side (max 3 at once). Passive effects apply to every creature on that side.
+Held per side (max 1 at once). Passive effects apply to every creature on that side.
 
 | State | Id | Max stacks | Default rounds | Passive | Reacts with |
 |---|---|---|---|---|---|

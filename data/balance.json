@@ -53,7 +53,7 @@
       }
     },
     "round_limit": 200,
-    "max_field_states": 3,
+    "max_field_states": 1,
     "growth_affinity_threshold": 30,
     "growth_tiers": {
       "slow": 0.8,

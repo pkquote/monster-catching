@@ -74,6 +74,61 @@ func test_fourth_state_pushes_out_oldest() -> void:
 	e.apply_field_state(1, "frosted", 1, 9, null, false)
 	e.apply_field_state(1, "overgrown", 1, 9, null, false)
 	assert_array(Array(e.sides[1].field.ids())).contains_exactly(["charged", "frosted", "overgrown"])
+	assert_str(FixtureDB.events_of(e.drain_events(), "field_removed")[0].reason).is_equal("replaced")
+
+
+func _duel_cap(cap: int) -> BattleEngine:
+	var capped := FixtureDB.build({"max_field_states": cap})
+	return FixtureDB.engine(capped, [FixtureDB.make(capped, "blob")], [FixtureDB.make(capped, "tank")])
+
+
+func _apply_to(e: BattleEngine, state: String, stacks := 1) -> Array:
+	e.drain_events()
+	e.apply_field_state(1, state, stacks, 3, null)
+	return FixtureDB.events_of(e.drain_events(), "field_removed")
+
+
+func test_new_state_replaces_the_old_one_at_cap_one() -> void:
+	var e := _duel_cap(1)
+	_apply_to(e, "soaked")
+	var removed := _apply_to(e, "overgrown")
+	assert_array(Array(e.sides[1].field.ids())).contains_exactly(["overgrown"])
+	assert_array(removed).has_size(1)
+	assert_str(removed[0].state).is_equal("soaked")
+	assert_str(removed[0].reason).is_equal("replaced")
+
+
+func test_first_state_at_cap_one_replaces_nothing() -> void:
+	var e := _duel_cap(1)
+	assert_array(_apply_to(e, "soaked")).is_empty()
+
+
+func test_same_state_restacks_at_cap_one() -> void:
+	var e := _duel_cap(1)
+	_apply_to(e, "soaked")
+	assert_array(_apply_to(e, "soaked")).is_empty()
+	assert_int(e.sides[1].field.stacks("soaked")).is_equal(2)
+
+
+func test_reaction_keeping_existing_state_at_cap_one() -> void:
+	var e := _duel_cap(1)
+	_apply_to(e, "soaked")
+	_apply_to(e, "charged")  # conduction consumes the incoming charged
+	assert_array(Array(e.sides[1].field.ids())).contains_exactly(["soaked"])
+
+
+func test_reaction_consuming_both_empties_the_side_at_cap_one() -> void:
+	var e := _duel_cap(1)
+	_apply_to(e, "scorched")
+	_apply_to(e, "frosted")  # steam
+	assert_int(e.sides[1].field.size()).is_equal(0)
+
+
+func test_cap_two_still_holds_two_states() -> void:
+	var e := _duel_cap(2)
+	_apply_to(e, "soaked")
+	_apply_to(e, "overgrown")
+	assert_array(Array(e.sides[1].field.ids())).contains_exactly(["soaked", "overgrown"])
 
 
 func test_passive_incoming_type_mod_boosts_damage() -> void:

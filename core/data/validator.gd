@@ -304,6 +304,9 @@ func _check_cross_rules() -> void:
 		_file = rec.file
 		_label = "[reactions:%s]" % r.get("id", "?")
 		var inputs = r.get("inputs", [])
+		# A reaction that consumed nothing would leave both its states on the side.
+		if inputs is Array and r.get("consumes", []) is Array and r.get("consumes", []).is_empty():
+			_err("consumes", "must consume at least one of its inputs")
 		for s in r.get("consumes", []):
 			if inputs is Array and not s in inputs:
 				_err("consumes", "'%s' is not one of the inputs" % s)

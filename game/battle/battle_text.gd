@@ -70,7 +70,7 @@ static func describe(ev: Dictionary, db: Database, names: Callable, tamer_name: 
 			var side := side_label(int(ev.side))
 			match ev.reason:
 				"expired": return "The %s on %s faded." % [state.to_lower(), side]
-				"pushed_out": return "The %s on %s was pushed out." % [state.to_lower(), side]
+				"replaced": return "The %s on %s was replaced." % [state.to_lower(), side]
 				"cashed_in": return "The %s on %s was used up." % [state.to_lower(), side]
 				"cleared": return "The %s on %s was cleared away." % [state.to_lower(), side]
 			return ""

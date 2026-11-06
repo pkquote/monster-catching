@@ -326,7 +326,7 @@ func test_consumed_item_survives_when_it_does_not_fire() -> void:
 	_hurt(_first(e2, 1))
 	e2.rng.seed = failing
 	e2.passive_rules.fire(_first(e2, 1), "hit", _first(e2, 0), true)
-	var ev2 := e2._take_events()
+	var ev2 := e2.drain_events()
 	assert_array(_triggered(ev2)).is_empty()
 	assert_array(_consumed(ev2)).is_empty()
 	assert_str(_first(e2, 1).creature.held_item).is_equal("fickle_berry")

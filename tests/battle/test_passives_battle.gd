@@ -409,12 +409,12 @@ func test_no_triggers_after_battle_over() -> void:
 	var over := FixtureDB.engine(db, [_make("tank", "regen")], [_make("blob", "")])
 	over.finish(0, "defeat")
 	over.passive_rules.fire(_first(over, 0), "round_end")
-	assert_array(_triggered(over._take_events())).is_empty()
+	assert_array(_triggered(over.drain_events())).is_empty()
 	var down := FixtureDB.engine(db, [_make("tank", "regen")], [_make("blob", ""), _make("blob", "")])
 	var b := _first(down, 0)
 	b.creature.hp = 0
 	down.passive_rules.fire(b, "round_end")
-	assert_array(_triggered(down._take_events())).is_empty()
+	assert_array(_triggered(down.drain_events())).is_empty()
 
 
 # An entry trigger can set off a reaction that knocks creatures out (Undertow's soak onto a

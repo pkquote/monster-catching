@@ -142,7 +142,7 @@ func test_fewer_than_two_foes_hits_those_present() -> void:
 	none.check_faints()
 	assert_array(_foes(none)).is_empty()
 	none.actions.execute(BattleAction.use_move(_me(none).bid, "twin_strike"))
-	assert_int(FixtureDB.events_of(none._take_events(), BattleEvents.NO_TARGET).size()).is_equal(1)
+	assert_int(FixtureDB.events_of(none.drain_events(), BattleEvents.NO_TARGET).size()).is_equal(1)
 
 
 func test_resolve_targets_does_not_randomise_when_disallowed() -> void:

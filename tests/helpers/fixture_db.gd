@@ -190,8 +190,8 @@ static func knock_out(e: BattleEngine, battlers: Array) -> void:
 	for b: Battler in battlers:
 		b.creature.hp = 0
 	e.check_faints()
-	e._update_underdog()
-	e._take_events()
+	e.refresh_underdog()
+	e.drain_events()
 
 
 ## Both sides controlled by the test (no AI). Returns a started engine.

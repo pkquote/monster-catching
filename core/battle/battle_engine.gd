@@ -645,3 +645,14 @@ func _take_events() -> Array:
 	var out := _events
 	_events = []
 	return out
+
+
+## Public hooks for callers that settle the engine outside resolve_round() (tests, scripted setups).
+## Returns and clears the events queued so far.
+func drain_events() -> Array:
+	return _take_events()
+
+
+## Recalculates Underdog for both sides, as the end of a round does.
+func refresh_underdog() -> void:
+	_update_underdog()

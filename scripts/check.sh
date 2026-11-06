@@ -28,11 +28,14 @@ echo "== Maps"
 "$GODOT" --headless --path . res://tools/check_maps.tscn >/dev/null 2>&1
 
 echo "== Tests"
+# One run: keep the output for the summary lines, and fail on the run's own exit code.
+TEST_LOG="$(mktemp)"
+trap 'rm -f "$TEST_LOG"' EXIT
+TEST_RC=0
 "$GODOT" --headless --path . -s res://addons/gdUnit4/bin/GdUnitCmdTool.gd \
-	--add res://tests --ignoreHeadlessMode -c 2>&1 \
-	| sed 's/\x1b\[[0-9;]*m//g' | grep -E "Statistics|FAILED|Exit code" || true
-"$GODOT" --headless --path . -s res://addons/gdUnit4/bin/GdUnitCmdTool.gd \
-	--add res://tests --ignoreHeadlessMode -c >/dev/null 2>&1
+	--add res://tests --ignoreHeadlessMode -c >"$TEST_LOG" 2>&1 || TEST_RC=$?
+sed 's/\x1b\[[0-9;]*m//g' "$TEST_LOG" | grep -E "Statistics|FAILED|Exit code" || true
+[ "$TEST_RC" -eq 0 ] || exit "$TEST_RC"
 
 echo "== Compendium"
 "$GODOT" --headless --path . --script res://tools/generate_compendium.gd 2>&1 | grep -E "^Wrote" 	|| { echo "Compendium generation failed:"; "$GODOT" --headless --path . --script res://tools/generate_compendium.gd 2>&1 | tail -20; exit 1; }

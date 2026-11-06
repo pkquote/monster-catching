@@ -171,6 +171,6 @@ func test_reaction_credits_catalyst() -> void:
 
 
 func _apply(e: BattleEngine, side: int, state: String, stacks: int) -> Array:
-	e._events = []
+	e.drain_events()
 	e.apply_field_state(side, state, stacks, 0, e.battler(_me(e)))
-	return e._take_events()
+	return e.drain_events()

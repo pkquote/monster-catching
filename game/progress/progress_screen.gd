@@ -37,6 +37,7 @@ var _info: HBoxContainer
 var _top: PanelContainer
 var _scroll: ScrollContainer
 var _bottom: PanelContainer
+var _side: Control
 
 
 func _ready() -> void:
@@ -57,7 +58,17 @@ func _ready() -> void:
 	_root.add_child(margin)
 	var column := VBoxContainer.new()
 	column.add_theme_constant_override("separation", GAP)
-	margin.add_child(column)
+	column.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	if _side != null:
+		# A side control (set_side) takes the left; the info panel and menu use the rest.
+		var row := HBoxContainer.new()
+		row.add_theme_constant_override("separation", GAP)
+		margin.add_child(row)
+		_side.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
+		row.add_child(_side)
+		row.add_child(column)
+	else:
+		margin.add_child(column)
 	_top = UIKit.panel(column, 10)
 	_info = HBoxContainer.new()
 	_info.add_theme_constant_override("separation", 10)
@@ -79,6 +90,15 @@ func _ready() -> void:
 	menu = CommandMenu.new()
 	menu.button_width = MENU_WIDTH
 	_bottom.add_child(menu)
+
+
+## Puts `control` to the left of the info panel and the menu. Call before the screen joins the tree.
+func set_side(control: Control) -> void:
+	_side = control
+
+
+func side_control() -> Control:
+	return _side
 
 
 ## Points the screen at `save` / `db` (null keeps the current game's / the content).

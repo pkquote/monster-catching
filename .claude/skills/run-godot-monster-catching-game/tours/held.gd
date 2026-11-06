@@ -41,10 +41,14 @@ func run() -> void:
 	await d.pick_menu("Summary")
 	await d._frames(5)
 	await d.shot("h01_summary_no_item")
-	var summ = d._find_all(d.current_scene, "CanvasLayer").filter(func(n): return n.get("tab") != null)[0]
+	var summ = d._find_all(d.current_scene, "CanvasLayer").filter(func(n): return n.get("mode") != null)[0]
 	var sm = d._find_menu()
-	d.expect("Held item: none" in summ.page_text(), "the Stats tab shows no held item")
-	d.expect(sm != null and "Give held item" in sm.labels(), "the Stats tab offers Give held item (%s)" % (sm.labels() if sm else []))
+	d.expect("Held item: none" in summ.page_text(), "the Summary shows no held item")
+	d.expect(sm != null and "Held item..." in sm.labels(), "the Summary offers Held item... (%s)" % (sm.labels() if sm else []))
+	await d.pick_menu("Held item...")
+	await d._frames(5)
+	sm = d._find_menu()
+	d.expect(sm != null and "Give held item" in sm.labels(), "the held list offers Give held item (%s)" % (sm.labels() if sm else []))
 	await d.pick_menu("Give held item")
 	await d._frames(5)
 	await d.shot("h02_give_which_item")
@@ -54,8 +58,10 @@ func run() -> void:
 	sm = d._find_menu()
 	d.expect(pup.held_item == "oran_berry" and not gs.current.inventory.has("oran_berry"), "Tidepup holds the berry and the bag is empty of it")
 	d.expect("Held item: Oran Berry" in summ.page_text(), "the Summary line names the Oran Berry (%s)" % summ.page_text().replace("\n", " | "))
-	d.expect(sm != null and "Take back" in sm.labels(), "the Stats tab now offers Take back")
-	await d.pick_menu("Back")
+	d.expect(sm != null and "Take back" in sm.labels(), "the held list now offers Take back")
+	await d.pick_menu("Back")  # to the top level
+	await d._frames(3)
+	await d.pick_menu("Back")  # closes the Summary
 	await d._frames(3)
 	await d.pick_menu("Cancel")
 	await d.pick_menu("Back")
@@ -121,7 +127,7 @@ func run() -> void:
 	await d.pick_menu("Summary")
 	await d._frames(5)
 	await d.shot("h06_summary_item_gone")
-	summ = d._find_all(d.current_scene, "CanvasLayer").filter(func(n): return n.get("tab") != null)[0]
+	summ = d._find_all(d.current_scene, "CanvasLayer").filter(func(n): return n.get("mode") != null)[0]
 	d.expect("Held item: none" in summ.page_text(), "the Summary shows no held item again")
 	await d.pick_menu("Back")
 	await d._frames(3)

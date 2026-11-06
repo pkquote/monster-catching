@@ -1,28 +1,34 @@
 class_name SummaryScreen
 extends ProgressScreen
-## One party creature in three tabs: Stats, Moves and Training. Left/Right switch
-## tab. Up/Down belong to the menu's own focus, so the previous/next creature are
-## menu options and the shoulder buttons (see Settings.SHOULDER_ACTIONS).
+## One party creature: its CreatureCard on the left (the affinity bars and the greyed passive under it), an
+## info block and a one-column menu on the right.
+## The top-level menu opens three sub-lists (Moves, Train, Held item) in the same column, each ending in
+## Back. Left/Right and the shoulder buttons step to the previous/next creature (top level only);
+## Up/Down belong to the menu's own focus.
 
-const TABS := ["stats", "moves", "training"]
-const TAB_NAMES := {"stats": "Stats", "moves": "Moves", "training": "Training"}
 const STAT_NAMES := {"hp": "HP", "stamina": "Stamina", "patk": "Physical Attack", "pdef": "Physical Defense",
 	"satk": "Special Attack", "sdef": "Special Defense", "spd": "Speed", "resolve": "Resolve", "luck": "Luck"}
-const COLUMN_WIDTH := ProgressScreen.HALF_WIDTH
-## Longest "Held item" text shown (name and description), so it stays on one line.
-const HELD_LINE_MAX := 80
+const MODES := ["top", "moves", "train", "held"]
+## Buttons are one column inside the right-hand side of the screen (the card takes the left).
+const COLUMN_WIDTH := 306
+## Longest "Held item" text shown (name and description), so it stays on one line in the info block.
+const HELD_LINE_MAX := 48
 const REFRESH := "@refresh"
 const PREV := "@prev"
 const NEXT := "@next"
+const TOP := "@top"
+const OPEN := {"@moves": "moves", "@train": "train", "@held": "held"}
 
-var tab := "stats"
+var mode := "top"
 
 var _party: Array
 var _index := 0
 var _notice := ""
 var _last: Variant = null  # the option picked last: it keeps the focus across the re-render
 var _busy := false  # a sub-screen is open: leave the keys to it
+var _opener := ""  # the top-level entry that opened the current sub-list
 var _extra: VBoxContainer
+var _card: CreatureCard
 
 
 ## Runs until the player closes the screen.
@@ -33,6 +39,16 @@ static func run(parent: Node, party: Array, index: int, save: SaveGame = null, d
 	screen.use_game(save, db)
 	screen._party = party
 	screen._index = clampi(index, 0, party.size() - 1)
+	# Under the card (it leaves about 80px): the greyed passive line and the affinity bars.
+	var side := VBoxContainer.new()
+	side.add_theme_constant_override("separation", 2)
+	screen._card = CreatureCard.new()
+	side.add_child(screen._card)
+	var extra_panel := UIKit.panel(side, 6)
+	screen._extra = VBoxContainer.new()
+	screen._extra.add_theme_constant_override("separation", 2)
+	extra_panel.add_child(screen._extra)
+	screen.set_side(side)
 	parent.add_child(screen)
 	await screen._loop(parent)
 	screen.close()
@@ -41,9 +57,7 @@ static func run(parent: Node, party: Array, index: int, save: SaveGame = null, d
 func _ready() -> void:
 	super()
 	menu.button_width = COLUMN_WIDTH
-	menu.linear_focus = true  # Up/Down must reach both columns; Left/Right belong to the tabs
-	_extra = VBoxContainer.new()
-	_body.get_parent().add_child(_extra)
+	menu.linear_focus = true
 
 
 ## The creature being shown.
@@ -51,18 +65,18 @@ func creature() -> CreatureInstance:
 	return _party[_index]
 
 
-func show_tab(name: String) -> void:
-	if not TABS.has(name):
+func card() -> CreatureCard:
+	return _card
+
+
+## Opens the top level or one of the sub-lists ("moves", "train", "held").
+func show_mode(name: String) -> void:
+	if not MODES.has(name):
 		return
-	tab = name
+	mode = name
 	_notice = ""
 	_last = null
 	menu.interrupt(REFRESH)
-
-
-## Steps through the tabs, wrapping.
-func next_tab(step: int = 1) -> void:
-	show_tab(TABS[posmod(TABS.find(tab) + step, TABS.size())])
 
 
 func show_creature(index: int) -> void:
@@ -74,19 +88,21 @@ func show_creature(index: int) -> void:
 	menu.interrupt(REFRESH)
 
 
+## Steps to the previous/next creature, wrapping. Nothing with a single creature.
+func _step_creature(step: int) -> void:
+	if _party.size() > 1:
+		show_creature(posmod(_index + step, _party.size()))
+
+
 ## `_input`, not `_unhandled_input`: the menu's GUI focus navigation would otherwise
-## take Left/Right first.
+## take Left/Right first. Only the top level switches creature.
 func _input(event: InputEvent) -> void:
-	if _busy:
+	if _busy or mode != "top":
 		return
-	if event.is_action_pressed("ui_right"):
-		next_tab(1)
-	elif event.is_action_pressed("ui_left"):
-		next_tab(-1)
-	elif event.is_action_pressed("next_creature"):
-		show_creature(_index + 1)
-	elif event.is_action_pressed("prev_creature"):
-		show_creature(_index - 1)
+	if event.is_action_pressed("ui_right") or event.is_action_pressed("next_creature"):
+		_step_creature(1)
+	elif event.is_action_pressed("ui_left") or event.is_action_pressed("prev_creature"):
+		_step_creature(-1)
 	else:
 		return
 	get_viewport().set_input_as_handled()
@@ -96,70 +112,82 @@ func _loop(parent: Node) -> void:
 	var db := _db
 	while true:
 		var c := creature()
-		_title.text = "%s  Lv %d  -  %s" % [c.display_name(db), c.level, TAB_NAMES[tab]]
+		_card.show_creature(db, c)
+		_title.text = _title_text(c)
 		var options: Array = _render(db, c)
-		if _party.size() > 1:
-			options.append({"label": "Previous creature", "value": PREV})
-			options.append({"label": "Next creature", "value": NEXT})
-		options.append({"label": "Back", "value": null})
+		if mode == "top":
+			if _party.size() > 1:
+				options.append({"label": "Previous creature", "value": PREV})
+				options.append({"label": "Next creature", "value": NEXT})
+			options.append({"label": "Back", "value": null})
+		else:
+			options.append({"label": "Back", "value": TOP})
 		if _last != null:
 			for o in options:
 				o["focus"] = typeof(o.value) == typeof(_last) and o.value == _last
-		var choice = await menu.choose("Left / Right: switch tab", options, true, 2)
+		var hint := "Left / Right: switch creature" if mode == "top" and _party.size() > 1 else ""
+		var choice = await menu.choose(hint, options, true, 1)
 		if choice == null:
-			return
-		_last = choice
+			if mode == "top":
+				return
+			_leave_sub()
+			continue
 		if choice is String and choice.begins_with("@"):
 			match choice:
 				PREV:
-					show_creature(posmod(_index - 1, _party.size()))
+					_step_creature(-1)
 				NEXT:
-					show_creature(posmod(_index + 1, _party.size()))
+					_step_creature(1)
+				TOP:
+					_leave_sub()
+				_:
+					if OPEN.has(choice):
+						mode = OPEN[choice]
+						_opener = choice
+						_notice = ""
+						_last = null
 			continue
+		_last = choice
 		_busy = true
 		await _act(parent, db, c, choice)
 		_busy = false
 
 
-## Fills the page and returns the tab's own menu options.
+func _title_text(c: CreatureInstance) -> String:
+	var text := "%s  Lv %d" % [c.display_name(_db), c.level]
+	if _party.size() > 1:
+		text += "  (%d / %d)" % [_index + 1, _party.size()]
+	return text
+
+
+## Back to the top level with the focus on the entry that opened the sub-list.
+func _leave_sub() -> void:
+	mode = "top"
+	_notice = ""
+	_last = _opener if _opener != "" else null
+
+
+## Fills the info block and returns this mode's own menu options.
 func _render(db: Database, c: CreatureInstance) -> Array:
 	for n in _extra.get_children():
+		_extra.remove_child(n)
 		n.queue_free()
-	match tab:
+	match mode:
 		"moves":
 			return _render_moves(db, c)
-		"training":
-			return _render_training(db, c)
-	return _render_stats(db, c)
+		"train":
+			return _render_train(db, c)
+		"held":
+			return _render_held(db, c)
+	return _render_top(db, c)
 
 
-func _render_stats(db: Database, c: CreatureInstance) -> Array:
-	var lines: PackedStringArray = []
-	var cells: PackedStringArray = []
-	for key in ["hp", "stamina", "patk", "pdef", "satk", "sdef", "spd", "resolve", "luck"]:
-		var value := c.max_hp(db) if key == "hp" else c.max_energy(db) if key == "stamina" else c.stat(db, key)
-		var text := "%s %d" % [STAT_NAMES[key], value]
-		# ▲ / ▼: this species grows the stat faster / slower than steady.
-		var tier := db.creature(c.species).growth_tier(key)
-		var multiplier: float = db.balance.growth_tiers.get(tier, 1.0)
-		if multiplier > 1.0:
-			text += "▲"
-		elif multiplier < 1.0:
-			text += "▼"
-		# Growth from the species and level, then what training added on top.
-		if c.trained(key) > 0:
-			text += " (%d+%d)" % [c.grown(db, key), value - c.grown(db, key)]
-		cells.append(text)
-	for i in range(0, cells.size(), 3):
-		lines.append("   ".join(cells.slice(i, i + 3)))
-	if c.level >= db.balance.level_cap:
-		lines.append("Max level")
-	else:
-		lines.append("XP to next level: %d" % (Stats.xp_for_level(c.level + 1) - c.xp))
-	lines[lines.size() - 1] += "   Bond: %d" % c.bond
+func _render_top(db: Database, c: CreatureInstance) -> Array:
+	var progress := "Max level" if c.level >= db.balance.level_cap \
+		else "XP to next level: %d" % (Stats.xp_for_level(c.level + 1) - c.xp)
 	var active := PassiveUnlockScreen.passive_line(db, Passives.active_id(c))
-	lines.append("Passive: " + (active if active != "" else "none"))
-	lines.append("Held item: " + _held_line(db, c))
+	var lines: PackedStringArray = [progress + "   Bond: %d" % c.bond,
+		"Passive: " + (active if active != "" else "none"), "Held item: " + _held_line(db, c)]
 	if _notice != "":
 		lines.append(_notice)
 	_body.text = "\n".join(lines)
@@ -167,36 +195,38 @@ func _render_stats(db: Database, c: CreatureInstance) -> Array:
 	var other := _other_passive(db, c)
 	if other.has("text"):
 		UIKit.label(_extra, other.text, UIKit.BODY_SIZE, UIKit.MUTED, true)
+	_affinity_grid(db, c)
+	if Progression.growth_target(db, c) != "":
+		options.append({"label": "Grow", "value": "grow"})
+	options.append({"label": "Moves...", "value": "@moves"})
+	options.append({"label": "Train...", "value": "@train"})
+	if not c.held_item.is_empty() or not _bag_held(db).is_empty():
+		options.append({"label": "Held item...", "value": "@held"})
 	if other.has("slot"):
 		options.append({"label": "Use " + other.name, "value": {"passive": other.slot}})
+	return options
+
+
+## The affinity tracks as a 2-column grid of name, bar and points.
+func _affinity_grid(db: Database, c: CreatureInstance) -> void:
 	var grid := GridContainer.new()
 	grid.columns = 2
-	grid.add_theme_constant_override("h_separation", 12)
+	grid.add_theme_constant_override("h_separation", 10)
 	_extra.add_child(grid)
 	for id in db.ids("affinities"):
 		var row := HBoxContainer.new()
-		row.add_theme_constant_override("separation", 6)
-		UIKit.label(row, db.affinity(id).name, UIKit.BODY_SIZE, UIKit.MUTED).custom_minimum_size = Vector2(64, 0)
+		row.add_theme_constant_override("separation", 4)
+		UIKit.label(row, db.affinity(id).name, UIKit.BODY_SIZE, UIKit.MUTED).custom_minimum_size = Vector2(56, 0)
 		var points := int(c.affinity.get(id, 0))
 		var bar := ProgressBar.new()
 		bar.show_percentage = false
 		bar.max_value = maxi(db.balance.growth_affinity_threshold, points)
 		bar.value = points
-		bar.custom_minimum_size = Vector2(150, 8)
+		bar.custom_minimum_size = Vector2(60, 8)
 		bar.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 		row.add_child(bar)
 		UIKit.label(row, str(points), UIKit.BODY_SIZE)
 		grid.add_child(row)
-	var bag_has := not _bag_held(db).is_empty()
-	if not c.held_item.is_empty():
-		options.append({"label": "Take back", "value": {"held": "take"}})
-		if bag_has:
-			options.push_front({"label": "Swap held item", "value": {"held": "swap"}})
-	elif bag_has:
-		options.append({"label": "Give held item", "value": {"held": "give"}})
-	if Progression.growth_target(db, c) != "":
-		options.push_front({"label": "Grow", "value": "grow"})
-	return options
 
 
 ## The held item's name and description; "none"; or the raw id when the data lacks it.
@@ -251,7 +281,7 @@ func _render_moves(db: Database, c: CreatureInstance) -> Array:
 	return options
 
 
-func _render_training(db: Database, c: CreatureInstance) -> Array:
+func _render_train(db: Database, c: CreatureInstance) -> Array:
 	var lines: PackedStringArray = ["Points to spend: %d" % Training.available(db, c)]
 	if _notice != "":
 		lines.append(_notice)
@@ -264,6 +294,24 @@ func _render_training(db: Database, c: CreatureInstance) -> Array:
 		options.append({"label": label, "value": {"train": stat}})
 	var seeds := int(_save.inventory.get("reset_seed", 0))
 	options.append({"label": "Use a Reset Seed (you have %d)" % seeds, "value": "seed", "disabled": seeds <= 0})
+	return options
+
+
+func _render_held(db: Database, c: CreatureInstance) -> Array:
+	var lines: PackedStringArray = ["Held item: " + _held_line(db, c)]
+	if _notice != "":
+		lines.append(_notice)
+	var options: Array = []
+	var bag_has := not _bag_held(db).is_empty()
+	if not c.held_item.is_empty():
+		if bag_has:
+			options.append({"label": "Swap held item", "value": {"held": "swap"}})
+		options.append({"label": "Take back", "value": {"held": "take"}})
+	elif bag_has:
+		options.append({"label": "Give held item", "value": {"held": "give"}})
+	else:
+		lines.append("No held items in the bag.")
+	_body.text = "\n".join(lines)
 	return options
 
 
@@ -299,7 +347,7 @@ func _held(db: Database, c: CreatureInstance, action: String) -> void:
 		options.append({"label": "%s ×%d" % [entry.def.name, entry.count], "value": entry.id})
 	options.append({"label": "Back", "value": null})
 	_body.text = "Give %s which item?" % c.display_name(db)
-	var id = await menu.choose("Pick an item.", options, true, 2)
+	var id = await menu.choose("Pick an item.", options, true, 1)
 	if id == null:
 		return
 	var r := HeldItems.give(db, _save, c, id)

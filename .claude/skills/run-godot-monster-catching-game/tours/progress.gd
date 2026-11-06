@@ -99,26 +99,30 @@ func run() -> void:
 	d.expect(gs.current.party[1].species == "torrentusk" and gs.current.party[0].species == "emberkit",
 		"Torrentusk moved to second place (%s, %s)" % [gs.current.party[0].species, gs.current.party[1].species])
 
-	# 6. Summary: all three tabs. 7. +1 Speed.
+	# 6. Summary: the card, Moves..., Train.... 7. +1 Speed.
 	await d.pick_menu("Torrentusk")
 	await d.pick_menu("Summary")
 	await d._frames(5)
 	await d.shot("p10_summary_stats")
-	var summ = d._find_all(d.current_scene, "CanvasLayer").filter(func(n): return n.get("tab") != null)[0]
-	d.expect(summ.tab == "stats", "Summary opens on Stats")
-	await d.key(KEY_RIGHT)
+	var summ = d._find_all(d.current_scene, "CanvasLayer").filter(func(n): return n.get("mode") != null)[0]
+	d.expect(summ.mode == "top" and summ.card().header_text().begins_with("Torrentusk"), "Summary opens on the top level with the card")
+	await d.pick_menu("Moves...")
 	await d._frames(5)
 	await d.shot("p11_summary_moves")
-	d.expect(summ.tab == "moves", "Right switches to Moves")
-	await d.key(KEY_RIGHT)
+	d.expect(summ.mode == "moves", "Moves... opens the moves list")
+	await d.pick_menu("Back")
+	await d._frames(3)
+	await d.pick_menu("Train...")
 	await d._frames(5)
 	await d.shot("p12_summary_training")
-	d.expect(summ.tab == "training", "Right switches to Training")
+	d.expect(summ.mode == "train", "Train... opens the training list")
 	await d.pick_menu("+1 Speed")
 	await d._frames(5)
 	await d.shot("p13_trained_speed")
 	d.expect(gs.current.party[1].trained("spd") == 1, "+1 Speed trained")
-	await d.pick_menu("Back")
+	await d.pick_menu("Back")  # to the top level
+	await d._frames(3)
+	await d.pick_menu("Back")  # closes the Summary
 	await d._frames(3)
 	await d.pick_menu("Cancel")
 	await d.pick_menu("Back")  # the party list

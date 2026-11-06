@@ -53,7 +53,7 @@ func run() -> void:
 	await d.pick_menu("Summary")
 	await d._frames(5)
 	await d.shot(tag + "03_summary")
-	var summ = d._find_all(d.current_scene, "CanvasLayer").filter(func(n): return n.get("tab") != null)[0]
+	var summ = d._find_all(d.current_scene, "CanvasLayer").filter(func(n): return n.get("mode") != null)[0]
 	for i: int in size - 1:
 		await d.pick_menu("Next creature")
 	await d._frames(5)

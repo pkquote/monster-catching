@@ -7,7 +7,7 @@ extends SceneTree
 ##   --mode=frontend      (default) full front-end tour: splash -> title -> new game -> world ->
 ##                        save -> quit -> load browser -> settings tabs -> rebind -> resume.
 ##                        Checks expectations and exits 1 if any fail.
-##   --mode=progress     M4 tour: test party, Give XP to 16, Learn Move, Grow, Party reorder, Summary tabs,
+##   --mode=progress     M4 tour: test party, Give XP to 16, Learn Move, Grow, Party reorder, Summary (card + sub-lists),
 ##                        training, Reset Seed, Storage Box, unsafe zone.
 ##   --mode=passives     passives tour: Set passive (Undertow), its battle-entry banner, Set Affinity
 ##                        unlocks Finisher, the Passive Unlocked screen, Summary -> Use Finisher.

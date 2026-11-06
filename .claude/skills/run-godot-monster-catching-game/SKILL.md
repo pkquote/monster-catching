@@ -69,7 +69,7 @@ timeout 400 "$GODOT" --path . --script res://.claude/skills/run-godot-monster-ca
 
 Progress tour (M4): new game → F1 → Get test party → Set Affinity (Striker) → Give XP to level 16 →
 Learn Move (replace one, keep the others) → Grow now (Tidepup → Torrentusk) → Menu → Party (move it to
-second place) → Summary (all three tabs, +1 Speed) → Bag → Reset Seed → the heal centre's Storage Box
+second place) → Summary (card, Moves..., Train..., +1 Speed) → Bag → Reset Seed → the heal centre's Storage Box
 (deposit, withdraw) → Route 1's deep grass, where Party → a row says it isn't safe to swap. It checks
 21 expectations and takes about 60 s. It places the player with `ow.player.place(...)` and uses
 `ow.change_map()` for the trips (as the overworld tour does) and walks the last tiles into the grass.
@@ -93,7 +93,7 @@ timeout 240 "$GODOT" --path . --script res://.claude/skills/run-godot-monster-ca
 ```
 
 **Held-items tour** (`--mode=held`): new game -> F1 test party -> an Oran Berry put in the bag -> Menu -> Party -> Tidepup ->
-Summary -> Give held item -> Oran Berry (the Stats tab then reads "Held item: Oran Berry - ...") -> a seeded wild battle
+Summary -> Held item... -> Give held item -> Oran Berry (the Summary then reads "Held item: Oran Berry - ...") -> a seeded wild battle
 with Tidepup under half HP: the berry fires (banner "Tidepup's Oran Berry!", then "Tidepup's Oran Berry was used up.") ->
 back in the world the Summary reads "Held item: none". The tour puts the berry in the bag directly (there is no F1 give-item page).
 

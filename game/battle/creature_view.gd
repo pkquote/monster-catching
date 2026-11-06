@@ -124,25 +124,14 @@ func capture_sequence(shakes: int, success: bool) -> void:
 
 func _draw() -> void:
 	var center := Vector2(SPRITE / 2.0, SPRITE / 2.0 + 2)
-	var main := TypeColors.type_color(_types[0] if _types.size() > 0 else "")
 	if highlighted:
 		draw_circle(center, SPRITE / 2.0 + 4, UIKit.ACCENT)
-	if _types.size() > 1:
-		draw_circle(center, SPRITE / 2.0, TypeColors.type_color(_types[1]))
-		draw_circle(center, SPRITE / 2.0 - 5, main)
-	else:
-		draw_circle(center, SPRITE / 2.0, main)
-	if _flash > 0.0:
-		draw_circle(center, SPRITE / 2.0, Color(1, 1, 1, _flash * 0.8))
-	var font := ThemeDB.fallback_font
-	var text_size := font.get_string_size(_initial, HORIZONTAL_ALIGNMENT_LEFT, -1, 22)
-	draw_string(font, center + Vector2(-text_size.x / 2.0, 8), _initial, HORIZONTAL_ALIGNMENT_LEFT, -1, 22,
-		Color(0, 0, 0, 0.65))
+	CreatureSpriteSlot.draw_placeholder(self, center, SPRITE / 2.0, _types, _initial, _flash)
 	# Bars
 	var x := SPRITE + 8.0
 	_bar(Vector2(x, 16), float(hp) / max_hp, _hp_color(float(hp) / max_hp), 6)
 	if side == 0:
-		_bar(Vector2(x, 24), float(energy) / max_energy, Color("5fa8e8"), 3)
+		_bar(Vector2(x, 24), float(energy) / max_energy, ResourceBars.STAMINA_COLOR, 3)
 
 
 func _bar(at: Vector2, fill: float, color: Color, height: int) -> void:
@@ -151,11 +140,7 @@ func _bar(at: Vector2, fill: float, color: Color, height: int) -> void:
 
 
 static func _hp_color(ratio: float) -> Color:
-	if ratio > 0.5:
-		return Color("6cc96a")
-	if ratio > 0.2:
-		return Color("e8c04a")
-	return Color("e2675c")
+	return ResourceBars.hp_color(ratio)
 
 
 func _refresh_labels() -> void:

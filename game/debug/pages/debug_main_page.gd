@@ -40,6 +40,7 @@ func build(box: VBoxContainer) -> void:
 			UIKit.label(box, "Get a test party for these battles; Custom battle builds its own.", 11,
 				UIKit.MUTED, true)
 	UIKit.spacer(box, 4)
+	UIKit.button(box, "UI gallery...", func(): menu.show_page(DebugUiGalleryPage.new()))
 	UIKit.button(box, "Logs...", func(): menu.show_page(DebugLogsPage.new()))
 	UIKit.button(box, "Close", menu.close)
 

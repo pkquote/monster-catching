@@ -149,6 +149,7 @@ timeout 60 "$GODOT" --path . --script res://.claude/skills/run-godot-monster-cat
 | `--mode=builder` | the team-builder tour above (`t01_…` to `t12_…` screenshots) |
 | `--mode=party` | the party tour above (`qNN_01_…` to `qNN_12_…`); `--party-size=N` sets the party size in memory |
 | `--mode=bag` | the bag tour above (`bag01_…` to `bag07_…` screenshots) |
+| `--mode=ui` | the F1 UI gallery: the creature card at Lv 5, 50, 99 and a dual-type creature with a long nickname (`u01_…` to `u04_…`) |
 | `--mode=scene` | open `--scene` (default: main scene), wait `--frames` (default 60), screenshot |
 | `--out=<dir>` | screenshot folder; `user://` paths allowed (default `user://run_shots`) |
 

@@ -172,6 +172,12 @@ const EFFECT_OPS := {
 	},
 }
 
+## Ops whose fields are each optional but that need at least one of a set, so a bare
+## effect would do nothing (and could not be described in text).
+const EFFECT_NEEDS_ONE_OF := {
+	"field_boost": ["stacks", "turns"],
+}
+
 ## Optional condition on a passive's always-on effect.
 const WHEN := {
 	"hp_below": {"t": "number", "opt": true, "min": 0.0, "max": 1.0},

@@ -110,6 +110,19 @@ func test_effect_op_fields_are_checked() -> void:
 	assert_str(_errors_for(raw)).contains("unknown field_states id 'lava'")
 
 
+func test_field_boost_needs_stacks_or_turns() -> void:
+	var bare := _base()
+	bare.entries.passives[0].entry = {"id": "steady", "name": "Steady",
+		"effects": [{"op": "field_boost"}]}
+	assert_str(_errors_for(bare)).contains("field_boost needs at least one of: stacks, turns")
+	for given: Dictionary in [{"stacks": 1}, {"turns": 2}, {"stacks": 2, "turns": 3}]:
+		var ok := _base()
+		var eff: Dictionary = {"op": "field_boost"}
+		eff.merge(given)
+		ok.entries.passives[0].entry = {"id": "steady", "name": "Steady", "effects": [eff]}
+		assert_str(_errors_for(ok)).is_empty()
+
+
 func test_status_move_power_rule() -> void:
 	var raw := _base()
 	raw.entries.moves[0].entry = _move({"category": "status", "power": 40})

@@ -186,6 +186,10 @@ func _check_effects(value: Variant, path: String, allow_when: bool = false, is_t
 		if allow_when:
 			fields["when"] = {"t": "dict", "fields": DataSchemas.WHEN, "opt": true}
 		_check_fields(eff, fields, sub)
+		if DataSchemas.EFFECT_NEEDS_ONE_OF.has(op):
+			var names: Array = DataSchemas.EFFECT_NEEDS_ONE_OF[op]
+			if not names.any(func(n: String) -> bool: return eff.has(n)):
+				_err(sub, "%s needs at least one of: %s" % [op, ", ".join(names)])
 
 
 func _check_range(n: float, rule: Dictionary, path: String) -> void:

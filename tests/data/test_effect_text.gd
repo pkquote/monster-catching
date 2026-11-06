@@ -95,8 +95,7 @@ func test_optional_fields_absent() -> void:
 	_check({"op": "status_immune"}, "Can't be given a status")
 	_check({"op": "apply_field_state", "side": "own", "state": "soaked"}, "Applies Soaked to own side")
 	_check({"op": "apply_status", "status": "burn"}, "Inflicts Burn")
-	# Oddity pinned as-is: with neither stacks nor turns the sentence ends in a trailing space.
-	_check({"op": "field_boost"}, "Its field states get ")
+	# A field_boost with neither stacks nor turns is rejected by the validator (EFFECT_NEEDS_ONE_OF).
 	_check({"op": "field_boost", "stacks": 1, "turns": 2}, "Its field states get +1 stack(s) and +2 round(s)")
 
 

@@ -317,7 +317,7 @@ func test_persistent_op_variants() -> void:
 		"incoming_type_mod typed": func(e: Dictionary) -> bool: return e.op == "incoming_type_mod" and e.has("type"),
 		"energy_discount any": func(e: Dictionary) -> bool: return e.op == "energy_discount" and not e.has("type"),
 		"energy_discount typed": func(e: Dictionary) -> bool: return e.op == "energy_discount" and e.has("type"),
-		"field_boost bare": func(e: Dictionary) -> bool: return e.op == "field_boost" and not e.has("stacks") and not e.has("turns"),
+		"field_boost stacks only": func(e: Dictionary) -> bool: return e.op == "field_boost" and e.has("stacks") and not e.has("turns"),
 		"field_boost max": func(e: Dictionary) -> bool: return e.op == "field_boost" and int(e.get("stacks", 0)) == int(boost.stacks.max) and int(e.get("turns", 0)) == int(boost.turns.max),
 		"type_power zero": func(e: Dictionary) -> bool: return e.op == "type_power" and is_equal_approx(float(e.mult), float(mult.min)),
 		"type_power max": func(e: Dictionary) -> bool: return e.op == "type_power" and is_equal_approx(float(e.mult), float(mult.max)),

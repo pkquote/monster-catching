@@ -1,6 +1,6 @@
 # Handoff: godot-monster-catching-game
 
-Date: 2026-11-06. Branch: `master`. Last commit: `2d21eea` ("Code audit fixes"). The uncommitted work is M5a Housekeeping (Settings tab scrolling, the bag item summary pane, shared effect text, the re-laid-out compendium) plus its tests and the `--mode=bag` tour.
+Date: 2026-11-06. Branch: `master`. Last commit: `f4068ba` ("Add the M5a housekeeping: bag summary pane, shared effect text and compendium re-layout"). Everything below is committed except the small `field_boost` validator rule (see "M5a Housekeeping").
 
 ## Read this first: standing rules
 - **Never commit, stage or stash.** The user writes every commit. Leave changes in the working tree.
@@ -69,7 +69,7 @@ Godot 4.7.2 (.NET build, but GDScript only) monster-catching RPG.
 
 ## Stat growth rates (implemented, committed)
 - Level cap is 99; `CreatureInstance.grown(db, stat)` is the level-derived growth (max HP, energy and stats are built from it); the Summary Stats tab shows `total (growth+trained)`. These were committed in `283a19e`.
-- New, uncommitted: each species can give any base stat a growth tier via `growth_rates` (`slow`/`steady`/`fast`, multipliers in `balance.json` `growth_tiers`: 0.8/1.0/1.2). `Stats.hp_at/stat_at/energy_at` take a percent (default 100); `BalanceDef.growth_percent`, `CreatureDef.growth_tier`. Validated in the validator and `tools/validate_data.gd`; the Summary marks non-steady stats with ▲/▼ (checked in the real window); the compendium shows a `Growth:` bullet (non-steady only) and a Lv 99 stats line per species. Spec: `documentation/specs/2026-11-04-stat-growth-rates-design.md`; plan: `documentation/plans/2026-11-04-stat-growth-rates.md`.
+- Committed in `1cc00e9`: each species can give any base stat a growth tier via `growth_rates` (`slow`/`steady`/`fast`, multipliers in `balance.json` `growth_tiers`: 0.8/1.0/1.2). `Stats.hp_at/stat_at/energy_at` take a percent (default 100); `BalanceDef.growth_percent`, `CreatureDef.growth_tier`. Validated in the validator and `tools/validate_data.gd`; the Summary marks non-steady stats with ▲/▼ (checked in the real window); the compendium shows a `Growth:` bullet (non-steady only) and a Lv 99 stats line per species. Spec: `documentation/specs/2026-11-04-stat-growth-rates-design.md`; plan: `documentation/plans/2026-11-04-stat-growth-rates.md`.
 - Follow-up content pass (not started): mark the shipped species with growth tiers. All 8 are still all-steady, so nothing changes in play until that is done.
 
 ## Held items (implemented, committed)
@@ -87,7 +87,7 @@ Godot 4.7.2 (.NET build, but GDScript only) monster-catching RPG.
 - **Behaviour change:** an existing `all_enemies` / `all` move that hits exactly two creatures now takes x0.85 instead of x0.75. Three or more is unchanged.
 - **Next brainstorm:** multi-hit moves (one foe, several hits). Not started.
 
-## Debug team builder, larger parties, exhibition battles, engine tests (implemented, uncommitted)
+## Debug team builder, larger parties, exhibition battles, engine tests (implemented, committed in `cd2f30e`)
 - **Spec:** `documentation/specs/2026-11-05-debug-team-builder-design.md` (Implemented); **plan:** `documentation/plans/2026-11-05-debug-team-builder.md` (7 tasks).
 - **What it does:**
   - The F1 "Custom battle" page is now a team builder: both teams built from scratch (or "Fill from my party"), up to `balance.party_size` creatures per side, each side fielding 1–3 in any combination (1v1 … 2v3 … 3v3); per-creature species, level, 4 moves, held item and passive; "All levels"; an editable player bag; wild or tamer foes.
@@ -105,7 +105,7 @@ Godot 4.7.2 (.NET build, but GDScript only) monster-catching RPG.
   - `one_ally` targeting: a `one_ally` move can pick the user itself, and a fainted-ally pick falls back to the **user**, while the docs say an invalid target is replaced with a random valid one. Pinned as current behaviour in `tests/battle/test_targeting_matrix.gd` (`PIN` comments); `all` excluding the user is pinned there too.
   - Underdog + swap: when an Underdog creature with several action slots swaps, its remaining queued actions are dropped and the newcomer gets none. Pinned in `tests/battle/test_swaps.gd` (`test_underdog_swapper_loses_its_remaining_actions_current_behaviour`).
 
-## Test content pack (implemented, uncommitted)
+## Test content pack (implemented, committed in `99d4683`)
 - **Spec:** `documentation/specs/2026-11-05-test-content-pack-design.md` (Implemented); **plan:** `documentation/plans/2026-11-05-test-content-pack.md` (8 tasks).
 - **What it is:** `data_testpack/` (30 creatures, 92 moves, 35 passives, 27 items, 6 tamers, 4 encounter tables; every id starts with `tp_`) layered on `data/` in debug builds only, so the F1 team builder and `tools/simulate.gd` (`--pack=1` default, `--pack=0` base only) can exercise every effect op, target kind, trigger, `when` key and held use kind. A scaffold: delete it as the real creature set grows.
 - **Key code:** `DataLoader.load_database(root, dialogue_root, packs)` and `DataLoader.pack_has_entries(root)`; `Database.TEST_PREFIX` / `is_test_content(id)`; `DataRegistry.PACK_ROOT` (added only when `OS.is_debug_build()` and the folder exists); `BattleLauncher.save_safe_species(db)` / `fill_box` (F1 Fill box never adds `tp_` creatures); `DebugPassivePage.save_safe_passives(db)` (F1 Set passive never offers `tp_` passives); `DataRegistry.load_with_fallback` (a pack that fails validation is logged and `data/` loads alone); `tools/validate_data.gd` prints `Data OK` and `Data+pack OK`.
@@ -113,7 +113,7 @@ Godot 4.7.2 (.NET build, but GDScript only) monster-catching RPG.
 - **Removal:** the checklist is in `documentation/battle-engine.md` ("Test content pack" > "Removal checklist"); `test_testpack_removal.gd` proves `data/` validates alone and only `data_registry.gd`, `database.gd`, `battle_launcher.gd` and `debug_passive_page.gd` mention the pack (scan limited to data/, game/, core/, dialogue/).
 - **Notes:** no engine bugs found. No status-cure op exists, so `tp_full_restore` (heal + energy) stands in for "full cure". A pack `balance.json` is ignored silently (tested). Creature passives are capped at 2 by the schema.
 
-## M5a Housekeeping (implemented, uncommitted)
+## M5a Housekeeping (implemented, committed in `f4068ba`)
 - **Spec:** `documentation/specs/2026-11-05-m5a-housekeeping-design.md` (Implemented, with an Amendments list); **plan:** `documentation/plans/2026-11-05-m5a-housekeeping.md`. Roadmap: `documentation/specs/2026-11-05-roadmap-m5-m8.md` (5a done; next is 5b).
 - **What shipped:**
   - Settings tabs follow focus: `scroll.follow_focus = true` in `SettingsMenu._tab()`, so the Controls tab scrolls with the arrow keys.
@@ -127,6 +127,7 @@ Godot 4.7.2 (.NET build, but GDScript only) monster-catching RPG.
   - Creature learnset tables have no priority column (priority is in Moves).
   - The bag pane is always full height (404x344), not content-sized.
   - `ItemIconSlot` is a placeholder until M7 supplies art.
+- **After the commit:** `DataSchemas.EFFECT_NEEDS_ONE_OF` (checked in `validator.gd` `_check_effects`) now rejects a `field_boost` with neither `stacks` nor `turns`, so the dangling "Its field states get " text can no longer reach the compendium or the bag. The test pack's `tp_reaction_boost` uses a stacks-only boost; the EffectText pin for the bare case was removed.
 - **What's next:** M5b shared visual pieces (creature sprite slot, stat radar, bars, summary card; `ItemIconSlot` already exists), then 5c Summary and 5d Box/Party. Brainstorm first; ask the user.
 
 ## Possible next steps (none requested yet)

@@ -1,0 +1,42 @@
+{
+  "schema": 1,
+  "entries": [
+    {
+      "id": "rune_strike",
+      "name": "Rune Strike",
+      "description": "A blow carried by a glowing rune.",
+      "type": "magic",
+      "category": "physical",
+      "power": 40,
+      "cost": 2,
+      "accuracy": 100,
+      "target": "one_enemy",
+      "effects": [{"op": "damage"}]
+    },
+    {
+      "id": "hex_bolt",
+      "name": "Hex Bolt",
+      "description": "A crackling bolt of raw arcana.",
+      "type": "magic",
+      "category": "special",
+      "power": 50,
+      "cost": 4,
+      "accuracy": 100,
+      "target": "one_enemy",
+      "effects": [{"op": "damage"}]
+    },
+    {
+      "id": "enchant",
+      "name": "Enchant",
+      "description": "Draws protective runes around your own side.",
+      "type": "magic",
+      "category": "status",
+      "power": 0,
+      "cost": 4,
+      "accuracy": 100,
+      "always_hits": true,
+      "target": "own_side",
+      "effects": [{"op": "apply_field_state", "side": "own", "state": "enchanted"}]
+    }
+  ]
+}

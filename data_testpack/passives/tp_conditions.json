@@ -1,27 +1,91 @@
 {
   "schema": 1,
   "entries": [
-    {"id": "tp_when_hp", "name": "TP When HP", "description": "Tests hp_below at 0.5, at its 1.0 maximum (true unless at full HP) and at 0.0 (never true).",
+    {
+      "id": "tp_when_hp",
+      "name": "TP When HP",
+      "description": "Tests hp_below at 0.5, at its 1.0 maximum (true unless at full HP) and at 0.0 (never true).",
       "effects": [
-        {"op": "stat_mod", "stat": "patk", "mult": 2.0, "when": {"hp_below": 0.5}},
-        {"op": "stat_mod", "stat": "pdef", "mult": 1.5, "when": {"hp_below": 1.0}},
-        {"op": "stat_mod", "stat": "sdef", "mult": 1.5, "when": {"hp_below": 0.0}}]},
-    {"id": "tp_when_underdog", "name": "TP When Underdog", "description": "Tests the underdog condition both ways: Speed x1.5 while outnumbered, Special Attack x1.1 while not.",
+        {
+          "op": "stat_mod",
+          "stat": "patk",
+          "mult": 2.0,
+          "when": {"hp_below": 0.5}
+        },
+        {
+          "op": "stat_mod",
+          "stat": "pdef",
+          "mult": 1.5,
+          "when": {"hp_below": 1.0}
+        },
+        {
+          "op": "stat_mod",
+          "stat": "sdef",
+          "mult": 1.5,
+          "when": {"hp_below": 0.0}
+        }
+      ]
+    },
+    {
+      "id": "tp_when_underdog",
+      "name": "TP When Underdog",
+      "description": "Tests the underdog condition both ways: Speed x1.5 while outnumbered, Special Attack x1.1 while not.",
       "effects": [
-        {"op": "stat_mod", "stat": "spd", "mult": 1.5, "when": {"underdog": true}},
-        {"op": "stat_mod", "stat": "satk", "mult": 1.1, "when": {"underdog": false}}]},
-    {"id": "tp_when_field_sides", "name": "TP When Field Sides", "description": "Tests the field condition with side own (Charged on its side) and side enemy (Soaked on the foe's side).",
+        {
+          "op": "stat_mod",
+          "stat": "spd",
+          "mult": 1.5,
+          "when": {"underdog": true}
+        },
+        {
+          "op": "stat_mod",
+          "stat": "satk",
+          "mult": 1.1,
+          "when": {"underdog": false}
+        }
+      ]
+    },
+    {
+      "id": "tp_when_field_sides",
+      "name": "TP When Field Sides",
+      "description": "Tests the field condition with side own (Charged on its side) and side enemy (Soaked on the foe's side).",
       "effects": [
-        {"op": "stat_mod", "stat": "spd", "mult": 1.5, "when": {"field": "charged", "side": "own"}},
-        {"op": "incoming_type_mod", "mult": 0.5, "when": {"field": "soaked", "side": "enemy"}}]},
-    {"id": "tp_aura_stat", "name": "TP Aura Stat", "description": "Tests an ally aura (scope allies): every creature on its side gets Physical Defense x1.2.",
+        {
+          "op": "stat_mod",
+          "stat": "spd",
+          "mult": 1.5,
+          "when": {"field": "charged", "side": "own"}
+        },
+        {
+          "op": "incoming_type_mod",
+          "mult": 0.5,
+          "when": {"field": "soaked", "side": "enemy"}
+        }
+      ]
+    },
+    {
+      "id": "tp_aura_stat",
+      "name": "TP Aura Stat",
+      "description": "Tests an ally aura (scope allies): every creature on its side gets Physical Defense x1.2.",
       "scope": "allies",
-      "effects": [{"op": "stat_mod", "stat": "pdef", "mult": 1.2}]},
-    {"id": "tp_aura_underdog_power", "name": "TP Aura Underdog Power", "description": "Tests an ally aura with a when condition checked on the holder: allies' Electric moves hit 20% harder while outnumbered.",
+      "effects": [{"op": "stat_mod", "stat": "pdef", "mult": 1.2}]
+    },
+    {
+      "id": "tp_aura_underdog_power",
+      "name": "TP Aura Underdog Power",
+      "description": "Tests an ally aura with a when condition checked on the holder: allies' Electric moves hit 20% harder while outnumbered.",
       "scope": "allies",
-      "effects": [{"op": "type_power", "type": "electric", "mult": 1.2, "when": {"underdog": true}}]},
-    {"id": "tp_aura_shelter", "name": "TP Aura Shelter", "description": "Tests an ally aura of protections: allies are sheltered from Haunted and can't be Dazed.",
+      "effects": [{"op": "type_power", "type": "electric", "mult": 1.2, "when": {"underdog": true}}]
+    },
+    {
+      "id": "tp_aura_shelter",
+      "name": "TP Aura Shelter",
+      "description": "Tests an ally aura of protections: allies are sheltered from Haunted and can't be Dazed.",
       "scope": "allies",
-      "effects": [{"op": "field_shelter", "state": "haunted"}, {"op": "status_immune", "status": "daze"}]}
+      "effects": [
+        {"op": "field_shelter", "state": "haunted"},
+        {"op": "status_immune", "status": "daze"}
+      ]
+    }
   ]
 }

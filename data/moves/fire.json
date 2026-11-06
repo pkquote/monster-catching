@@ -1,0 +1,65 @@
+{
+  "schema": 1,
+  "entries": [
+    {
+      "id": "ember_flick",
+      "name": "Ember Flick",
+      "type": "fire",
+      "category": "special",
+      "power": 40,
+      "cost": 2,
+      "accuracy": 100,
+      "target": "one_enemy",
+      "effects": [
+        {"op": "damage"},
+        {"op": "apply_status", "status": "burn", "chance": 10}
+      ]
+    },
+    {
+      "id": "scorch_field",
+      "name": "Scorch Field",
+      "description": "Sets the enemy side smouldering.",
+      "type": "fire",
+      "category": "status",
+      "power": 0,
+      "cost": 4,
+      "accuracy": 100,
+      "always_hits": true,
+      "target": "enemy_side",
+      "effects": [{"op": "apply_field_state", "side": "enemy", "state": "scorched"}]
+    },
+    {
+      "id": "flare_burst",
+      "name": "Flare Burst",
+      "description": "Hits every foe; far stronger on a Scorched side.",
+      "type": "fire",
+      "category": "special",
+      "power": 45,
+      "cost": 7,
+      "accuracy": 90,
+      "target": "all_enemies",
+      "effects": [
+        {
+          "op": "bonus_if_field",
+          "side": "target",
+          "state": "scorched",
+          "mult": 1.6,
+          "consume": true
+        },
+        {"op": "damage"}
+      ]
+    },
+    {
+      "id": "crossfire",
+      "name": "Crossfire",
+      "description": "Flames lash two foes of your choice.",
+      "type": "fire",
+      "category": "special",
+      "power": 44,
+      "cost": 4,
+      "accuracy": 100,
+      "target": "two_enemies",
+      "effects": [{"op": "damage"}]
+    }
+  ]
+}

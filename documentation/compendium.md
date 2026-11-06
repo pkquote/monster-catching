@@ -549,8 +549,8 @@ Grouped by type. Physical moves use P.Atk vs P.Def; special moves use S.Atk vs S
 | Move | Id | Cat. | Power | Cost | Acc | Pri | Target | Effects | Learned by |
 |---|---|---|---|---|---|---|---|---|---|
 | **Byte** | `byte` | Physical | 40 | 2 | 100% | 0 | One enemy | Damage<br>*A quick, glitching snap.* | — |
-| **Corrupt** | `corrupt` | Status | — | 4 | — | 0 | Enemy side | Applies Glitched to the enemy side<br>*Seeds the enemy side with corrupted data.* | — |
 | **Data Burst** | `data_burst` | Special | 50 | 4 | 100% | 0 | One enemy | Damage<br>*Floods the target with a blast of raw data.* | — |
+| **Digitize** | `digitize` | Status | — | 4 | — | 0 | Enemy side | Applies Glitched to the enemy side<br>*Converts the enemy's field to a digital entity.* | — |
 
 ### Water moves
 

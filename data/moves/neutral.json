@@ -1,0 +1,56 @@
+{
+  "schema": 1,
+  "entries": [
+    {
+      "id": "tackle",
+      "name": "Tackle",
+      "type": "neutral",
+      "category": "physical",
+      "power": 40,
+      "cost": 1,
+      "accuracy": 100,
+      "target": "one_enemy",
+      "effects": [{"op": "damage"}]
+    },
+    {
+      "id": "brace",
+      "name": "Brace",
+      "description": "Raises Physical and Special Defense.",
+      "type": "neutral",
+      "category": "status",
+      "power": 0,
+      "cost": 3,
+      "accuracy": 100,
+      "always_hits": true,
+      "target": "self",
+      "effects": [
+        {"op": "stat_stage", "stat": "pdef", "stages": 1},
+        {"op": "stat_stage", "stat": "sdef", "stages": 1}
+      ]
+    },
+    {
+      "id": "taunting_howl",
+      "name": "Taunting Howl",
+      "description": "Lowers every foe's Physical Attack.",
+      "type": "neutral",
+      "category": "status",
+      "power": 0,
+      "cost": 3,
+      "accuracy": 100,
+      "target": "all_enemies",
+      "effects": [{"op": "stat_stage", "stat": "patk", "stages": -1}]
+    },
+    {
+      "id": "scrap",
+      "name": "Scrap",
+      "description": "A desperate, free flail. Always available, even with no energy.",
+      "type": "neutral",
+      "category": "physical",
+      "power": 25,
+      "cost": 0,
+      "accuracy": 100,
+      "target": "one_enemy",
+      "effects": [{"op": "damage"}]
+    }
+  ]
+}

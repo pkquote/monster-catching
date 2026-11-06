@@ -1,0 +1,41 @@
+{
+  "schema": 1,
+  "entries": [
+    {
+      "id": "pebble_toss",
+      "name": "Pebble Toss",
+      "type": "earth",
+      "category": "physical",
+      "power": 40,
+      "cost": 2,
+      "accuracy": 100,
+      "target": "one_enemy",
+      "effects": [{"op": "damage"}]
+    },
+    {
+      "id": "quake_stomp",
+      "name": "Quake Stomp",
+      "description": "Shakes the whole field, allies included.",
+      "type": "earth",
+      "category": "physical",
+      "power": 70,
+      "cost": 9,
+      "accuracy": 100,
+      "target": "all",
+      "effects": [{"op": "damage"}]
+    },
+    {
+      "id": "dust_sweep",
+      "name": "Dust Sweep",
+      "description": "Clears every state from your own side.",
+      "type": "earth",
+      "category": "status",
+      "power": 0,
+      "cost": 3,
+      "accuracy": 100,
+      "always_hits": true,
+      "target": "own_side",
+      "effects": [{"op": "remove_field_state", "side": "own"}]
+    }
+  ]
+}

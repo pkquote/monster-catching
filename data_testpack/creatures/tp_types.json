@@ -1,19 +1,460 @@
 {
   "schema": 1,
   "entries": [
-    {"id": "tp_neutral_plain", "name": "TP Neutral Plain", "description": "A middling neutral creature with every stat near 50, the baseline for comparisons.", "types": ["neutral"], "base_stats": {"hp": 50, "patk": 50, "pdef": 50, "satk": 50, "sdef": 50, "spd": 50, "luck": 50, "resolve": 50, "stamina": 50}, "catch_rate": 0.5, "xp_yield": 50, "learnset": [{"level": 1, "move": "tp_hit_neutral_physical_prio_minus3"}, {"level": 1, "move": "tp_power_min"}, {"level": 5, "move": "tp_power_max"}, {"level": 8, "move": "tp_damage_status_stage"}], "passives": ["tp_when_hp"], "affinity_passives": {"striker": "tp_when_underdog", "warden": "tp_type_power_up", "catalyst": "tp_status_immune", "trickster": "tp_energy_discounts"}},
-    {"id": "tp_fire_glass_cannon", "name": "TP Fire Glass Cannon", "description": "A fragile fire creature with huge attacks and almost no bulk.", "types": ["fire"], "base_stats": {"hp": 30, "patk": 200, "pdef": 40, "satk": 200, "sdef": 40, "spd": 90, "luck": 50, "resolve": 40, "stamina": 60}, "catch_rate": 0.35, "xp_yield": 180, "learnset": [{"level": 1, "move": "tp_hit_fire_special_prio_minus2"}, {"level": 1, "move": "tp_cash_scorched"}, {"level": 10, "move": "tp_apply_scorched"}, {"level": 22, "move": "tp_skip_chance_in_move"}], "growth_rates": {"patk": "fast", "satk": "fast", "hp": "slow", "pdef": "slow", "sdef": "slow"}, "passives": ["tp_when_field_sides", "tp_shelter"], "affinity_passives": {"striker": "tp_aura_underdog_power", "warden": "tp_incoming_weak", "catalyst": "tp_field_boost_max", "trickster": "tp_enter_triggers"}},
-    {"id": "tp_water_wall", "name": "TP Water Wall", "description": "A water creature with towering HP and defences and barely any attack.", "types": ["water"], "base_stats": {"hp": 200, "patk": 30, "pdef": 180, "satk": 30, "sdef": 180, "spd": 40, "luck": 50, "resolve": 120, "stamina": 90}, "catch_rate": 0.2, "xp_yield": 150, "learnset": [{"level": 1, "move": "tp_hit_water_physical_prio_minus1"}, {"level": 1, "move": "tp_apply_soaked"}, {"level": 12, "move": "tp_clear_soaked"}, {"level": 36, "move": "tp_restore_energy_half_ally"}], "growth_rates": {"hp": "fast", "pdef": "fast", "spd": "slow"}, "passives": ["tp_aura_underdog_power", "tp_reaction_boost"], "affinity_passives": {"striker": "tp_type_power_extremes", "warden": "tp_guards", "catalyst": "tp_rest_scrap", "trickster": "tp_hit_when_field"}},
-    {"id": "tp_grass_speedster", "name": "TP Grass Speedster", "description": "A grass creature with blistering speed and thin everything else.", "types": ["grass"], "base_stats": {"hp": 45, "patk": 70, "pdef": 40, "satk": 70, "sdef": 40, "spd": 230, "luck": 80, "resolve": 50, "stamina": 70}, "catch_rate": 0.45, "xp_yield": 90, "learnset": [{"level": 1, "move": "tp_hit_grass_special"}, {"level": 1, "move": "tp_stage_acc_swing"}, {"level": 5, "move": "tp_cash_soaked"}, {"level": 8, "move": "tp_apply_overgrown"}], "growth_rates": {"spd": "fast", "luck": "fast", "pdef": "slow"}, "passives": ["tp_type_power_up"], "affinity_passives": {"striker": "tp_absorb", "warden": "tp_reaction_boost", "catalyst": "tp_hit_contact_rare", "trickster": "tp_knockout_when_underdog"}},
-    {"id": "tp_electric_slow_bruiser", "name": "TP Electric Slow Bruiser", "description": "A heavy electric hitter with big HP and attack but crawling speed.", "types": ["electric"], "base_stats": {"hp": 160, "patk": 190, "pdef": 90, "satk": 60, "sdef": 60, "spd": 8, "luck": 40, "resolve": 70, "stamina": 80}, "catch_rate": 0.25, "xp_yield": 140, "learnset": [{"level": 1, "move": "tp_hit_electric_physical_prio_plus1"}, {"level": 1, "move": "tp_cash_charged"}, {"level": 15, "move": "tp_hit_shock_chance_1"}, {"level": 19, "move": "tp_cash_overgrown"}], "growth_rates": {"patk": "fast", "hp": "fast", "spd": "slow"}, "passives": ["tp_incoming_resist", "tp_enter_triggers"], "affinity_passives": {"striker": "tp_shelter", "warden": "tp_stat_mod_all", "catalyst": "tp_round_end_when_hp", "trickster": "tp_faint_field"}},
-    {"id": "tp_ice_four_attacks", "name": "TP Ice Four Attacks", "description": "An ice creature whose whole moveset is four damaging ice moves.", "types": ["ice"], "base_stats": {"hp": 60, "patk": 60, "pdef": 60, "satk": 60, "sdef": 60, "spd": 60, "luck": 60, "resolve": 60, "stamina": 60}, "catch_rate": 0.6, "xp_yield": 70, "learnset": [{"level": 1, "move": "tp_hit_ice_special_prio_plus2"}, {"level": 1, "move": "tp_damage_overrides"}, {"level": 1, "move": "tp_hit_chill_chance_100"}, {"level": 1, "move": "tp_cash_frosted"}], "passives": ["tp_absorb", "tp_hit_noncontact"], "affinity_passives": {"striker": "tp_energy_discounts", "warden": "tp_hit_noncontact", "catalyst": "tp_knockout_boost", "trickster": "tp_kitchen_sink"}},
-    {"id": "tp_earth_max_stats", "name": "TP Earth Max Stats", "description": "An earth creature with all nine base stats at the maximum 255 and a catch rate of zero.", "types": ["earth"], "base_stats": {"hp": 255, "patk": 255, "pdef": 255, "satk": 255, "sdef": 255, "spd": 255, "luck": 255, "resolve": 255, "stamina": 255}, "catch_rate": 0.0, "xp_yield": 1000, "learnset": [{"level": 1, "move": "tp_hit_earth_physical_prio_plus3"}, {"level": 1, "move": "tp_hit_everyone"}, {"level": 33, "move": "tp_apply_charged"}], "growth_rates": {"hp": "fast", "patk": "fast"}, "passives": ["tp_guards"], "affinity_passives": {"striker": "tp_enter_triggers", "warden": "tp_round_end_sweep", "catalyst": "tp_chain_a", "trickster": "tp_field_bond_none"}},
-    {"id": "tp_magic_energy_starved", "name": "TP Magic Energy Starved", "description": "A magic creature with stamina 1 whose strongest moves cost more energy than it has.", "types": ["magic"], "base_stats": {"hp": 80, "patk": 60, "pdef": 60, "satk": 120, "sdef": 80, "spd": 60, "luck": 50, "resolve": 50, "stamina": 1}, "catch_rate": 0.3, "xp_yield": 110, "learnset": [{"level": 1, "move": "tp_power_max"}, {"level": 1, "move": "tp_hit_magic_special_prio_minus3"}, {"level": 1, "move": "tp_cash_enchanted"}, {"level": 3, "move": "tp_apply_enchanted"}], "growth_rates": {"stamina": "slow"}, "passives": ["tp_field_boost_max", "tp_knockout_when_underdog"], "affinity_passives": {"striker": "tp_hit_when_field", "warden": "tp_faint_curse", "catalyst": "tp_field_encounter_none", "trickster": "tp_when_field_sides"}},
-    {"id": "tp_mental_luck_resolve", "name": "TP Mental Luck Resolve", "description": "A mental creature with maximum luck and resolve to stress crits and resist caps.", "types": ["mental"], "base_stats": {"hp": 70, "patk": 50, "pdef": 60, "satk": 70, "sdef": 70, "spd": 70, "luck": 255, "resolve": 255, "stamina": 100}, "catch_rate": 0.15, "xp_yield": 200, "learnset": [{"level": 1, "move": "tp_hit_mental_physical_prio_minus2"}, {"level": 1, "move": "tp_apply_hazed"}, {"level": 2, "move": "tp_apply_frosted"}, {"level": 20, "move": "tp_cash_hazed"}], "growth_rates": {"luck": "fast", "resolve": "fast"}, "passives": ["tp_energy_discounts", "tp_faint_curse"], "affinity_passives": {"striker": "tp_knockout_when_underdog", "warden": "tp_chain_b", "catalyst": "tp_when_hp", "trickster": "tp_aura_shelter"}},
-    {"id": "tp_iron_status_only", "name": "TP Iron Status Only", "description": "An iron creature whose four moves are all status moves.", "types": ["iron"], "base_stats": {"hp": 70, "patk": 70, "pdef": 70, "satk": 70, "sdef": 70, "spd": 70, "luck": 70, "resolve": 70, "stamina": 70}, "catch_rate": 0.5, "xp_yield": 60, "learnset": [{"level": 1, "move": "tp_apply_magnetized"}, {"level": 1, "move": "tp_clear_magnetized"}, {"level": 1, "move": "tp_damage_fraction_small"}, {"level": 1, "move": "tp_stage_luck_swing"}], "passives": ["tp_stat_mod_all"], "affinity_passives": {"striker": "tp_faint_field", "warden": "tp_field_xp_encounter_max", "catalyst": "tp_aura_stat", "trickster": "tp_incoming_resist"}},
-    {"id": "tp_virtual_one_move", "name": "TP Virtual One Move", "description": "A virtual creature that knows exactly one move, the stall case.", "types": ["virtual"], "base_stats": {"hp": 65, "patk": 65, "pdef": 65, "satk": 65, "sdef": 65, "spd": 65, "luck": 65, "resolve": 65, "stamina": 65}, "catch_rate": 0.55, "xp_yield": 40, "learnset": [{"level": 1, "move": "tp_always_hits_damage"}], "passives": ["tp_hit_contact_rare", "tp_kitchen_sink"], "affinity_passives": {"striker": "tp_kitchen_sink", "warden": "tp_when_underdog", "catalyst": "tp_type_power_up", "trickster": "tp_status_immune"}},
-    {"id": "tp_ghost_all_level_one", "name": "TP Ghost All Level One", "description": "A ghost creature that has every move it will ever know at level 1.", "types": ["ghost"], "base_stats": {"hp": 55, "patk": 55, "pdef": 55, "satk": 55, "sdef": 55, "spd": 55, "luck": 55, "resolve": 55, "stamina": 55}, "catch_rate": 0.4, "xp_yield": 80, "learnset": [{"level": 1, "move": "tp_hit_ghost_special_prio_plus1"}, {"level": 1, "move": "tp_always_hits_status"}, {"level": 1, "move": "tp_scrap_power_in_move"}, {"level": 1, "move": "tp_apply_haunted"}, {"level": 1, "move": "tp_cash_haunted"}, {"level": 1, "move": "tp_clear_haunted"}, {"level": 1, "move": "tp_stage_sdef_swing"}], "passives": ["tp_hit_when_field", "tp_field_xp_encounter_max"], "affinity_passives": {"striker": "tp_field_bond_none", "warden": "tp_aura_underdog_power", "catalyst": "tp_incoming_weak", "trickster": "tp_field_boost_max"}},
-    {"id": "tp_dark_late_bloomer", "name": "TP Dark Late Bloomer", "description": "A dark creature that keeps learning moves all the way to level 100.", "types": ["dark"], "base_stats": {"hp": 75, "patk": 75, "pdef": 75, "satk": 75, "sdef": 75, "spd": 75, "luck": 75, "resolve": 75, "stamina": 75}, "catch_rate": 0.35, "xp_yield": 120, "learnset": [{"level": 1, "move": "tp_hit_dark_physical_prio_plus2"}, {"level": 12, "move": "tp_accuracy_min"}, {"level": 25, "move": "tp_apply_shrouded"}, {"level": 40, "move": "tp_cash_shrouded"}, {"level": 55, "move": "tp_clear_shrouded"}, {"level": 70, "move": "tp_damage_fraction_full"}, {"level": 99, "move": "tp_stage_spd_swing"}, {"level": 100, "move": "tp_hit_light_special_prio_plus3"}], "passives": ["tp_round_end_sweep"], "affinity_passives": {"striker": "tp_when_field_sides", "warden": "tp_type_power_extremes", "catalyst": "tp_guards", "trickster": "tp_rest_scrap"}},
-    {"id": "tp_light_min_stats", "name": "TP Light Min Stats", "description": "A light creature with all nine base stats at the minimum 1 and a catch rate of one.", "types": ["light"], "base_stats": {"hp": 1, "patk": 1, "pdef": 1, "satk": 1, "sdef": 1, "spd": 1, "luck": 1, "resolve": 1, "stamina": 1}, "catch_rate": 1.0, "xp_yield": 0, "learnset": [{"level": 1, "move": "tp_accuracy_max"}, {"level": 1, "move": "tp_hit_light_special_prio_plus3"}, {"level": 5, "move": "tp_heal_self_full"}], "passives": ["tp_knockout_boost", "tp_when_field_sides"], "affinity_passives": {"striker": "tp_aura_shelter", "warden": "tp_absorb", "catalyst": "tp_reaction_boost", "trickster": "tp_hit_contact_rare"}}
+    {
+      "id": "tp_neutral_plain",
+      "name": "TP Neutral Plain",
+      "description": "A middling neutral creature with every stat near 50, the baseline for comparisons.",
+      "types": ["neutral"],
+      "base_stats": {
+        "hp": 50,
+        "patk": 50,
+        "pdef": 50,
+        "satk": 50,
+        "sdef": 50,
+        "spd": 50,
+        "luck": 50,
+        "resolve": 50,
+        "stamina": 50
+      },
+      "catch_rate": 0.5,
+      "xp_yield": 50,
+      "learnset": [
+        {"level": 1, "move": "tp_hit_neutral_physical_prio_minus3"},
+        {"level": 1, "move": "tp_power_min"},
+        {"level": 5, "move": "tp_power_max"},
+        {"level": 8, "move": "tp_damage_status_stage"}
+      ],
+      "passives": ["tp_when_hp"],
+      "affinity_passives": {
+        "striker": "tp_when_underdog",
+        "warden": "tp_type_power_up",
+        "catalyst": "tp_status_immune",
+        "trickster": "tp_energy_discounts"
+      }
+    },
+    {
+      "id": "tp_fire_glass_cannon",
+      "name": "TP Fire Glass Cannon",
+      "description": "A fragile fire creature with huge attacks and almost no bulk.",
+      "types": ["fire"],
+      "base_stats": {
+        "hp": 30,
+        "patk": 200,
+        "pdef": 40,
+        "satk": 200,
+        "sdef": 40,
+        "spd": 90,
+        "luck": 50,
+        "resolve": 40,
+        "stamina": 60
+      },
+      "catch_rate": 0.35,
+      "xp_yield": 180,
+      "learnset": [
+        {"level": 1, "move": "tp_hit_fire_special_prio_minus2"},
+        {"level": 1, "move": "tp_cash_scorched"},
+        {"level": 10, "move": "tp_apply_scorched"},
+        {"level": 22, "move": "tp_skip_chance_in_move"}
+      ],
+      "growth_rates": {"patk": "fast", "satk": "fast", "hp": "slow", "pdef": "slow", "sdef": "slow"},
+      "passives": ["tp_when_field_sides", "tp_shelter"],
+      "affinity_passives": {
+        "striker": "tp_aura_underdog_power",
+        "warden": "tp_incoming_weak",
+        "catalyst": "tp_field_boost_max",
+        "trickster": "tp_enter_triggers"
+      }
+    },
+    {
+      "id": "tp_water_wall",
+      "name": "TP Water Wall",
+      "description": "A water creature with towering HP and defences and barely any attack.",
+      "types": ["water"],
+      "base_stats": {
+        "hp": 200,
+        "patk": 30,
+        "pdef": 180,
+        "satk": 30,
+        "sdef": 180,
+        "spd": 40,
+        "luck": 50,
+        "resolve": 120,
+        "stamina": 90
+      },
+      "catch_rate": 0.2,
+      "xp_yield": 150,
+      "learnset": [
+        {"level": 1, "move": "tp_hit_water_physical_prio_minus1"},
+        {"level": 1, "move": "tp_apply_soaked"},
+        {"level": 12, "move": "tp_clear_soaked"},
+        {"level": 36, "move": "tp_restore_energy_half_ally"}
+      ],
+      "growth_rates": {"hp": "fast", "pdef": "fast", "spd": "slow"},
+      "passives": ["tp_aura_underdog_power", "tp_reaction_boost"],
+      "affinity_passives": {
+        "striker": "tp_type_power_extremes",
+        "warden": "tp_guards",
+        "catalyst": "tp_rest_scrap",
+        "trickster": "tp_hit_when_field"
+      }
+    },
+    {
+      "id": "tp_grass_speedster",
+      "name": "TP Grass Speedster",
+      "description": "A grass creature with blistering speed and thin everything else.",
+      "types": ["grass"],
+      "base_stats": {
+        "hp": 45,
+        "patk": 70,
+        "pdef": 40,
+        "satk": 70,
+        "sdef": 40,
+        "spd": 230,
+        "luck": 80,
+        "resolve": 50,
+        "stamina": 70
+      },
+      "catch_rate": 0.45,
+      "xp_yield": 90,
+      "learnset": [
+        {"level": 1, "move": "tp_hit_grass_special"},
+        {"level": 1, "move": "tp_stage_acc_swing"},
+        {"level": 5, "move": "tp_cash_soaked"},
+        {"level": 8, "move": "tp_apply_overgrown"}
+      ],
+      "growth_rates": {"spd": "fast", "luck": "fast", "pdef": "slow"},
+      "passives": ["tp_type_power_up"],
+      "affinity_passives": {
+        "striker": "tp_absorb",
+        "warden": "tp_reaction_boost",
+        "catalyst": "tp_hit_contact_rare",
+        "trickster": "tp_knockout_when_underdog"
+      }
+    },
+    {
+      "id": "tp_electric_slow_bruiser",
+      "name": "TP Electric Slow Bruiser",
+      "description": "A heavy electric hitter with big HP and attack but crawling speed.",
+      "types": ["electric"],
+      "base_stats": {
+        "hp": 160,
+        "patk": 190,
+        "pdef": 90,
+        "satk": 60,
+        "sdef": 60,
+        "spd": 8,
+        "luck": 40,
+        "resolve": 70,
+        "stamina": 80
+      },
+      "catch_rate": 0.25,
+      "xp_yield": 140,
+      "learnset": [
+        {"level": 1, "move": "tp_hit_electric_physical_prio_plus1"},
+        {"level": 1, "move": "tp_cash_charged"},
+        {"level": 15, "move": "tp_hit_shock_chance_1"},
+        {"level": 19, "move": "tp_cash_overgrown"}
+      ],
+      "growth_rates": {"patk": "fast", "hp": "fast", "spd": "slow"},
+      "passives": ["tp_incoming_resist", "tp_enter_triggers"],
+      "affinity_passives": {
+        "striker": "tp_shelter",
+        "warden": "tp_stat_mod_all",
+        "catalyst": "tp_round_end_when_hp",
+        "trickster": "tp_faint_field"
+      }
+    },
+    {
+      "id": "tp_ice_four_attacks",
+      "name": "TP Ice Four Attacks",
+      "description": "An ice creature whose whole moveset is four damaging ice moves.",
+      "types": ["ice"],
+      "base_stats": {
+        "hp": 60,
+        "patk": 60,
+        "pdef": 60,
+        "satk": 60,
+        "sdef": 60,
+        "spd": 60,
+        "luck": 60,
+        "resolve": 60,
+        "stamina": 60
+      },
+      "catch_rate": 0.6,
+      "xp_yield": 70,
+      "learnset": [
+        {"level": 1, "move": "tp_hit_ice_special_prio_plus2"},
+        {"level": 1, "move": "tp_damage_overrides"},
+        {"level": 1, "move": "tp_hit_chill_chance_100"},
+        {"level": 1, "move": "tp_cash_frosted"}
+      ],
+      "passives": ["tp_absorb", "tp_hit_noncontact"],
+      "affinity_passives": {
+        "striker": "tp_energy_discounts",
+        "warden": "tp_hit_noncontact",
+        "catalyst": "tp_knockout_boost",
+        "trickster": "tp_kitchen_sink"
+      }
+    },
+    {
+      "id": "tp_earth_max_stats",
+      "name": "TP Earth Max Stats",
+      "description": "An earth creature with all nine base stats at the maximum 255 and a catch rate of zero.",
+      "types": ["earth"],
+      "base_stats": {
+        "hp": 255,
+        "patk": 255,
+        "pdef": 255,
+        "satk": 255,
+        "sdef": 255,
+        "spd": 255,
+        "luck": 255,
+        "resolve": 255,
+        "stamina": 255
+      },
+      "catch_rate": 0.0,
+      "xp_yield": 1000,
+      "learnset": [
+        {"level": 1, "move": "tp_hit_earth_physical_prio_plus3"},
+        {"level": 1, "move": "tp_hit_everyone"},
+        {"level": 33, "move": "tp_apply_charged"}
+      ],
+      "growth_rates": {"hp": "fast", "patk": "fast"},
+      "passives": ["tp_guards"],
+      "affinity_passives": {
+        "striker": "tp_enter_triggers",
+        "warden": "tp_round_end_sweep",
+        "catalyst": "tp_chain_a",
+        "trickster": "tp_field_bond_none"
+      }
+    },
+    {
+      "id": "tp_magic_energy_starved",
+      "name": "TP Magic Energy Starved",
+      "description": "A magic creature with stamina 1 whose strongest moves cost more energy than it has.",
+      "types": ["magic"],
+      "base_stats": {
+        "hp": 80,
+        "patk": 60,
+        "pdef": 60,
+        "satk": 120,
+        "sdef": 80,
+        "spd": 60,
+        "luck": 50,
+        "resolve": 50,
+        "stamina": 1
+      },
+      "catch_rate": 0.3,
+      "xp_yield": 110,
+      "learnset": [
+        {"level": 1, "move": "tp_power_max"},
+        {"level": 1, "move": "tp_hit_magic_special_prio_minus3"},
+        {"level": 1, "move": "tp_cash_enchanted"},
+        {"level": 3, "move": "tp_apply_enchanted"}
+      ],
+      "growth_rates": {"stamina": "slow"},
+      "passives": ["tp_field_boost_max", "tp_knockout_when_underdog"],
+      "affinity_passives": {
+        "striker": "tp_hit_when_field",
+        "warden": "tp_faint_curse",
+        "catalyst": "tp_field_encounter_none",
+        "trickster": "tp_when_field_sides"
+      }
+    },
+    {
+      "id": "tp_mental_luck_resolve",
+      "name": "TP Mental Luck Resolve",
+      "description": "A mental creature with maximum luck and resolve to stress crits and resist caps.",
+      "types": ["mental"],
+      "base_stats": {
+        "hp": 70,
+        "patk": 50,
+        "pdef": 60,
+        "satk": 70,
+        "sdef": 70,
+        "spd": 70,
+        "luck": 255,
+        "resolve": 255,
+        "stamina": 100
+      },
+      "catch_rate": 0.15,
+      "xp_yield": 200,
+      "learnset": [
+        {"level": 1, "move": "tp_hit_mental_physical_prio_minus2"},
+        {"level": 1, "move": "tp_apply_hazed"},
+        {"level": 2, "move": "tp_apply_frosted"},
+        {"level": 20, "move": "tp_cash_hazed"}
+      ],
+      "growth_rates": {"luck": "fast", "resolve": "fast"},
+      "passives": ["tp_energy_discounts", "tp_faint_curse"],
+      "affinity_passives": {
+        "striker": "tp_knockout_when_underdog",
+        "warden": "tp_chain_b",
+        "catalyst": "tp_when_hp",
+        "trickster": "tp_aura_shelter"
+      }
+    },
+    {
+      "id": "tp_iron_status_only",
+      "name": "TP Iron Status Only",
+      "description": "An iron creature whose four moves are all status moves.",
+      "types": ["iron"],
+      "base_stats": {
+        "hp": 70,
+        "patk": 70,
+        "pdef": 70,
+        "satk": 70,
+        "sdef": 70,
+        "spd": 70,
+        "luck": 70,
+        "resolve": 70,
+        "stamina": 70
+      },
+      "catch_rate": 0.5,
+      "xp_yield": 60,
+      "learnset": [
+        {"level": 1, "move": "tp_apply_magnetized"},
+        {"level": 1, "move": "tp_clear_magnetized"},
+        {"level": 1, "move": "tp_damage_fraction_small"},
+        {"level": 1, "move": "tp_stage_luck_swing"}
+      ],
+      "passives": ["tp_stat_mod_all"],
+      "affinity_passives": {
+        "striker": "tp_faint_field",
+        "warden": "tp_field_xp_encounter_max",
+        "catalyst": "tp_aura_stat",
+        "trickster": "tp_incoming_resist"
+      }
+    },
+    {
+      "id": "tp_virtual_one_move",
+      "name": "TP Virtual One Move",
+      "description": "A virtual creature that knows exactly one move, the stall case.",
+      "types": ["virtual"],
+      "base_stats": {
+        "hp": 65,
+        "patk": 65,
+        "pdef": 65,
+        "satk": 65,
+        "sdef": 65,
+        "spd": 65,
+        "luck": 65,
+        "resolve": 65,
+        "stamina": 65
+      },
+      "catch_rate": 0.55,
+      "xp_yield": 40,
+      "learnset": [{"level": 1, "move": "tp_always_hits_damage"}],
+      "passives": ["tp_hit_contact_rare", "tp_kitchen_sink"],
+      "affinity_passives": {
+        "striker": "tp_kitchen_sink",
+        "warden": "tp_when_underdog",
+        "catalyst": "tp_type_power_up",
+        "trickster": "tp_status_immune"
+      }
+    },
+    {
+      "id": "tp_ghost_all_level_one",
+      "name": "TP Ghost All Level One",
+      "description": "A ghost creature that has every move it will ever know at level 1.",
+      "types": ["ghost"],
+      "base_stats": {
+        "hp": 55,
+        "patk": 55,
+        "pdef": 55,
+        "satk": 55,
+        "sdef": 55,
+        "spd": 55,
+        "luck": 55,
+        "resolve": 55,
+        "stamina": 55
+      },
+      "catch_rate": 0.4,
+      "xp_yield": 80,
+      "learnset": [
+        {"level": 1, "move": "tp_hit_ghost_special_prio_plus1"},
+        {"level": 1, "move": "tp_always_hits_status"},
+        {"level": 1, "move": "tp_scrap_power_in_move"},
+        {"level": 1, "move": "tp_apply_haunted"},
+        {"level": 1, "move": "tp_cash_haunted"},
+        {"level": 1, "move": "tp_clear_haunted"},
+        {"level": 1, "move": "tp_stage_sdef_swing"}
+      ],
+      "passives": ["tp_hit_when_field", "tp_field_xp_encounter_max"],
+      "affinity_passives": {
+        "striker": "tp_field_bond_none",
+        "warden": "tp_aura_underdog_power",
+        "catalyst": "tp_incoming_weak",
+        "trickster": "tp_field_boost_max"
+      }
+    },
+    {
+      "id": "tp_dark_late_bloomer",
+      "name": "TP Dark Late Bloomer",
+      "description": "A dark creature that keeps learning moves all the way to level 100.",
+      "types": ["dark"],
+      "base_stats": {
+        "hp": 75,
+        "patk": 75,
+        "pdef": 75,
+        "satk": 75,
+        "sdef": 75,
+        "spd": 75,
+        "luck": 75,
+        "resolve": 75,
+        "stamina": 75
+      },
+      "catch_rate": 0.35,
+      "xp_yield": 120,
+      "learnset": [
+        {"level": 1, "move": "tp_hit_dark_physical_prio_plus2"},
+        {"level": 12, "move": "tp_accuracy_min"},
+        {"level": 25, "move": "tp_apply_shrouded"},
+        {"level": 40, "move": "tp_cash_shrouded"},
+        {"level": 55, "move": "tp_clear_shrouded"},
+        {"level": 70, "move": "tp_damage_fraction_full"},
+        {"level": 99, "move": "tp_stage_spd_swing"},
+        {"level": 100, "move": "tp_hit_light_special_prio_plus3"}
+      ],
+      "passives": ["tp_round_end_sweep"],
+      "affinity_passives": {
+        "striker": "tp_when_field_sides",
+        "warden": "tp_type_power_extremes",
+        "catalyst": "tp_guards",
+        "trickster": "tp_rest_scrap"
+      }
+    },
+    {
+      "id": "tp_light_min_stats",
+      "name": "TP Light Min Stats",
+      "description": "A light creature with all nine base stats at the minimum 1 and a catch rate of one.",
+      "types": ["light"],
+      "base_stats": {
+        "hp": 1,
+        "patk": 1,
+        "pdef": 1,
+        "satk": 1,
+        "sdef": 1,
+        "spd": 1,
+        "luck": 1,
+        "resolve": 1,
+        "stamina": 1
+      },
+      "catch_rate": 1.0,
+      "xp_yield": 0,
+      "learnset": [
+        {"level": 1, "move": "tp_accuracy_max"},
+        {"level": 1, "move": "tp_hit_light_special_prio_plus3"},
+        {"level": 5, "move": "tp_heal_self_full"}
+      ],
+      "passives": ["tp_knockout_boost", "tp_when_field_sides"],
+      "affinity_passives": {
+        "striker": "tp_aura_shelter",
+        "warden": "tp_absorb",
+        "catalyst": "tp_reaction_boost",
+        "trickster": "tp_hit_contact_rare"
+      }
+    }
   ]
 }

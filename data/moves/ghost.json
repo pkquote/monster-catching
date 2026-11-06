@@ -1,0 +1,42 @@
+{
+  "schema": 1,
+  "entries": [
+    {
+      "id": "spirit_touch",
+      "name": "Spirit Touch",
+      "description": "A chilling touch from beyond.",
+      "type": "ghost",
+      "category": "physical",
+      "power": 40,
+      "cost": 2,
+      "accuracy": 100,
+      "target": "one_enemy",
+      "effects": [{"op": "damage"}]
+    },
+    {
+      "id": "wail",
+      "name": "Wail",
+      "description": "A mournful cry that rattles the soul.",
+      "type": "ghost",
+      "category": "special",
+      "power": 50,
+      "cost": 4,
+      "accuracy": 100,
+      "target": "one_enemy",
+      "effects": [{"op": "damage"}]
+    },
+    {
+      "id": "haunt",
+      "name": "Haunt",
+      "description": "Calls restless spirits onto the enemy side.",
+      "type": "ghost",
+      "category": "status",
+      "power": 0,
+      "cost": 4,
+      "accuracy": 100,
+      "always_hits": true,
+      "target": "enemy_side",
+      "effects": [{"op": "apply_field_state", "side": "enemy", "state": "haunted"}]
+    }
+  ]
+}

@@ -1,11 +1,62 @@
 {
   "schema": 1,
   "entries": [
-    {"id": "tp_potion_small", "name": "TP Potion Small", "description": "Tests a small heal: restores a tenth of a creature's HP.", "category": "heal", "price": 10, "target": "one_ally", "effects": [{"op": "heal", "fraction": 0.1}]},
-    {"id": "tp_potion_full", "name": "TP Potion Full", "description": "Tests a full heal: restores all of a creature's HP.", "category": "heal", "price": 1000, "target": "one_ally", "effects": [{"op": "heal", "fraction": 1.0}]},
-    {"id": "tp_potion_zero", "name": "TP Potion Zero", "description": "Tests a heal of fraction 0, the schema minimum, which does nothing.", "category": "heal", "price": 0, "target": "one_ally", "effects": [{"op": "heal", "fraction": 0.0}]},
-    {"id": "tp_energy_small", "name": "TP Energy Small", "description": "Tests a partial energy restore: gives back a quarter of a creature's energy.", "category": "heal", "price": 20, "target": "one_ally", "effects": [{"op": "restore_energy", "fraction": 0.25}]},
-    {"id": "tp_full_restore", "name": "TP Full Restore", "description": "No cure op exists, so this heals all HP and restores all energy as the stand-in for a full cure.", "category": "heal", "price": 2000, "target": "one_ally", "effects": [{"op": "heal", "fraction": 1.0}, {"op": "restore_energy", "fraction": 1.0}]},
-    {"id": "tp_battle_boost", "name": "TP Battle Boost", "description": "Tests a battle-category item: raises one ally's Speed by 3 stages.", "category": "battle", "price": 300, "target": "one_ally", "effects": [{"op": "stat_stage", "stat": "spd", "stages": 3}]}
+    {
+      "id": "tp_potion_small",
+      "name": "TP Potion Small",
+      "description": "Tests a small heal: restores a tenth of a creature's HP.",
+      "category": "heal",
+      "price": 10,
+      "target": "one_ally",
+      "effects": [{"op": "heal", "fraction": 0.1}]
+    },
+    {
+      "id": "tp_potion_full",
+      "name": "TP Potion Full",
+      "description": "Tests a full heal: restores all of a creature's HP.",
+      "category": "heal",
+      "price": 1000,
+      "target": "one_ally",
+      "effects": [{"op": "heal", "fraction": 1.0}]
+    },
+    {
+      "id": "tp_potion_zero",
+      "name": "TP Potion Zero",
+      "description": "Tests a heal of fraction 0, the schema minimum, which does nothing.",
+      "category": "heal",
+      "price": 0,
+      "target": "one_ally",
+      "effects": [{"op": "heal", "fraction": 0.0}]
+    },
+    {
+      "id": "tp_energy_small",
+      "name": "TP Energy Small",
+      "description": "Tests a partial energy restore: gives back a quarter of a creature's energy.",
+      "category": "heal",
+      "price": 20,
+      "target": "one_ally",
+      "effects": [{"op": "restore_energy", "fraction": 0.25}]
+    },
+    {
+      "id": "tp_full_restore",
+      "name": "TP Full Restore",
+      "description": "No cure op exists, so this heals all HP and restores all energy as the stand-in for a full cure.",
+      "category": "heal",
+      "price": 2000,
+      "target": "one_ally",
+      "effects": [
+        {"op": "heal", "fraction": 1.0},
+        {"op": "restore_energy", "fraction": 1.0}
+      ]
+    },
+    {
+      "id": "tp_battle_boost",
+      "name": "TP Battle Boost",
+      "description": "Tests a battle-category item: raises one ally's Speed by 3 stages.",
+      "category": "battle",
+      "price": 300,
+      "target": "one_ally",
+      "effects": [{"op": "stat_stage", "stat": "spd", "stages": 3}]
+    }
   ]
 }

@@ -1,23 +1,263 @@
 {
   "schema": 1,
   "entries": [
-    {"id": "tp_inflict_burn", "name": "TP Inflict Burn", "description": "A status move that always inflicts burn, with no chance field.", "type": "fire", "category": "status", "power": 0, "cost": 3, "accuracy": 100, "target": "one_enemy", "effects": [{"op": "apply_status", "status": "burn"}]},
-    {"id": "tp_inflict_shock", "name": "TP Inflict Shock", "description": "A status move that always inflicts shock, with no chance field.", "type": "water", "category": "status", "power": 0, "cost": 3, "accuracy": 100, "target": "one_enemy", "effects": [{"op": "apply_status", "status": "shock"}]},
-    {"id": "tp_inflict_chill", "name": "TP Inflict Chill", "description": "A status move that always inflicts chill, with no chance field.", "type": "grass", "category": "status", "power": 0, "cost": 3, "accuracy": 100, "target": "one_enemy", "effects": [{"op": "apply_status", "status": "chill"}]},
-    {"id": "tp_inflict_daze", "name": "TP Inflict Daze", "description": "A status move that always inflicts daze, with no chance field.", "type": "electric", "category": "status", "power": 0, "cost": 3, "accuracy": 100, "target": "one_enemy", "effects": [{"op": "apply_status", "status": "daze"}]},
-    {"id": "tp_hit_burn_chance_10", "name": "TP Hit Burn Chance 10", "description": "A special hit with a 10% chance to inflict burn.", "type": "ice", "category": "special", "power": 45, "cost": 4, "accuracy": 100, "target": "one_enemy", "effects": [{"op": "damage"}, {"op": "apply_status", "status": "burn", "chance": 10}]},
-    {"id": "tp_hit_shock_chance_30", "name": "TP Hit Shock Chance 30", "description": "A special hit with a 30% chance to inflict shock.", "type": "earth", "category": "special", "power": 45, "cost": 4, "accuracy": 100, "target": "one_enemy", "effects": [{"op": "damage"}, {"op": "apply_status", "status": "shock", "chance": 30}]},
-    {"id": "tp_hit_chill_chance_50", "name": "TP Hit Chill Chance 50", "description": "A special hit with a 50% chance to inflict chill.", "type": "magic", "category": "special", "power": 45, "cost": 4, "accuracy": 100, "target": "one_enemy", "effects": [{"op": "damage"}, {"op": "apply_status", "status": "chill", "chance": 50}]},
-    {"id": "tp_hit_daze_chance_75", "name": "TP Hit Daze Chance 75", "description": "A special hit with a 75% chance to inflict daze.", "type": "mental", "category": "special", "power": 45, "cost": 4, "accuracy": 100, "target": "one_enemy", "effects": [{"op": "damage"}, {"op": "apply_status", "status": "daze", "chance": 75}]},
-    {"id": "tp_hit_shock_chance_1", "name": "TP Hit Shock Chance 1", "description": "A physical hit with the lowest legal status chance of 1%.", "type": "electric", "category": "physical", "power": 50, "cost": 4, "accuracy": 100, "target": "one_enemy", "effects": [{"op": "damage"}, {"op": "apply_status", "status": "shock", "chance": 1}]},
-    {"id": "tp_hit_chill_chance_100", "name": "TP Hit Chill Chance 100", "description": "A physical hit whose status chance is a written-out 100%.", "type": "ice", "category": "physical", "power": 50, "cost": 4, "accuracy": 100, "target": "one_enemy", "effects": [{"op": "damage"}, {"op": "apply_status", "status": "chill", "chance": 100}]},
-    {"id": "tp_stage_patk_swing", "name": "TP Stage Patk Swing", "description": "Raises the user's patk by 3 and lowers the target's patk by 3.", "type": "water", "category": "status", "power": 0, "cost": 2, "accuracy": 100, "target": "one_enemy", "effects": [{"op": "stat_stage", "stat": "patk", "stages": 3, "target": "self"}, {"op": "stat_stage", "stat": "patk", "stages": -3}]},
-    {"id": "tp_stage_pdef_swing", "name": "TP Stage Pdef Swing", "description": "Raises the user's pdef by 2 and lowers the target's pdef by 2.", "type": "ice", "category": "status", "power": 0, "cost": 5, "accuracy": 100, "target": "one_enemy", "effects": [{"op": "stat_stage", "stat": "pdef", "stages": 2, "target": "self"}, {"op": "stat_stage", "stat": "pdef", "stages": -2}]},
-    {"id": "tp_stage_satk_swing", "name": "TP Stage Satk Swing", "description": "Raises the user's satk by 1 and lowers the target's satk by 1.", "type": "mental", "category": "status", "power": 0, "cost": 8, "accuracy": 100, "target": "one_enemy", "effects": [{"op": "stat_stage", "stat": "satk", "stages": 1, "target": "self"}, {"op": "stat_stage", "stat": "satk", "stages": -1}]},
-    {"id": "tp_stage_sdef_swing", "name": "TP Stage Sdef Swing", "description": "Raises the user's sdef by 3 and lowers the target's sdef by 3.", "type": "ghost", "category": "status", "power": 0, "cost": 11, "accuracy": 100, "target": "one_enemy", "effects": [{"op": "stat_stage", "stat": "sdef", "stages": 3, "target": "self"}, {"op": "stat_stage", "stat": "sdef", "stages": -3}]},
-    {"id": "tp_stage_spd_swing", "name": "TP Stage Spd Swing", "description": "Raises the user's spd by 2 and lowers the target's spd by 2.", "type": "neutral", "category": "status", "power": 0, "cost": 14, "accuracy": 100, "target": "one_enemy", "effects": [{"op": "stat_stage", "stat": "spd", "stages": 2, "target": "self"}, {"op": "stat_stage", "stat": "spd", "stages": -2}]},
-    {"id": "tp_stage_acc_swing", "name": "TP Stage Acc Swing", "description": "Raises the user's acc by 1 and lowers the target's acc by 1.", "type": "grass", "category": "status", "power": 0, "cost": 17, "accuracy": 100, "target": "one_enemy", "effects": [{"op": "stat_stage", "stat": "acc", "stages": 1, "target": "self"}, {"op": "stat_stage", "stat": "acc", "stages": -1}]},
-    {"id": "tp_stage_resolve_swing", "name": "TP Stage Resolve Swing", "description": "Raises the user's resolve by 3 and lowers the target's resolve by 3.", "type": "earth", "category": "status", "power": 0, "cost": 20, "accuracy": 100, "target": "one_enemy", "effects": [{"op": "stat_stage", "stat": "resolve", "stages": 3, "target": "self"}, {"op": "stat_stage", "stat": "resolve", "stages": -3}]},
-    {"id": "tp_stage_luck_swing", "name": "TP Stage Luck Swing", "description": "Raises the user's luck by 2 and lowers the target's luck by 2.", "type": "iron", "category": "status", "power": 0, "cost": 23, "accuracy": 100, "target": "one_enemy", "effects": [{"op": "stat_stage", "stat": "luck", "stages": 2, "target": "self"}, {"op": "stat_stage", "stat": "luck", "stages": -2}]}
+    {
+      "id": "tp_inflict_burn",
+      "name": "TP Inflict Burn",
+      "description": "A status move that always inflicts burn, with no chance field.",
+      "type": "fire",
+      "category": "status",
+      "power": 0,
+      "cost": 3,
+      "accuracy": 100,
+      "target": "one_enemy",
+      "effects": [{"op": "apply_status", "status": "burn"}]
+    },
+    {
+      "id": "tp_inflict_shock",
+      "name": "TP Inflict Shock",
+      "description": "A status move that always inflicts shock, with no chance field.",
+      "type": "water",
+      "category": "status",
+      "power": 0,
+      "cost": 3,
+      "accuracy": 100,
+      "target": "one_enemy",
+      "effects": [{"op": "apply_status", "status": "shock"}]
+    },
+    {
+      "id": "tp_inflict_chill",
+      "name": "TP Inflict Chill",
+      "description": "A status move that always inflicts chill, with no chance field.",
+      "type": "grass",
+      "category": "status",
+      "power": 0,
+      "cost": 3,
+      "accuracy": 100,
+      "target": "one_enemy",
+      "effects": [{"op": "apply_status", "status": "chill"}]
+    },
+    {
+      "id": "tp_inflict_daze",
+      "name": "TP Inflict Daze",
+      "description": "A status move that always inflicts daze, with no chance field.",
+      "type": "electric",
+      "category": "status",
+      "power": 0,
+      "cost": 3,
+      "accuracy": 100,
+      "target": "one_enemy",
+      "effects": [{"op": "apply_status", "status": "daze"}]
+    },
+    {
+      "id": "tp_hit_burn_chance_10",
+      "name": "TP Hit Burn Chance 10",
+      "description": "A special hit with a 10% chance to inflict burn.",
+      "type": "ice",
+      "category": "special",
+      "power": 45,
+      "cost": 4,
+      "accuracy": 100,
+      "target": "one_enemy",
+      "effects": [
+        {"op": "damage"},
+        {"op": "apply_status", "status": "burn", "chance": 10}
+      ]
+    },
+    {
+      "id": "tp_hit_shock_chance_30",
+      "name": "TP Hit Shock Chance 30",
+      "description": "A special hit with a 30% chance to inflict shock.",
+      "type": "earth",
+      "category": "special",
+      "power": 45,
+      "cost": 4,
+      "accuracy": 100,
+      "target": "one_enemy",
+      "effects": [
+        {"op": "damage"},
+        {"op": "apply_status", "status": "shock", "chance": 30}
+      ]
+    },
+    {
+      "id": "tp_hit_chill_chance_50",
+      "name": "TP Hit Chill Chance 50",
+      "description": "A special hit with a 50% chance to inflict chill.",
+      "type": "magic",
+      "category": "special",
+      "power": 45,
+      "cost": 4,
+      "accuracy": 100,
+      "target": "one_enemy",
+      "effects": [
+        {"op": "damage"},
+        {"op": "apply_status", "status": "chill", "chance": 50}
+      ]
+    },
+    {
+      "id": "tp_hit_daze_chance_75",
+      "name": "TP Hit Daze Chance 75",
+      "description": "A special hit with a 75% chance to inflict daze.",
+      "type": "mental",
+      "category": "special",
+      "power": 45,
+      "cost": 4,
+      "accuracy": 100,
+      "target": "one_enemy",
+      "effects": [
+        {"op": "damage"},
+        {"op": "apply_status", "status": "daze", "chance": 75}
+      ]
+    },
+    {
+      "id": "tp_hit_shock_chance_1",
+      "name": "TP Hit Shock Chance 1",
+      "description": "A physical hit with the lowest legal status chance of 1%.",
+      "type": "electric",
+      "category": "physical",
+      "power": 50,
+      "cost": 4,
+      "accuracy": 100,
+      "target": "one_enemy",
+      "effects": [
+        {"op": "damage"},
+        {"op": "apply_status", "status": "shock", "chance": 1}
+      ]
+    },
+    {
+      "id": "tp_hit_chill_chance_100",
+      "name": "TP Hit Chill Chance 100",
+      "description": "A physical hit whose status chance is a written-out 100%.",
+      "type": "ice",
+      "category": "physical",
+      "power": 50,
+      "cost": 4,
+      "accuracy": 100,
+      "target": "one_enemy",
+      "effects": [
+        {"op": "damage"},
+        {"op": "apply_status", "status": "chill", "chance": 100}
+      ]
+    },
+    {
+      "id": "tp_stage_patk_swing",
+      "name": "TP Stage Patk Swing",
+      "description": "Raises the user's patk by 3 and lowers the target's patk by 3.",
+      "type": "water",
+      "category": "status",
+      "power": 0,
+      "cost": 2,
+      "accuracy": 100,
+      "target": "one_enemy",
+      "effects": [
+        {"op": "stat_stage", "stat": "patk", "stages": 3, "target": "self"},
+        {"op": "stat_stage", "stat": "patk", "stages": -3}
+      ]
+    },
+    {
+      "id": "tp_stage_pdef_swing",
+      "name": "TP Stage Pdef Swing",
+      "description": "Raises the user's pdef by 2 and lowers the target's pdef by 2.",
+      "type": "ice",
+      "category": "status",
+      "power": 0,
+      "cost": 5,
+      "accuracy": 100,
+      "target": "one_enemy",
+      "effects": [
+        {"op": "stat_stage", "stat": "pdef", "stages": 2, "target": "self"},
+        {"op": "stat_stage", "stat": "pdef", "stages": -2}
+      ]
+    },
+    {
+      "id": "tp_stage_satk_swing",
+      "name": "TP Stage Satk Swing",
+      "description": "Raises the user's satk by 1 and lowers the target's satk by 1.",
+      "type": "mental",
+      "category": "status",
+      "power": 0,
+      "cost": 8,
+      "accuracy": 100,
+      "target": "one_enemy",
+      "effects": [
+        {"op": "stat_stage", "stat": "satk", "stages": 1, "target": "self"},
+        {"op": "stat_stage", "stat": "satk", "stages": -1}
+      ]
+    },
+    {
+      "id": "tp_stage_sdef_swing",
+      "name": "TP Stage Sdef Swing",
+      "description": "Raises the user's sdef by 3 and lowers the target's sdef by 3.",
+      "type": "ghost",
+      "category": "status",
+      "power": 0,
+      "cost": 11,
+      "accuracy": 100,
+      "target": "one_enemy",
+      "effects": [
+        {"op": "stat_stage", "stat": "sdef", "stages": 3, "target": "self"},
+        {"op": "stat_stage", "stat": "sdef", "stages": -3}
+      ]
+    },
+    {
+      "id": "tp_stage_spd_swing",
+      "name": "TP Stage Spd Swing",
+      "description": "Raises the user's spd by 2 and lowers the target's spd by 2.",
+      "type": "neutral",
+      "category": "status",
+      "power": 0,
+      "cost": 14,
+      "accuracy": 100,
+      "target": "one_enemy",
+      "effects": [
+        {"op": "stat_stage", "stat": "spd", "stages": 2, "target": "self"},
+        {"op": "stat_stage", "stat": "spd", "stages": -2}
+      ]
+    },
+    {
+      "id": "tp_stage_acc_swing",
+      "name": "TP Stage Acc Swing",
+      "description": "Raises the user's acc by 1 and lowers the target's acc by 1.",
+      "type": "grass",
+      "category": "status",
+      "power": 0,
+      "cost": 17,
+      "accuracy": 100,
+      "target": "one_enemy",
+      "effects": [
+        {"op": "stat_stage", "stat": "acc", "stages": 1, "target": "self"},
+        {"op": "stat_stage", "stat": "acc", "stages": -1}
+      ]
+    },
+    {
+      "id": "tp_stage_resolve_swing",
+      "name": "TP Stage Resolve Swing",
+      "description": "Raises the user's resolve by 3 and lowers the target's resolve by 3.",
+      "type": "earth",
+      "category": "status",
+      "power": 0,
+      "cost": 20,
+      "accuracy": 100,
+      "target": "one_enemy",
+      "effects": [
+        {"op": "stat_stage", "stat": "resolve", "stages": 3, "target": "self"},
+        {"op": "stat_stage", "stat": "resolve", "stages": -3}
+      ]
+    },
+    {
+      "id": "tp_stage_luck_swing",
+      "name": "TP Stage Luck Swing",
+      "description": "Raises the user's luck by 2 and lowers the target's luck by 2.",
+      "type": "iron",
+      "category": "status",
+      "power": 0,
+      "cost": 23,
+      "accuracy": 100,
+      "target": "one_enemy",
+      "effects": [
+        {"op": "stat_stage", "stat": "luck", "stages": 2, "target": "self"},
+        {"op": "stat_stage", "stat": "luck", "stages": -2}
+      ]
+    }
   ]
 }

@@ -1,12 +1,254 @@
 {
   "schema": 1,
   "entries": [
-    {"id": "tp_budget_full_fast", "name": "TP Budget Full Fast", "description": "Spends the whole growth budget with two fast stats and nothing slow.", "types": ["fire", "electric"], "base_stats": {"hp": 60, "patk": 90, "pdef": 60, "satk": 60, "sdef": 60, "spd": 90, "luck": 50, "resolve": 50, "stamina": 60}, "catch_rate": 0.3, "xp_yield": 100, "learnset": [{"level": 1, "move": "tp_hit_neutral_physical_prio_minus3"}, {"level": 7, "move": "tp_stage_pdef_swing"}], "growth_rates": {"patk": "fast", "spd": "fast"}, "passives": ["tp_status_immune", "tp_hit_when_field"], "affinity_passives": {"striker": "tp_when_hp", "warden": "tp_aura_shelter", "catalyst": "tp_absorb", "trickster": "tp_reaction_boost"}},
-    {"id": "tp_budget_full_tradeoff", "name": "TP Budget Full Tradeoff", "description": "Spends the budget as three fast stats balanced by one slow stat.", "types": ["water", "dark"], "base_stats": {"hp": 70, "patk": 70, "pdef": 70, "satk": 70, "sdef": 70, "spd": 70, "luck": 70, "resolve": 70, "stamina": 70}, "catch_rate": 0.3, "xp_yield": 100, "learnset": [{"level": 1, "move": "tp_hit_neutral_physical_prio_minus3"}, {"level": 21, "move": "tp_stage_resolve_swing"}], "growth_rates": {"hp": "fast", "satk": "fast", "luck": "fast", "pdef": "slow"}, "passives": ["tp_shelter"], "affinity_passives": {"striker": "tp_aura_stat", "warden": "tp_incoming_resist", "catalyst": "tp_shelter", "trickster": "tp_stat_mod_all"}},
-    {"id": "tp_growth_all_slow", "name": "TP Growth All Slow", "description": "Every one of its nine stats grows at the slow tier.", "types": ["mental", "iron"], "base_stats": {"hp": 80, "patk": 80, "pdef": 80, "satk": 80, "sdef": 80, "spd": 80, "luck": 80, "resolve": 80, "stamina": 80}, "catch_rate": 0.5, "xp_yield": 100, "learnset": [{"level": 1, "move": "tp_hit_neutral_physical_prio_minus3"}, {"level": 35, "move": "tp_hit_two_foes"}], "growth_rates": {"hp": "slow", "patk": "slow", "pdef": "slow", "satk": "slow", "sdef": "slow", "spd": "slow", "luck": "slow", "resolve": "slow", "stamina": "slow"}, "passives": ["tp_reaction_boost", "tp_knockout_boost"], "affinity_passives": {"striker": "tp_type_power_up", "warden": "tp_status_immune", "catalyst": "tp_energy_discounts", "trickster": "tp_hit_noncontact"}},
-    {"id": "tp_cant_learn_status_moves", "name": "TP Cant Learn Status Moves", "description": "A creature that can never learn any tp_inflict move or tp_hit chance move, for the F1 builder labels.", "types": ["neutral", "dark"], "base_stats": {"hp": 60, "patk": 60, "pdef": 60, "satk": 60, "sdef": 60, "spd": 60, "luck": 60, "resolve": 60, "stamina": 60}, "catch_rate": 0.5, "xp_yield": 50, "learnset": [{"level": 1, "move": "tp_hit_neutral_physical_prio_minus3"}, {"level": 1, "move": "tp_power_min"}, {"level": 10, "move": "tp_hit_fire_special_prio_minus2"}, {"level": 20, "move": "tp_hit_water_physical_prio_minus1"}], "passives": ["tp_rest_scrap", "tp_faint_field"], "affinity_passives": {"striker": "tp_incoming_weak", "warden": "tp_field_boost_max", "catalyst": "tp_enter_triggers", "trickster": "tp_round_end_sweep"}},
-    {"id": "tp_learner_everything", "name": "TP Learner Everything", "description": "A dual creature that takes the long tail of moves so every pack move is learnable somewhere.", "types": ["earth", "magic"], "base_stats": {"hp": 90, "patk": 90, "pdef": 70, "satk": 90, "sdef": 70, "spd": 60, "luck": 60, "resolve": 60, "stamina": 120}, "catch_rate": 0.1, "xp_yield": 300, "learnset": [{"level": 1, "move": "tp_hit_earth_physical_prio_plus3"}, {"level": 1, "move": "tp_hit_magic_special_prio_minus3"}, {"level": 1, "move": "tp_hit_virtual_physical"}, {"level": 3, "move": "tp_inflict_shock"}, {"level": 4, "move": "tp_restore_energy_small_allies"}, {"level": 6, "move": "tp_clear_glitched"}, {"level": 9, "move": "tp_clear_frosted"}, {"level": 11, "move": "tp_restore_energy_full_self"}, {"level": 12, "move": "tp_clear_scorched"}, {"level": 14, "move": "tp_stage_satk_swing"}, {"level": 15, "move": "tp_damage_heal_stage_field"}, {"level": 17, "move": "tp_inflict_daze"}, {"level": 20, "move": "tp_cash_radiant"}, {"level": 23, "move": "tp_clear_hazed"}, {"level": 26, "move": "tp_clear_overgrown"}, {"level": 28, "move": "tp_hit_all_foes"}, {"level": 29, "move": "tp_stage_two_stats_self"}, {"level": 31, "move": "tp_hit_shock_chance_30"}, {"level": 34, "move": "tp_clear_all_fields"}, {"level": 37, "move": "tp_apply_glitched"}, {"level": 40, "move": "tp_clear_charged"}, {"level": 42, "move": "tp_heal_ally_small"}, {"level": 43, "move": "tp_hit_two_foes_chill"}, {"level": 45, "move": "tp_hit_daze_chance_75"}], "passives": ["tp_enter_triggers"], "affinity_passives": {"striker": "tp_guards", "warden": "tp_rest_scrap", "catalyst": "tp_hit_when_field", "trickster": "tp_faint_curse"}},
-    {"id": "tp_high_xp_hard_catch", "name": "TP High XP Hard Catch", "description": "Gives a huge xp yield and is nearly uncatchable.", "types": ["light", "ghost"], "base_stats": {"hp": 100, "patk": 100, "pdef": 100, "satk": 100, "sdef": 100, "spd": 100, "luck": 100, "resolve": 100, "stamina": 100}, "catch_rate": 0.01, "xp_yield": 600, "learnset": [{"level": 1, "move": "tp_hit_light_special_prio_plus3"}, {"level": 1, "move": "tp_hit_ghost_special_prio_plus1"}], "growth_rates": {"spd": "fast", "resolve": "slow"}, "passives": ["tp_hit_noncontact", "tp_field_encounter_none"], "affinity_passives": {"striker": "tp_reaction_boost", "warden": "tp_hit_contact_rare", "catalyst": "tp_knockout_when_underdog", "trickster": "tp_chain_b"}},
-    {"id": "tp_zero_xp_easy_catch", "name": "TP Zero XP Easy Catch", "description": "Gives no xp at all and is very easy to catch.", "types": ["grass", "light"], "base_stats": {"hp": 35, "patk": 35, "pdef": 35, "satk": 35, "sdef": 35, "spd": 35, "luck": 35, "resolve": 35, "stamina": 35}, "catch_rate": 0.95, "xp_yield": 0, "learnset": [{"level": 1, "move": "tp_hit_grass_special"}, {"level": 1, "move": "tp_heal_self_full"}], "growth_rates": {"luck": "slow", "stamina": "fast"}, "passives": ["tp_round_end_when_hp", "tp_field_bond_none"], "affinity_passives": {"striker": "tp_stat_mod_all", "warden": "tp_round_end_when_hp", "catalyst": "tp_faint_field", "trickster": "tp_field_xp_encounter_max"}}
+    {
+      "id": "tp_budget_full_fast",
+      "name": "TP Budget Full Fast",
+      "description": "Spends the whole growth budget with two fast stats and nothing slow.",
+      "types": ["fire", "electric"],
+      "base_stats": {
+        "hp": 60,
+        "patk": 90,
+        "pdef": 60,
+        "satk": 60,
+        "sdef": 60,
+        "spd": 90,
+        "luck": 50,
+        "resolve": 50,
+        "stamina": 60
+      },
+      "catch_rate": 0.3,
+      "xp_yield": 100,
+      "learnset": [
+        {"level": 1, "move": "tp_hit_neutral_physical_prio_minus3"},
+        {"level": 7, "move": "tp_stage_pdef_swing"}
+      ],
+      "growth_rates": {"patk": "fast", "spd": "fast"},
+      "passives": ["tp_status_immune", "tp_hit_when_field"],
+      "affinity_passives": {
+        "striker": "tp_when_hp",
+        "warden": "tp_aura_shelter",
+        "catalyst": "tp_absorb",
+        "trickster": "tp_reaction_boost"
+      }
+    },
+    {
+      "id": "tp_budget_full_tradeoff",
+      "name": "TP Budget Full Tradeoff",
+      "description": "Spends the budget as three fast stats balanced by one slow stat.",
+      "types": ["water", "dark"],
+      "base_stats": {
+        "hp": 70,
+        "patk": 70,
+        "pdef": 70,
+        "satk": 70,
+        "sdef": 70,
+        "spd": 70,
+        "luck": 70,
+        "resolve": 70,
+        "stamina": 70
+      },
+      "catch_rate": 0.3,
+      "xp_yield": 100,
+      "learnset": [
+        {"level": 1, "move": "tp_hit_neutral_physical_prio_minus3"},
+        {"level": 21, "move": "tp_stage_resolve_swing"}
+      ],
+      "growth_rates": {"hp": "fast", "satk": "fast", "luck": "fast", "pdef": "slow"},
+      "passives": ["tp_shelter"],
+      "affinity_passives": {
+        "striker": "tp_aura_stat",
+        "warden": "tp_incoming_resist",
+        "catalyst": "tp_shelter",
+        "trickster": "tp_stat_mod_all"
+      }
+    },
+    {
+      "id": "tp_growth_all_slow",
+      "name": "TP Growth All Slow",
+      "description": "Every one of its nine stats grows at the slow tier.",
+      "types": ["mental", "iron"],
+      "base_stats": {
+        "hp": 80,
+        "patk": 80,
+        "pdef": 80,
+        "satk": 80,
+        "sdef": 80,
+        "spd": 80,
+        "luck": 80,
+        "resolve": 80,
+        "stamina": 80
+      },
+      "catch_rate": 0.5,
+      "xp_yield": 100,
+      "learnset": [
+        {"level": 1, "move": "tp_hit_neutral_physical_prio_minus3"},
+        {"level": 35, "move": "tp_hit_two_foes"}
+      ],
+      "growth_rates": {
+        "hp": "slow",
+        "patk": "slow",
+        "pdef": "slow",
+        "satk": "slow",
+        "sdef": "slow",
+        "spd": "slow",
+        "luck": "slow",
+        "resolve": "slow",
+        "stamina": "slow"
+      },
+      "passives": ["tp_reaction_boost", "tp_knockout_boost"],
+      "affinity_passives": {
+        "striker": "tp_type_power_up",
+        "warden": "tp_status_immune",
+        "catalyst": "tp_energy_discounts",
+        "trickster": "tp_hit_noncontact"
+      }
+    },
+    {
+      "id": "tp_cant_learn_status_moves",
+      "name": "TP Cant Learn Status Moves",
+      "description": "A creature that can never learn any tp_inflict move or tp_hit chance move, for the F1 builder labels.",
+      "types": ["neutral", "dark"],
+      "base_stats": {
+        "hp": 60,
+        "patk": 60,
+        "pdef": 60,
+        "satk": 60,
+        "sdef": 60,
+        "spd": 60,
+        "luck": 60,
+        "resolve": 60,
+        "stamina": 60
+      },
+      "catch_rate": 0.5,
+      "xp_yield": 50,
+      "learnset": [
+        {"level": 1, "move": "tp_hit_neutral_physical_prio_minus3"},
+        {"level": 1, "move": "tp_power_min"},
+        {"level": 10, "move": "tp_hit_fire_special_prio_minus2"},
+        {"level": 20, "move": "tp_hit_water_physical_prio_minus1"}
+      ],
+      "passives": ["tp_rest_scrap", "tp_faint_field"],
+      "affinity_passives": {
+        "striker": "tp_incoming_weak",
+        "warden": "tp_field_boost_max",
+        "catalyst": "tp_enter_triggers",
+        "trickster": "tp_round_end_sweep"
+      }
+    },
+    {
+      "id": "tp_learner_everything",
+      "name": "TP Learner Everything",
+      "description": "A dual creature that takes the long tail of moves so every pack move is learnable somewhere.",
+      "types": ["earth", "magic"],
+      "base_stats": {
+        "hp": 90,
+        "patk": 90,
+        "pdef": 70,
+        "satk": 90,
+        "sdef": 70,
+        "spd": 60,
+        "luck": 60,
+        "resolve": 60,
+        "stamina": 120
+      },
+      "catch_rate": 0.1,
+      "xp_yield": 300,
+      "learnset": [
+        {"level": 1, "move": "tp_hit_earth_physical_prio_plus3"},
+        {"level": 1, "move": "tp_hit_magic_special_prio_minus3"},
+        {"level": 1, "move": "tp_hit_virtual_physical"},
+        {"level": 3, "move": "tp_inflict_shock"},
+        {"level": 4, "move": "tp_restore_energy_small_allies"},
+        {"level": 6, "move": "tp_clear_glitched"},
+        {"level": 9, "move": "tp_clear_frosted"},
+        {"level": 11, "move": "tp_restore_energy_full_self"},
+        {"level": 12, "move": "tp_clear_scorched"},
+        {"level": 14, "move": "tp_stage_satk_swing"},
+        {"level": 15, "move": "tp_damage_heal_stage_field"},
+        {"level": 17, "move": "tp_inflict_daze"},
+        {"level": 20, "move": "tp_cash_radiant"},
+        {"level": 23, "move": "tp_clear_hazed"},
+        {"level": 26, "move": "tp_clear_overgrown"},
+        {"level": 28, "move": "tp_hit_all_foes"},
+        {"level": 29, "move": "tp_stage_two_stats_self"},
+        {"level": 31, "move": "tp_hit_shock_chance_30"},
+        {"level": 34, "move": "tp_clear_all_fields"},
+        {"level": 37, "move": "tp_apply_glitched"},
+        {"level": 40, "move": "tp_clear_charged"},
+        {"level": 42, "move": "tp_heal_ally_small"},
+        {"level": 43, "move": "tp_hit_two_foes_chill"},
+        {"level": 45, "move": "tp_hit_daze_chance_75"}
+      ],
+      "passives": ["tp_enter_triggers"],
+      "affinity_passives": {
+        "striker": "tp_guards",
+        "warden": "tp_rest_scrap",
+        "catalyst": "tp_hit_when_field",
+        "trickster": "tp_faint_curse"
+      }
+    },
+    {
+      "id": "tp_high_xp_hard_catch",
+      "name": "TP High XP Hard Catch",
+      "description": "Gives a huge xp yield and is nearly uncatchable.",
+      "types": ["light", "ghost"],
+      "base_stats": {
+        "hp": 100,
+        "patk": 100,
+        "pdef": 100,
+        "satk": 100,
+        "sdef": 100,
+        "spd": 100,
+        "luck": 100,
+        "resolve": 100,
+        "stamina": 100
+      },
+      "catch_rate": 0.01,
+      "xp_yield": 600,
+      "learnset": [
+        {"level": 1, "move": "tp_hit_light_special_prio_plus3"},
+        {"level": 1, "move": "tp_hit_ghost_special_prio_plus1"}
+      ],
+      "growth_rates": {"spd": "fast", "resolve": "slow"},
+      "passives": ["tp_hit_noncontact", "tp_field_encounter_none"],
+      "affinity_passives": {
+        "striker": "tp_reaction_boost",
+        "warden": "tp_hit_contact_rare",
+        "catalyst": "tp_knockout_when_underdog",
+        "trickster": "tp_chain_b"
+      }
+    },
+    {
+      "id": "tp_zero_xp_easy_catch",
+      "name": "TP Zero XP Easy Catch",
+      "description": "Gives no xp at all and is very easy to catch.",
+      "types": ["grass", "light"],
+      "base_stats": {
+        "hp": 35,
+        "patk": 35,
+        "pdef": 35,
+        "satk": 35,
+        "sdef": 35,
+        "spd": 35,
+        "luck": 35,
+        "resolve": 35,
+        "stamina": 35
+      },
+      "catch_rate": 0.95,
+      "xp_yield": 0,
+      "learnset": [
+        {"level": 1, "move": "tp_hit_grass_special"},
+        {"level": 1, "move": "tp_heal_self_full"}
+      ],
+      "growth_rates": {"luck": "slow", "stamina": "fast"},
+      "passives": ["tp_round_end_when_hp", "tp_field_bond_none"],
+      "affinity_passives": {
+        "striker": "tp_stat_mod_all",
+        "warden": "tp_round_end_when_hp",
+        "catalyst": "tp_faint_field",
+        "trickster": "tp_field_xp_encounter_max"
+      }
+    }
   ]
 }

@@ -1,50 +1,124 @@
 {
   "schema": 1,
   "entries": [
-    { "id": "conduction", "name": "Conduction", "description": "Current races through the water, shocking everyone standing in it.",
-      "inputs": ["charged", "soaked"], "consumes": ["charged"], "scope": "side",
+    {
+      "id": "conduction",
+      "name": "Conduction",
+      "description": "Current races through the water, shocking everyone standing in it.",
+      "inputs": ["charged", "soaked"],
+      "consumes": ["charged"],
+      "scope": "side",
       "effects": [
-        { "op": "damage", "power": 60, "type": "electric", "scale_with_stacks": true, "target": "all_allies" },
-        { "op": "apply_status", "status": "shock", "chance": 30, "target": "all_allies" }
-      ] },
-    { "id": "wildfire", "name": "Wildfire", "description": "The undergrowth catches. Everything on this side burns.",
-      "inputs": ["scorched", "overgrown"], "consumes": ["overgrown"], "scope": "side",
+        {
+          "op": "damage",
+          "power": 60,
+          "type": "electric",
+          "scale_with_stacks": true,
+          "target": "all_allies"
+        },
+        {"op": "apply_status", "status": "shock", "chance": 30, "target": "all_allies"}
+      ]
+    },
+    {
+      "id": "wildfire",
+      "name": "Wildfire",
+      "description": "The undergrowth catches. Everything on this side burns.",
+      "inputs": ["scorched", "overgrown"],
+      "consumes": ["overgrown"],
+      "scope": "side",
       "effects": [
-        { "op": "damage", "power": 45, "type": "fire", "scale_with_stacks": true, "target": "all_allies" },
-        { "op": "apply_status", "status": "burn", "target": "all_allies" }
-      ] },
-    { "id": "icebound", "name": "Icebound", "description": "Standing water freezes solid around their feet.",
-      "inputs": ["soaked", "frosted"], "consumes": ["soaked"], "scope": "side",
+        {
+          "op": "damage",
+          "power": 45,
+          "type": "fire",
+          "scale_with_stacks": true,
+          "target": "all_allies"
+        },
+        {"op": "apply_status", "status": "burn", "target": "all_allies"}
+      ]
+    },
+    {
+      "id": "icebound",
+      "name": "Icebound",
+      "description": "Standing water freezes solid around their feet.",
+      "inputs": ["soaked", "frosted"],
+      "consumes": ["soaked"],
+      "scope": "side",
       "effects": [
-        { "op": "stat_stage", "stat": "spd", "stages": -2, "target": "all_allies" },
-        { "op": "apply_status", "status": "chill", "target": "all_allies" }
-      ] },
-    { "id": "steam", "name": "Steam", "description": "A scalding cloud blankets the whole battlefield.",
-      "inputs": ["scorched", "frosted"], "consumes": ["scorched", "frosted"], "scope": "both_sides",
+        {"op": "stat_stage", "stat": "spd", "stages": -2, "target": "all_allies"},
+        {"op": "apply_status", "status": "chill", "target": "all_allies"}
+      ]
+    },
+    {
+      "id": "steam",
+      "name": "Steam",
+      "description": "A scalding cloud blankets the whole battlefield.",
+      "inputs": ["scorched", "frosted"],
+      "consumes": ["scorched", "frosted"],
+      "scope": "both_sides",
+      "effects": [{"op": "stat_stage", "stat": "acc", "stages": -1, "target": "all"}]
+    },
+    {
+      "id": "railstorm",
+      "name": "Railstorm",
+      "description": "Current arcs through the magnetized filings, flinging them like shrapnel.",
+      "inputs": ["magnetized", "charged"],
+      "consumes": ["magnetized"],
+      "scope": "side",
       "effects": [
-        { "op": "stat_stage", "stat": "acc", "stages": -1, "target": "all" }
-      ] },
-    { "id": "railstorm", "name": "Railstorm", "description": "Current arcs through the magnetized filings, flinging them like shrapnel.",
-      "inputs": ["magnetized", "charged"], "consumes": ["magnetized"], "scope": "side",
+        {
+          "op": "damage",
+          "power": 55,
+          "type": "electric",
+          "scale_with_stacks": true,
+          "target": "all_allies"
+        }
+      ]
+    },
+    {
+      "id": "overload",
+      "name": "Overload",
+      "description": "A surge hits corrupted data and everything shorts out at once.",
+      "inputs": ["glitched", "charged"],
+      "consumes": ["glitched", "charged"],
+      "scope": "side",
       "effects": [
-        {"op": "damage", "power": 55, "type": "electric", "scale_with_stacks": true, "target": "all_allies"}
-      ] },
-    { "id": "overload", "name": "Overload", "description": "A surge hits corrupted data and everything shorts out at once.",
-      "inputs": ["glitched", "charged"], "consumes": ["glitched", "charged"], "scope": "side",
-      "effects": [
-        {"op": "damage", "power": 45, "type": "virtual", "scale_with_stacks": true, "target": "all_allies"},
+        {
+          "op": "damage",
+          "power": 45,
+          "type": "virtual",
+          "scale_with_stacks": true,
+          "target": "all_allies"
+        },
         {"op": "apply_status", "status": "shock", "chance": 40, "target": "all_allies"}
-      ] },
-    { "id": "nightmare", "name": "Nightmare", "description": "The spirits slip into fogged minds and the haze turns into terror.",
-      "inputs": ["haunted", "hazed"], "consumes": ["hazed"], "scope": "side",
+      ]
+    },
+    {
+      "id": "nightmare",
+      "name": "Nightmare",
+      "description": "The spirits slip into fogged minds and the haze turns into terror.",
+      "inputs": ["haunted", "hazed"],
+      "consumes": ["hazed"],
+      "scope": "side",
       "effects": [
-        {"op": "damage", "power": 45, "type": "mental", "scale_with_stacks": true, "target": "all_allies"},
+        {
+          "op": "damage",
+          "power": 45,
+          "type": "mental",
+          "scale_with_stacks": true,
+          "target": "all_allies"
+        },
         {"op": "stat_stage", "stat": "resolve", "stages": -2, "target": "all_allies"}
-      ] },
-    { "id": "eclipse", "name": "Eclipse", "description": "Light and shadow collide, and the whole field goes dark and dazzling at once.",
-      "inputs": ["shrouded", "radiant"], "consumes": ["shrouded", "radiant"], "scope": "both_sides",
-      "effects": [
-        {"op": "apply_status", "status": "daze", "chance": 50, "target": "all"}
-      ] }
+      ]
+    },
+    {
+      "id": "eclipse",
+      "name": "Eclipse",
+      "description": "Light and shadow collide, and the whole field goes dark and dazzling at once.",
+      "inputs": ["shrouded", "radiant"],
+      "consumes": ["shrouded", "radiant"],
+      "scope": "both_sides",
+      "effects": [{"op": "apply_status", "status": "daze", "chance": 50, "target": "all"}]
+    }
   ]
 }

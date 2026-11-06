@@ -1,15 +1,63 @@
 {
   "schema": 1,
   "entries": [
-    {"id": "tide_charm", "name": "Tide Charm", "description": "Water moves hit 10% harder.", "category": "held", "price": 400,
-      "held": {"effects": [{"op": "type_power", "type": "water", "mult": 1.1}]}},
-    {"id": "oran_berry", "name": "Oran Berry", "description": "Eaten when hurt below half HP: heals a quarter. One use.", "category": "held", "price": 200,
-      "held": {"use": "consumed", "triggers": [{"on": "hit", "when": {"hp_below": 0.5}, "effects": [{"op": "heal", "fraction": 0.25, "target": "self"}]}]}},
-    {"id": "rough_bark", "name": "Rough Bark", "description": "First physical hit each battle lowers the attacker's Phys. Attack.", "category": "held", "price": 500,
-      "held": {"use": "per_battle", "triggers": [{"on": "hit", "contact": true, "effects": [{"op": "stat_stage", "stat": "patk", "stages": -1, "target": "attacker"}]}]}},
-    {"id": "scout_lens", "name": "Scout Lens", "description": "Wild encounters are 10% rarer while it leads.", "category": "held", "price": 350,
-      "held": {"field": [{"op": "encounter_rate", "mult": 0.9}]}},
-    {"id": "guard_banner", "name": "Guard Banner", "description": "Allies on the field take 10% less damage.", "category": "held", "price": 800,
-      "held": {"scope": "allies", "effects": [{"op": "incoming_type_mod", "mult": 0.9}]}}
+    {
+      "id": "tide_charm",
+      "name": "Tide Charm",
+      "description": "Water moves hit 10% harder.",
+      "category": "held",
+      "price": 400,
+      "held": {"effects": [{"op": "type_power", "type": "water", "mult": 1.1}]}
+    },
+    {
+      "id": "oran_berry",
+      "name": "Oran Berry",
+      "description": "Eaten when hurt below half HP: heals a quarter. One use.",
+      "category": "held",
+      "price": 200,
+      "held": {
+        "use": "consumed",
+        "triggers": [
+          {
+            "on": "hit",
+            "when": {"hp_below": 0.5},
+            "effects": [{"op": "heal", "fraction": 0.25, "target": "self"}]
+          }
+        ]
+      }
+    },
+    {
+      "id": "rough_bark",
+      "name": "Rough Bark",
+      "description": "First physical hit each battle lowers the attacker's Phys. Attack.",
+      "category": "held",
+      "price": 500,
+      "held": {
+        "use": "per_battle",
+        "triggers": [
+          {
+            "on": "hit",
+            "contact": true,
+            "effects": [{"op": "stat_stage", "stat": "patk", "stages": -1, "target": "attacker"}]
+          }
+        ]
+      }
+    },
+    {
+      "id": "scout_lens",
+      "name": "Scout Lens",
+      "description": "Wild encounters are 10% rarer while it leads.",
+      "category": "held",
+      "price": 350,
+      "held": {"field": [{"op": "encounter_rate", "mult": 0.9}]}
+    },
+    {
+      "id": "guard_banner",
+      "name": "Guard Banner",
+      "description": "Allies on the field take 10% less damage.",
+      "category": "held",
+      "price": 800,
+      "held": {"scope": "allies", "effects": [{"op": "incoming_type_mod", "mult": 0.9}]}
+    }
   ]
 }

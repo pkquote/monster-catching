@@ -1,13 +1,33 @@
 {
   "schema": 1,
   "entries": [
-    { "id": "burn", "name": "Burn", "description": "Loses a little HP each round.", "turns": 4,
-      "effects": [ { "op": "damage_fraction", "fraction": 0.0625 } ] },
-    { "id": "shock", "name": "Shock", "description": "May lose its action to muscle spasms.", "turns": 3,
-      "effects": [ { "op": "skip_chance", "chance": 25 } ] },
-    { "id": "chill", "name": "Chill", "description": "Speed is reduced.", "turns": 3,
-      "effects": [ { "op": "stat_mod", "stat": "spd", "mult": 0.75 } ] },
-    { "id": "daze", "name": "Daze", "description": "Accuracy is reduced.", "turns": 3,
-      "effects": [ { "op": "stat_mod", "stat": "acc", "mult": 0.8 } ] }
+    {
+      "id": "burn",
+      "name": "Burn",
+      "description": "Loses a little HP each round.",
+      "turns": 4,
+      "effects": [{"op": "damage_fraction", "fraction": 0.0625}]
+    },
+    {
+      "id": "shock",
+      "name": "Shock",
+      "description": "May lose its action to muscle spasms.",
+      "turns": 3,
+      "effects": [{"op": "skip_chance", "chance": 25}]
+    },
+    {
+      "id": "chill",
+      "name": "Chill",
+      "description": "Speed is reduced.",
+      "turns": 3,
+      "effects": [{"op": "stat_mod", "stat": "spd", "mult": 0.75}]
+    },
+    {
+      "id": "daze",
+      "name": "Daze",
+      "description": "Accuracy is reduced.",
+      "turns": 3,
+      "effects": [{"op": "stat_mod", "stat": "acc", "mult": 0.8}]
+    }
   ]
 }

@@ -1,23 +1,43 @@
 {
   "schema": 1,
   "entries": [
-    {"id": "tp_enc_single_species", "name": "TP Single Species", "pack_min": 1, "pack_max": 2,
-      "table": [{"species": "tp_neutral_plain", "weight": 1, "min_level": 3, "max_level": 8}]},
-    {"id": "tp_enc_wide_levels", "name": "TP Wide Level Range", "pack_min": 1, "pack_max": 2,
+    {
+      "id": "tp_enc_single_species",
+      "name": "TP Single Species",
+      "pack_min": 1,
+      "pack_max": 2,
+      "table": [{"species": "tp_neutral_plain", "weight": 1, "min_level": 3, "max_level": 8}]
+    },
+    {
+      "id": "tp_enc_wide_levels",
+      "name": "TP Wide Level Range",
+      "pack_min": 1,
+      "pack_max": 2,
       "table": [
         {"species": "tp_ghost_all_level_one", "weight": 50, "min_level": 1, "max_level": 60},
         {"species": "tp_dark_late_bloomer", "weight": 50, "min_level": 1, "max_level": 60}
-      ]},
-    {"id": "tp_enc_pack_of_three", "name": "TP Pack Of Three", "pack_min": 3, "pack_max": 3,
+      ]
+    },
+    {
+      "id": "tp_enc_pack_of_three",
+      "name": "TP Pack Of Three",
+      "pack_min": 3,
+      "pack_max": 3,
       "table": [
         {"species": "tp_neutral_plain", "weight": 40, "min_level": 5, "max_level": 10},
         {"species": "tp_grass_speedster", "weight": 30, "min_level": 5, "max_level": 10},
         {"species": "tp_iron_status_only", "weight": 30, "min_level": 5, "max_level": 10}
-      ]},
-    {"id": "tp_enc_rare_heavy", "name": "TP Rare Heavy", "pack_min": 1, "pack_max": 2,
+      ]
+    },
+    {
+      "id": "tp_enc_rare_heavy",
+      "name": "TP Rare Heavy",
+      "pack_min": 1,
+      "pack_max": 2,
       "table": [
         {"species": "tp_neutral_plain", "weight": 95, "min_level": 10, "max_level": 20},
         {"species": "tp_earth_max_stats", "weight": 5, "min_level": 50, "max_level": 50}
-      ]}
+      ]
+    }
   ]
 }

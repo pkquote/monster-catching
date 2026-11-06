@@ -1,48 +1,203 @@
 {
   "schema": 1,
   "entries": [
-    {"id": "tp_enter_triggers", "name": "TP Enter Triggers", "description": "Tests two enter triggers: always grows Overgrown (2 stacks, 5 turns) on its side, and with 50% chance raises its own Physical Attack.",
+    {
+      "id": "tp_enter_triggers",
+      "name": "TP Enter Triggers",
+      "description": "Tests two enter triggers: always grows Overgrown (2 stacks, 5 turns) on its side, and with 50% chance raises its own Physical Attack.",
       "triggers": [
-        {"on": "enter", "effects": [{"op": "apply_field_state", "side": "own", "state": "overgrown", "stacks": 2, "turns": 5}]},
-        {"on": "enter", "chance": 50, "effects": [{"op": "stat_stage", "stat": "patk", "stages": 1}]}]},
-    {"id": "tp_hit_contact_rare", "name": "TP Hit Contact Rare", "description": "Tests a contact hit trigger at 1% chance: physical hits may Shock the attacker.",
-      "triggers": [{"on": "hit", "chance": 1, "contact": true, "effects": [{"op": "apply_status", "status": "shock"}]}]},
-    {"id": "tp_hit_noncontact", "name": "TP Hit Noncontact", "description": "Tests a contact false hit trigger at 50% chance: any hit may lower the attacker's Special Attack.",
-      "triggers": [{"on": "hit", "chance": 50, "contact": false, "effects": [{"op": "stat_stage", "stat": "satk", "stages": -1, "target": "attacker"}]}]},
-    {"id": "tp_hit_when_field", "name": "TP Hit When Field", "description": "Tests the field and side condition on triggers: Chills the attacker when Soaked is on its own side, Burns it when Scorched is on the foe's side.",
+        {
+          "on": "enter",
+          "effects": [
+            {
+              "op": "apply_field_state",
+              "side": "own",
+              "state": "overgrown",
+              "stacks": 2,
+              "turns": 5
+            }
+          ]
+        },
+        {
+          "on": "enter",
+          "chance": 50,
+          "effects": [{"op": "stat_stage", "stat": "patk", "stages": 1}]
+        }
+      ]
+    },
+    {
+      "id": "tp_hit_contact_rare",
+      "name": "TP Hit Contact Rare",
+      "description": "Tests a contact hit trigger at 1% chance: physical hits may Shock the attacker.",
       "triggers": [
-        {"on": "hit", "when": {"field": "soaked", "side": "own"}, "effects": [{"op": "apply_status", "status": "chill"}]},
-        {"on": "hit", "when": {"field": "scorched", "side": "enemy"}, "effects": [{"op": "apply_status", "status": "burn"}]}]},
-    {"id": "tp_round_end_when_hp", "name": "TP Round End When HP", "description": "Tests a round_end trigger gated by hp_below: heals a quarter of its HP each round while below half HP.",
-      "triggers": [{"on": "round_end", "when": {"hp_below": 0.5}, "effects": [{"op": "heal", "fraction": 0.25}]}]},
-    {"id": "tp_round_end_sweep", "name": "TP Round End Sweep", "description": "Tests a round_end trigger with an all_enemies target at 1% chance: may Daze every foe.",
-      "triggers": [{"on": "round_end", "chance": 1, "effects": [{"op": "apply_status", "status": "daze", "target": "all_enemies"}]}]},
-    {"id": "tp_knockout_when_underdog", "name": "TP Knockout When Underdog", "description": "Tests a knockout trigger gated by underdog: a knockout while outnumbered refills its energy.",
-      "triggers": [{"on": "knockout", "when": {"underdog": true}, "effects": [{"op": "restore_energy", "fraction": 1.0}]}]},
-    {"id": "tp_knockout_boost", "name": "TP Knockout Boost", "description": "Tests a knockout trigger at the stat stage limit: a knockout raises its Speed by 3 stages.",
-      "triggers": [{"on": "knockout", "effects": [{"op": "stat_stage", "stat": "spd", "stages": 3, "target": "self"}]}]},
-    {"id": "tp_faint_curse", "name": "TP Faint Curse", "description": "Tests a faint trigger landing on the attacker: whoever knocks it out is Burned and takes a tenth of their HP.",
-      "triggers": [{"on": "faint", "effects": [{"op": "apply_status", "status": "burn"}, {"op": "damage_fraction", "fraction": 0.1}]}]},
-    {"id": "tp_faint_field", "name": "TP Faint Field", "description": "Tests a faint trigger that sets a field state at 50% chance: scorches the enemy side.",
-      "triggers": [{"on": "faint", "chance": 50, "effects": [{"op": "apply_field_state", "side": "enemy", "state": "scorched"}]}]},
-    {"id": "tp_chain_a", "name": "TP Chain A", "description": "Depth-guard case with TP Chain B: its hit trigger strikes the attacker, which would set off B's hit trigger and loop, but the depth guard stops trigger effects from firing triggers.",
-      "triggers": [{"on": "hit", "effects": [{"op": "damage", "power": 20, "type": "neutral"}]}]},
-    {"id": "tp_chain_b", "name": "TP Chain B", "description": "Depth-guard case with TP Chain A: its hit trigger strikes the attacker, which would set off A's hit trigger and loop, but the depth guard stops trigger effects from firing triggers.",
-      "triggers": [{"on": "hit", "effects": [{"op": "damage", "power": 20, "type": "neutral"}]}]},
-    {"id": "tp_kitchen_sink", "name": "TP Kitchen Sink", "description": "Tests one passive using all four lists at once: an always-on effect, a trigger of every kind, and all three overworld ops.",
+        {
+          "on": "hit",
+          "chance": 1,
+          "contact": true,
+          "effects": [{"op": "apply_status", "status": "shock"}]
+        }
+      ]
+    },
+    {
+      "id": "tp_hit_noncontact",
+      "name": "TP Hit Noncontact",
+      "description": "Tests a contact false hit trigger at 50% chance: any hit may lower the attacker's Special Attack.",
+      "triggers": [
+        {
+          "on": "hit",
+          "chance": 50,
+          "contact": false,
+          "effects": [{"op": "stat_stage", "stat": "satk", "stages": -1, "target": "attacker"}]
+        }
+      ]
+    },
+    {
+      "id": "tp_hit_when_field",
+      "name": "TP Hit When Field",
+      "description": "Tests the field and side condition on triggers: Chills the attacker when Soaked is on its own side, Burns it when Scorched is on the foe's side.",
+      "triggers": [
+        {
+          "on": "hit",
+          "when": {"field": "soaked", "side": "own"},
+          "effects": [{"op": "apply_status", "status": "chill"}]
+        },
+        {
+          "on": "hit",
+          "when": {"field": "scorched", "side": "enemy"},
+          "effects": [{"op": "apply_status", "status": "burn"}]
+        }
+      ]
+    },
+    {
+      "id": "tp_round_end_when_hp",
+      "name": "TP Round End When HP",
+      "description": "Tests a round_end trigger gated by hp_below: heals a quarter of its HP each round while below half HP.",
+      "triggers": [
+        {
+          "on": "round_end",
+          "when": {"hp_below": 0.5},
+          "effects": [{"op": "heal", "fraction": 0.25}]
+        }
+      ]
+    },
+    {
+      "id": "tp_round_end_sweep",
+      "name": "TP Round End Sweep",
+      "description": "Tests a round_end trigger with an all_enemies target at 1% chance: may Daze every foe.",
+      "triggers": [
+        {
+          "on": "round_end",
+          "chance": 1,
+          "effects": [{"op": "apply_status", "status": "daze", "target": "all_enemies"}]
+        }
+      ]
+    },
+    {
+      "id": "tp_knockout_when_underdog",
+      "name": "TP Knockout When Underdog",
+      "description": "Tests a knockout trigger gated by underdog: a knockout while outnumbered refills its energy.",
+      "triggers": [
+        {
+          "on": "knockout",
+          "when": {"underdog": true},
+          "effects": [{"op": "restore_energy", "fraction": 1.0}]
+        }
+      ]
+    },
+    {
+      "id": "tp_knockout_boost",
+      "name": "TP Knockout Boost",
+      "description": "Tests a knockout trigger at the stat stage limit: a knockout raises its Speed by 3 stages.",
+      "triggers": [
+        {
+          "on": "knockout",
+          "effects": [{"op": "stat_stage", "stat": "spd", "stages": 3, "target": "self"}]
+        }
+      ]
+    },
+    {
+      "id": "tp_faint_curse",
+      "name": "TP Faint Curse",
+      "description": "Tests a faint trigger landing on the attacker: whoever knocks it out is Burned and takes a tenth of their HP.",
+      "triggers": [
+        {
+          "on": "faint",
+          "effects": [
+            {"op": "apply_status", "status": "burn"},
+            {"op": "damage_fraction", "fraction": 0.1}
+          ]
+        }
+      ]
+    },
+    {
+      "id": "tp_faint_field",
+      "name": "TP Faint Field",
+      "description": "Tests a faint trigger that sets a field state at 50% chance: scorches the enemy side.",
+      "triggers": [
+        {
+          "on": "faint",
+          "chance": 50,
+          "effects": [{"op": "apply_field_state", "side": "enemy", "state": "scorched"}]
+        }
+      ]
+    },
+    {
+      "id": "tp_chain_a",
+      "name": "TP Chain A",
+      "description": "Depth-guard case with TP Chain B: its hit trigger strikes the attacker, which would set off B's hit trigger and loop, but the depth guard stops trigger effects from firing triggers.",
+      "triggers": [{"on": "hit", "effects": [{"op": "damage", "power": 20, "type": "neutral"}]}]
+    },
+    {
+      "id": "tp_chain_b",
+      "name": "TP Chain B",
+      "description": "Depth-guard case with TP Chain A: its hit trigger strikes the attacker, which would set off A's hit trigger and loop, but the depth guard stops trigger effects from firing triggers.",
+      "triggers": [{"on": "hit", "effects": [{"op": "damage", "power": 20, "type": "neutral"}]}]
+    },
+    {
+      "id": "tp_kitchen_sink",
+      "name": "TP Kitchen Sink",
+      "description": "Tests one passive using all four lists at once: an always-on effect, a trigger of every kind, and all three overworld ops.",
       "effects": [{"op": "type_power", "type": "magic", "mult": 1.1}],
       "triggers": [
         {"on": "enter", "effects": [{"op": "stat_stage", "stat": "luck", "stages": 1}]},
-        {"on": "hit", "contact": true, "effects": [{"op": "stat_stage", "stat": "spd", "stages": -1}]},
+        {
+          "on": "hit",
+          "contact": true,
+          "effects": [{"op": "stat_stage", "stat": "spd", "stages": -1}]
+        },
         {"on": "round_end", "effects": [{"op": "restore_energy", "fraction": 0.1}]},
         {"on": "knockout", "effects": [{"op": "heal", "fraction": 0.1}]},
-        {"on": "faint", "effects": [{"op": "stat_stage", "stat": "pdef", "stages": -1}]}],
-      "field": [{"op": "encounter_rate", "mult": 0.5}, {"op": "xp_mult", "mult": 1.5}, {"op": "bond_gain", "mult": 1.5}]},
-    {"id": "tp_field_encounter_none", "name": "TP Field Encounter None", "description": "Tests the overworld encounter_rate op at 0: no wild encounters while it leads.",
-      "field": [{"op": "encounter_rate", "mult": 0.0}]},
-    {"id": "tp_field_xp_encounter_max", "name": "TP Field XP Encounter Max", "description": "Tests the overworld xp_mult and encounter_rate ops at their x5 maximum.",
-      "field": [{"op": "xp_mult", "mult": 5.0}, {"op": "encounter_rate", "mult": 5.0}]},
-    {"id": "tp_field_bond_none", "name": "TP Field Bond None", "description": "Tests the overworld bond_gain op at 0 and xp_mult at 0: no Bond or XP while it leads.",
-      "field": [{"op": "bond_gain", "mult": 0.0}, {"op": "xp_mult", "mult": 0.0}]}
+        {"on": "faint", "effects": [{"op": "stat_stage", "stat": "pdef", "stages": -1}]}
+      ],
+      "field": [
+        {"op": "encounter_rate", "mult": 0.5},
+        {"op": "xp_mult", "mult": 1.5},
+        {"op": "bond_gain", "mult": 1.5}
+      ]
+    },
+    {
+      "id": "tp_field_encounter_none",
+      "name": "TP Field Encounter None",
+      "description": "Tests the overworld encounter_rate op at 0: no wild encounters while it leads.",
+      "field": [{"op": "encounter_rate", "mult": 0.0}]
+    },
+    {
+      "id": "tp_field_xp_encounter_max",
+      "name": "TP Field XP Encounter Max",
+      "description": "Tests the overworld xp_mult and encounter_rate ops at their x5 maximum.",
+      "field": [
+        {"op": "xp_mult", "mult": 5.0},
+        {"op": "encounter_rate", "mult": 5.0}
+      ]
+    },
+    {
+      "id": "tp_field_bond_none",
+      "name": "TP Field Bond None",
+      "description": "Tests the overworld bond_gain op at 0 and xp_mult at 0: no Bond or XP while it leads.",
+      "field": [
+        {"op": "bond_gain", "mult": 0.0},
+        {"op": "xp_mult", "mult": 0.0}
+      ]
+    }
   ]
 }

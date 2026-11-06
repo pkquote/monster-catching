@@ -1,50 +1,159 @@
 {
   "schema": 1,
   "entries": [
-    { "id": "tidal_heart", "name": "Tidal Heart", "description": "Water moves hit 20% harder.",
-      "effects": [{"op": "type_power", "type": "water", "mult": 1.2}] },
-    { "id": "undertow", "name": "Undertow", "description": "On entering battle, soaks the enemy side. Wild encounters are 20% rarer while it leads.",
-      "triggers": [{"on": "enter", "effects": [{"op": "apply_field_state", "side": "enemy", "state": "soaked"}]}],
-      "field": [{"op": "encounter_rate", "mult": 0.8}] },
-    { "id": "bulwark_hide", "name": "Bulwark Hide", "description": "Takes 30% less Earth damage. Foes can't lower its Physical Defense.",
-      "effects": [{"op": "incoming_type_mod", "type": "earth", "mult": 0.7}, {"op": "guard_stages", "stat": "pdef"}] },
-    { "id": "fog_weaver", "name": "Fog Weaver", "description": "Field states it applies last 1 round longer.",
-      "effects": [{"op": "field_boost", "turns": 1}] },
-    { "id": "chill_skin", "name": "Chill Skin", "description": "When hit by a physical move, 30% chance to Chill the attacker.",
-      "triggers": [{"on": "hit", "chance": 30, "contact": true, "effects": [{"op": "apply_status", "status": "chill"}]}] },
-    { "id": "kindling", "name": "Kindling", "description": "Below a third of its HP, Fire moves hit 50% harder.",
-      "effects": [{"op": "type_power", "type": "fire", "mult": 1.5, "when": {"hp_below": 0.34}}] },
-    { "id": "ember_trail", "name": "Ember Trail", "description": "When it faints, scorches the enemy side.",
-      "triggers": [{"on": "faint", "effects": [{"op": "apply_field_state", "side": "enemy", "state": "scorched"}]}] },
-    { "id": "photosynth", "name": "Photosynth", "description": "Heals 1/16 of its HP at the end of each round. Bond gains are 25% larger while it leads.",
+    {
+      "id": "tidal_heart",
+      "name": "Tidal Heart",
+      "description": "Water moves hit 20% harder.",
+      "effects": [{"op": "type_power", "type": "water", "mult": 1.2}]
+    },
+    {
+      "id": "undertow",
+      "name": "Undertow",
+      "description": "On entering battle, soaks the enemy side. Wild encounters are 20% rarer while it leads.",
+      "triggers": [
+        {
+          "on": "enter",
+          "effects": [{"op": "apply_field_state", "side": "enemy", "state": "soaked"}]
+        }
+      ],
+      "field": [{"op": "encounter_rate", "mult": 0.8}]
+    },
+    {
+      "id": "bulwark_hide",
+      "name": "Bulwark Hide",
+      "description": "Takes 30% less Earth damage. Foes can't lower its Physical Defense.",
+      "effects": [
+        {"op": "incoming_type_mod", "type": "earth", "mult": 0.7},
+        {"op": "guard_stages", "stat": "pdef"}
+      ]
+    },
+    {
+      "id": "fog_weaver",
+      "name": "Fog Weaver",
+      "description": "Field states it applies last 1 round longer.",
+      "effects": [{"op": "field_boost", "turns": 1}]
+    },
+    {
+      "id": "chill_skin",
+      "name": "Chill Skin",
+      "description": "When hit by a physical move, 30% chance to Chill the attacker.",
+      "triggers": [
+        {
+          "on": "hit",
+          "chance": 30,
+          "contact": true,
+          "effects": [{"op": "apply_status", "status": "chill"}]
+        }
+      ]
+    },
+    {
+      "id": "kindling",
+      "name": "Kindling",
+      "description": "Below a third of its HP, Fire moves hit 50% harder.",
+      "effects": [{"op": "type_power", "type": "fire", "mult": 1.5, "when": {"hp_below": 0.34}}]
+    },
+    {
+      "id": "ember_trail",
+      "name": "Ember Trail",
+      "description": "When it faints, scorches the enemy side.",
+      "triggers": [
+        {
+          "on": "faint",
+          "effects": [{"op": "apply_field_state", "side": "enemy", "state": "scorched"}]
+        }
+      ]
+    },
+    {
+      "id": "photosynth",
+      "name": "Photosynth",
+      "description": "Heals 1/16 of its HP at the end of each round. Bond gains are 25% larger while it leads.",
       "triggers": [{"on": "round_end", "effects": [{"op": "heal", "fraction": 0.0625}]}],
-      "field": [{"op": "bond_gain", "mult": 1.25}] },
-    { "id": "rootbed", "name": "Rootbed", "description": "On entering battle, grows Overgrown on its own side. Can't be Dazed.",
+      "field": [{"op": "bond_gain", "mult": 1.25}]
+    },
+    {
+      "id": "rootbed",
+      "name": "Rootbed",
+      "description": "On entering battle, grows Overgrown on its own side. Can't be Dazed.",
       "effects": [{"op": "status_immune", "status": "daze"}],
-      "triggers": [{"on": "enter", "effects": [{"op": "apply_field_state", "side": "own", "state": "overgrown"}]}] },
-    { "id": "static_wings", "name": "Static Wings", "description": "Electric moves cost 2 less energy.",
-      "effects": [{"op": "energy_discount", "type": "electric", "amount": 2}] },
-    { "id": "lightning_rod", "name": "Lightning Rod", "description": "Electric damage heals it for 25% of its HP instead.",
-      "effects": [{"op": "absorb_type", "type": "electric", "fraction": 0.25}] },
-    { "id": "frost_guard", "name": "Frost Guard", "description": "Can't be Chilled. Takes half damage from Ice.",
-      "effects": [{"op": "status_immune", "status": "chill"}, {"op": "incoming_type_mod", "type": "ice", "mult": 0.5}] },
-    { "id": "cold_snap", "name": "Cold Snap", "description": "On a knockout, +1 Speed. Earns 10% more XP while it leads.",
+      "triggers": [
+        {
+          "on": "enter",
+          "effects": [{"op": "apply_field_state", "side": "own", "state": "overgrown"}]
+        }
+      ]
+    },
+    {
+      "id": "static_wings",
+      "name": "Static Wings",
+      "description": "Electric moves cost 2 less energy.",
+      "effects": [{"op": "energy_discount", "type": "electric", "amount": 2}]
+    },
+    {
+      "id": "lightning_rod",
+      "name": "Lightning Rod",
+      "description": "Electric damage heals it for 25% of its HP instead.",
+      "effects": [{"op": "absorb_type", "type": "electric", "fraction": 0.25}]
+    },
+    {
+      "id": "frost_guard",
+      "name": "Frost Guard",
+      "description": "Can't be Chilled. Takes half damage from Ice.",
+      "effects": [
+        {"op": "status_immune", "status": "chill"},
+        {"op": "incoming_type_mod", "type": "ice", "mult": 0.5}
+      ]
+    },
+    {
+      "id": "cold_snap",
+      "name": "Cold Snap",
+      "description": "On a knockout, +1 Speed. Earns 10% more XP while it leads.",
       "triggers": [{"on": "knockout", "effects": [{"op": "stat_stage", "stat": "spd", "stages": 1}]}],
-      "field": [{"op": "xp_mult", "mult": 1.1}] },
-    { "id": "sturdy", "name": "Sturdy", "description": "Foes can't lower its stats.",
-      "effects": [{"op": "guard_stages"}] },
-    { "id": "rubble_pile", "name": "Rubble Pile", "description": "While outnumbered, Physical Defense x1.3.",
-      "effects": [{"op": "stat_mod", "stat": "pdef", "mult": 1.3, "when": {"underdog": true}}] },
-
-    { "id": "finisher", "name": "Finisher", "description": "On a knockout, restores 15% energy. Scrap hits 50% harder.",
+      "field": [{"op": "xp_mult", "mult": 1.1}]
+    },
+    {
+      "id": "sturdy",
+      "name": "Sturdy",
+      "description": "Foes can't lower its stats.",
+      "effects": [{"op": "guard_stages"}]
+    },
+    {
+      "id": "rubble_pile",
+      "name": "Rubble Pile",
+      "description": "While outnumbered, Physical Defense x1.3.",
+      "effects": [{"op": "stat_mod", "stat": "pdef", "mult": 1.3, "when": {"underdog": true}}]
+    },
+    {
+      "id": "finisher",
+      "name": "Finisher",
+      "description": "On a knockout, restores 15% energy. Scrap hits 50% harder.",
       "effects": [{"op": "scrap_power", "mult": 1.5}],
-      "triggers": [{"on": "knockout", "effects": [{"op": "restore_energy", "fraction": 0.15}]}] },
-    { "id": "guardian_aura", "name": "Guardian Aura", "description": "Allies on the field take 10% less damage from moves.",
+      "triggers": [{"on": "knockout", "effects": [{"op": "restore_energy", "fraction": 0.15}]}]
+    },
+    {
+      "id": "guardian_aura",
+      "name": "Guardian Aura",
+      "description": "Allies on the field take 10% less damage from moves.",
       "scope": "allies",
-      "effects": [{"op": "incoming_type_mod", "mult": 0.9}] },
-    { "id": "reaction_spark", "name": "Reaction Spark", "description": "Reactions it triggers deal 30% more. Its field states gain +1 stack.",
-      "effects": [{"op": "reaction_power", "mult": 1.3}, {"op": "field_boost", "stacks": 1}] },
-    { "id": "slippery", "name": "Slippery", "description": "Can't be given a status. Rest restores an extra 15% energy.",
-      "effects": [{"op": "status_immune"}, {"op": "rest_bonus", "fraction": 0.15}] }
+      "effects": [{"op": "incoming_type_mod", "mult": 0.9}]
+    },
+    {
+      "id": "reaction_spark",
+      "name": "Reaction Spark",
+      "description": "Reactions it triggers deal 30% more. Its field states gain +1 stack.",
+      "effects": [
+        {"op": "reaction_power", "mult": 1.3},
+        {"op": "field_boost", "stacks": 1}
+      ]
+    },
+    {
+      "id": "slippery",
+      "name": "Slippery",
+      "description": "Can't be given a status. Rest restores an extra 15% energy.",
+      "effects": [
+        {"op": "status_immune"},
+        {"op": "rest_bonus", "fraction": 0.15}
+      ]
+    }
   ]
 }

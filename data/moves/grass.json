@@ -1,0 +1,57 @@
+{
+  "schema": 1,
+  "entries": [
+    {
+      "id": "vine_lash",
+      "name": "Vine Lash",
+      "type": "grass",
+      "category": "physical",
+      "power": 45,
+      "cost": 3,
+      "accuracy": 100,
+      "target": "one_enemy",
+      "effects": [{"op": "damage"}]
+    },
+    {
+      "id": "twin_lash",
+      "name": "Twin Lash",
+      "description": "Two vines strike two foes of your choice.",
+      "type": "grass",
+      "category": "physical",
+      "power": 42,
+      "cost": 4,
+      "accuracy": 100,
+      "target": "two_enemies",
+      "effects": [{"op": "damage"}]
+    },
+    {
+      "id": "seed_carpet",
+      "name": "Seed Carpet",
+      "description": "Grows a thicket on the enemy side.",
+      "type": "grass",
+      "category": "status",
+      "power": 0,
+      "cost": 4,
+      "accuracy": 100,
+      "always_hits": true,
+      "target": "enemy_side",
+      "effects": [{"op": "apply_field_state", "side": "enemy", "state": "overgrown"}]
+    },
+    {
+      "id": "regrowth",
+      "name": "Regrowth",
+      "description": "Heals; heals more on your own Overgrown side.",
+      "type": "grass",
+      "category": "status",
+      "power": 0,
+      "cost": 6,
+      "accuracy": 100,
+      "always_hits": true,
+      "target": "self",
+      "effects": [
+        {"op": "bonus_if_field", "side": "own", "state": "overgrown", "mult": 1.5},
+        {"op": "heal", "fraction": 0.2}
+      ]
+    }
+  ]
+}

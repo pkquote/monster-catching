@@ -1,0 +1,42 @@
+{
+  "schema": 1,
+  "entries": [
+    {
+      "id": "focus_palm",
+      "name": "Focus Palm",
+      "description": "A strike guided by total concentration.",
+      "type": "mental",
+      "category": "physical",
+      "power": 40,
+      "cost": 2,
+      "accuracy": 100,
+      "target": "one_enemy",
+      "effects": [{"op": "damage"}]
+    },
+    {
+      "id": "mind_spike",
+      "name": "Mind Spike",
+      "description": "A piercing psychic jolt.",
+      "type": "mental",
+      "category": "special",
+      "power": 50,
+      "cost": 4,
+      "accuracy": 100,
+      "target": "one_enemy",
+      "effects": [{"op": "damage"}]
+    },
+    {
+      "id": "psychic_haze",
+      "name": "Psychic Haze",
+      "description": "Fills the enemy side with a dulling psychic fog.",
+      "type": "mental",
+      "category": "status",
+      "power": 0,
+      "cost": 4,
+      "accuracy": 100,
+      "always_hits": true,
+      "target": "enemy_side",
+      "effects": [{"op": "apply_field_state", "side": "enemy", "state": "hazed"}]
+    }
+  ]
+}

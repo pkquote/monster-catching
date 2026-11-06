@@ -1,26 +1,93 @@
 {
   "schema": 1,
   "entries": [
-    {"id": "tp_tamer_basic_1v1", "name": "TP Basic 1v1", "max_active": 1, "ai": "basic", "reward_money": 100,
+    {
+      "id": "tp_tamer_basic_1v1",
+      "name": "TP Basic 1v1",
+      "max_active": 1,
+      "ai": "basic",
+      "reward_money": 100,
       "party": [
-        {"species": "tp_neutral_plain", "level": 10, "moves": ["tp_hit_neutral_physical_prio_minus3", "tp_power_min"], "held_item": "tp_h_consumed_hit"},
-        {"species": "tp_light_min_stats", "level": 10, "moves": ["tp_accuracy_max", "tp_hit_light_special_prio_plus3"]}
+        {
+          "species": "tp_neutral_plain",
+          "level": 10,
+          "moves": ["tp_hit_neutral_physical_prio_minus3", "tp_power_min"],
+          "held_item": "tp_h_consumed_hit"
+        },
+        {
+          "species": "tp_light_min_stats",
+          "level": 10,
+          "moves": ["tp_accuracy_max", "tp_hit_light_special_prio_plus3"]
+        }
       ],
-      "items": [{"item": "tp_potion_small", "count": 2}]},
-    {"id": "tp_tamer_tactician_2v2", "name": "TP Tactician 2v2", "max_active": 2, "ai": "tactician", "reward_money": 400,
+      "items": [{"item": "tp_potion_small", "count": 2}]
+    },
+    {
+      "id": "tp_tamer_tactician_2v2",
+      "name": "TP Tactician 2v2",
+      "max_active": 2,
+      "ai": "tactician",
+      "reward_money": 400,
       "party": [
-        {"species": "tp_chain2_tank", "level": 30, "moves": ["tp_hit_iron_special_prio_minus1", "tp_apply_soaked"], "passive": "tp_aura_stat", "held_item": "tp_h_aura"},
-        {"species": "tp_chain2_caster", "level": 30, "moves": ["tp_hit_magic_special_prio_minus3", "tp_inflict_chill", "tp_cash_frosted"], "passive": "tp_aura_shelter", "held_item": "tp_h_aura_trigger"},
-        {"species": "tp_iron_status_only", "level": 25, "moves": ["tp_apply_magnetized", "tp_clear_magnetized"], "held_item": "tp_h_pb_enter"}
+        {
+          "species": "tp_chain2_tank",
+          "level": 30,
+          "moves": ["tp_hit_iron_special_prio_minus1", "tp_apply_soaked"],
+          "passive": "tp_aura_stat",
+          "held_item": "tp_h_aura"
+        },
+        {
+          "species": "tp_chain2_caster",
+          "level": 30,
+          "moves": ["tp_hit_magic_special_prio_minus3", "tp_inflict_chill", "tp_cash_frosted"],
+          "passive": "tp_aura_shelter",
+          "held_item": "tp_h_aura_trigger"
+        },
+        {
+          "species": "tp_iron_status_only",
+          "level": 25,
+          "moves": ["tp_apply_magnetized", "tp_clear_magnetized"],
+          "held_item": "tp_h_pb_enter"
+        }
       ],
-      "items": [{"item": "tp_potion_full", "count": 1}, {"item": "tp_energy_small", "count": 1}]},
-    {"id": "tp_tamer_aggressive_3v3", "name": "TP Aggressive 3v3", "max_active": 3, "ai": "aggressive", "reward_money": 900,
+      "items": [
+        {"item": "tp_potion_full", "count": 1},
+        {"item": "tp_energy_small", "count": 1}
+      ]
+    },
+    {
+      "id": "tp_tamer_aggressive_3v3",
+      "name": "TP Aggressive 3v3",
+      "max_active": 3,
+      "ai": "aggressive",
+      "reward_money": 900,
       "party": [
-        {"species": "tp_fire_glass_cannon", "level": 40, "moves": ["tp_hit_fire_special_prio_minus2", "tp_cash_scorched", "tp_apply_scorched"], "held_item": "tp_h_consumed_enter"},
-        {"species": "tp_electric_slow_bruiser", "level": 40, "moves": ["tp_hit_electric_physical_prio_plus1", "tp_cash_charged", "tp_hit_shock_chance_1"], "held_item": "tp_h_pb_hit_contact"},
-        {"species": "tp_grass_speedster", "level": 40, "moves": ["tp_hit_grass_special", "tp_apply_overgrown", "tp_cash_soaked"], "held_item": "tp_h_type_power"}
-      ]},
-    {"id": "tp_tamer_bench_3v6", "name": "TP Bench-Heavy 3v6", "max_active": 3, "ai": "tactician", "reward_money": 1500,
+        {
+          "species": "tp_fire_glass_cannon",
+          "level": 40,
+          "moves": ["tp_hit_fire_special_prio_minus2", "tp_cash_scorched", "tp_apply_scorched"],
+          "held_item": "tp_h_consumed_enter"
+        },
+        {
+          "species": "tp_electric_slow_bruiser",
+          "level": 40,
+          "moves": ["tp_hit_electric_physical_prio_plus1", "tp_cash_charged", "tp_hit_shock_chance_1"],
+          "held_item": "tp_h_pb_hit_contact"
+        },
+        {
+          "species": "tp_grass_speedster",
+          "level": 40,
+          "moves": ["tp_hit_grass_special", "tp_apply_overgrown", "tp_cash_soaked"],
+          "held_item": "tp_h_type_power"
+        }
+      ]
+    },
+    {
+      "id": "tp_tamer_bench_3v6",
+      "name": "TP Bench-Heavy 3v6",
+      "max_active": 3,
+      "ai": "tactician",
+      "reward_money": 1500,
       "party": [
         {"species": "tp_chain3_mid_striker", "level": 35, "held_item": "tp_h_consumed_knockout"},
         {"species": "tp_chain3_mid_warden", "level": 35, "held_item": "tp_h_pb_round_end"},
@@ -29,16 +96,53 @@
         {"species": "tp_ghost_all_level_one", "level": 35, "held_item": "tp_h_pb_faint"},
         {"species": "tp_dark_late_bloomer", "level": 35, "held_item": "tp_h_stat_guard"}
       ],
-      "items": [{"item": "tp_full_restore", "count": 2}]},
-    {"id": "tp_tamer_outnumbered_3v2", "name": "TP Underdog Trainer (3 slots, 2 creatures; outnumbered by a 3-creature team)", "max_active": 3, "ai": "aggressive", "reward_money": 700,
+      "items": [{"item": "tp_full_restore", "count": 2}]
+    },
+    {
+      "id": "tp_tamer_outnumbered_3v2",
+      "name": "TP Underdog Trainer (3 slots, 2 creatures; outnumbered by a 3-creature team)",
+      "max_active": 3,
+      "ai": "aggressive",
+      "reward_money": 700,
       "party": [
-        {"species": "tp_water_wall", "level": 20, "passive": "tp_aura_underdog_power", "held_item": "tp_h_pb_round_end"},
-        {"species": "tp_magic_energy_starved", "level": 20, "passive": "tp_knockout_when_underdog", "held_item": "tp_h_pb_knockout"}
-      ]},
-    {"id": "tp_tamer_stall_1", "name": "TP Stall Trainer", "max_active": 1, "ai": "tactician", "reward_money": 600,
+        {
+          "species": "tp_water_wall",
+          "level": 20,
+          "passive": "tp_aura_underdog_power",
+          "held_item": "tp_h_pb_round_end"
+        },
+        {
+          "species": "tp_magic_energy_starved",
+          "level": 20,
+          "passive": "tp_knockout_when_underdog",
+          "held_item": "tp_h_pb_knockout"
+        }
+      ]
+    },
+    {
+      "id": "tp_tamer_stall_1",
+      "name": "TP Stall Trainer",
+      "max_active": 1,
+      "ai": "tactician",
+      "reward_money": 600,
       "party": [
-        {"species": "tp_water_wall", "level": 50, "moves": ["tp_hit_water_physical_prio_minus1", "tp_apply_soaked", "tp_clear_soaked", "tp_heal_self_full"], "passive": "tp_absorb", "held_item": "tp_h_consumed_hit"}
+        {
+          "species": "tp_water_wall",
+          "level": 50,
+          "moves": [
+            "tp_hit_water_physical_prio_minus1",
+            "tp_apply_soaked",
+            "tp_clear_soaked",
+            "tp_heal_self_full"
+          ],
+          "passive": "tp_absorb",
+          "held_item": "tp_h_consumed_hit"
+        }
       ],
-      "items": [{"item": "tp_potion_full", "count": 5}, {"item": "tp_energy_small", "count": 3}]}
+      "items": [
+        {"item": "tp_potion_full", "count": 5},
+        {"item": "tp_energy_small", "count": 3}
+      ]
+    }
   ]
 }

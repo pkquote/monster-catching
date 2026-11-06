@@ -1,35 +1,122 @@
 {
   "schema": 1,
   "entries": [
-    {"id": "tp_type_power_up", "name": "TP Type Power Up", "description": "Tests type_power: Fire moves hit 50% harder.",
-      "effects": [{"op": "type_power", "type": "fire", "mult": 1.5}]},
-    {"id": "tp_type_power_extremes", "name": "TP Type Power Extremes", "description": "Tests type_power at both ends of its range: Ghost moves x5, Neutral moves x0 (damage floors at 1).",
-      "effects": [{"op": "type_power", "type": "ghost", "mult": 5.0}, {"op": "type_power", "type": "neutral", "mult": 0.0}]},
-    {"id": "tp_incoming_resist", "name": "TP Incoming Resist", "description": "Tests incoming_type_mod: takes half damage from Water and none beyond the 1 minimum from Ice.",
-      "effects": [{"op": "incoming_type_mod", "type": "water", "mult": 0.5}, {"op": "incoming_type_mod", "type": "ice", "mult": 0.0}]},
-    {"id": "tp_incoming_weak", "name": "TP Incoming Weak", "description": "Tests incoming_type_mod: takes x5 from Grass, and an untyped x0.9 from every move.",
-      "effects": [{"op": "incoming_type_mod", "type": "grass", "mult": 5.0}, {"op": "incoming_type_mod", "mult": 0.9}]},
-    {"id": "tp_absorb", "name": "TP Absorb", "description": "Tests absorb_type: Water damage heals a quarter of max HP, Fire damage heals all of it.",
-      "effects": [{"op": "absorb_type", "type": "water", "fraction": 0.25}, {"op": "absorb_type", "type": "fire", "fraction": 1.0}]},
-    {"id": "tp_status_immune", "name": "TP Status Immune", "description": "Tests status_immune with and without a status: blocks Burn, and also blocks every status.",
-      "effects": [{"op": "status_immune", "status": "burn"}, {"op": "status_immune"}]},
-    {"id": "tp_guards", "name": "TP Guards", "description": "Tests guard_stages with and without a stat: foes can't lower Speed, nor any other stat.",
-      "effects": [{"op": "guard_stages", "stat": "spd"}, {"op": "guard_stages"}]},
-    {"id": "tp_shelter", "name": "TP Shelter", "description": "Tests field_shelter: Scorched and Soaked on its side skip it and their reactions spare it.",
-      "effects": [{"op": "field_shelter", "state": "scorched"}, {"op": "field_shelter", "state": "soaked"}]},
-    {"id": "tp_field_boost_max", "name": "TP Field Boost Max", "description": "Tests field_boost at its limits: field states it applies gain 5 stacks and last 10 turns longer.",
-      "effects": [{"op": "field_boost", "stacks": 5, "turns": 10}]},
-    {"id": "tp_reaction_boost", "name": "TP Reaction Boost", "description": "Tests reaction_power x2 and a stacks-only field_boost (one extra stack, no extra turns).",
-      "effects": [{"op": "reaction_power", "mult": 2.0}, {"op": "field_boost", "stacks": 1}]},
-    {"id": "tp_energy_discounts", "name": "TP Energy Discounts", "description": "Tests energy_discount: Fire moves cost 30 less and every move costs 1 less (never below 0).",
-      "effects": [{"op": "energy_discount", "type": "fire", "amount": 30}, {"op": "energy_discount", "amount": 1}]},
-    {"id": "tp_rest_scrap", "name": "TP Rest Scrap", "description": "Tests rest_bonus (Rest restores 100% extra energy) and scrap_power (Scrap hits x3).",
-      "effects": [{"op": "rest_bonus", "fraction": 1.0}, {"op": "scrap_power", "mult": 3.0}]},
-    {"id": "tp_stat_mod_all", "name": "TP Stat Mod All", "description": "Tests stat_mod on every stat, with multipliers above and below 1.",
+    {
+      "id": "tp_type_power_up",
+      "name": "TP Type Power Up",
+      "description": "Tests type_power: Fire moves hit 50% harder.",
+      "effects": [{"op": "type_power", "type": "fire", "mult": 1.5}]
+    },
+    {
+      "id": "tp_type_power_extremes",
+      "name": "TP Type Power Extremes",
+      "description": "Tests type_power at both ends of its range: Ghost moves x5, Neutral moves x0 (damage floors at 1).",
       "effects": [
-        {"op": "stat_mod", "stat": "patk", "mult": 1.1}, {"op": "stat_mod", "stat": "pdef", "mult": 0.9},
-        {"op": "stat_mod", "stat": "satk", "mult": 1.25}, {"op": "stat_mod", "stat": "sdef", "mult": 0.75},
-        {"op": "stat_mod", "stat": "spd", "mult": 0.5}, {"op": "stat_mod", "stat": "acc", "mult": 1.5},
-        {"op": "stat_mod", "stat": "resolve", "mult": 2.0}, {"op": "stat_mod", "stat": "luck", "mult": 5.0}]}
+        {"op": "type_power", "type": "ghost", "mult": 5.0},
+        {"op": "type_power", "type": "neutral", "mult": 0.0}
+      ]
+    },
+    {
+      "id": "tp_incoming_resist",
+      "name": "TP Incoming Resist",
+      "description": "Tests incoming_type_mod: takes half damage from Water and none beyond the 1 minimum from Ice.",
+      "effects": [
+        {"op": "incoming_type_mod", "type": "water", "mult": 0.5},
+        {"op": "incoming_type_mod", "type": "ice", "mult": 0.0}
+      ]
+    },
+    {
+      "id": "tp_incoming_weak",
+      "name": "TP Incoming Weak",
+      "description": "Tests incoming_type_mod: takes x5 from Grass, and an untyped x0.9 from every move.",
+      "effects": [
+        {"op": "incoming_type_mod", "type": "grass", "mult": 5.0},
+        {"op": "incoming_type_mod", "mult": 0.9}
+      ]
+    },
+    {
+      "id": "tp_absorb",
+      "name": "TP Absorb",
+      "description": "Tests absorb_type: Water damage heals a quarter of max HP, Fire damage heals all of it.",
+      "effects": [
+        {"op": "absorb_type", "type": "water", "fraction": 0.25},
+        {"op": "absorb_type", "type": "fire", "fraction": 1.0}
+      ]
+    },
+    {
+      "id": "tp_status_immune",
+      "name": "TP Status Immune",
+      "description": "Tests status_immune with and without a status: blocks Burn, and also blocks every status.",
+      "effects": [
+        {"op": "status_immune", "status": "burn"},
+        {"op": "status_immune"}
+      ]
+    },
+    {
+      "id": "tp_guards",
+      "name": "TP Guards",
+      "description": "Tests guard_stages with and without a stat: foes can't lower Speed, nor any other stat.",
+      "effects": [
+        {"op": "guard_stages", "stat": "spd"},
+        {"op": "guard_stages"}
+      ]
+    },
+    {
+      "id": "tp_shelter",
+      "name": "TP Shelter",
+      "description": "Tests field_shelter: Scorched and Soaked on its side skip it and their reactions spare it.",
+      "effects": [
+        {"op": "field_shelter", "state": "scorched"},
+        {"op": "field_shelter", "state": "soaked"}
+      ]
+    },
+    {
+      "id": "tp_field_boost_max",
+      "name": "TP Field Boost Max",
+      "description": "Tests field_boost at its limits: field states it applies gain 5 stacks and last 10 turns longer.",
+      "effects": [{"op": "field_boost", "stacks": 5, "turns": 10}]
+    },
+    {
+      "id": "tp_reaction_boost",
+      "name": "TP Reaction Boost",
+      "description": "Tests reaction_power x2 and a stacks-only field_boost (one extra stack, no extra turns).",
+      "effects": [
+        {"op": "reaction_power", "mult": 2.0},
+        {"op": "field_boost", "stacks": 1}
+      ]
+    },
+    {
+      "id": "tp_energy_discounts",
+      "name": "TP Energy Discounts",
+      "description": "Tests energy_discount: Fire moves cost 30 less and every move costs 1 less (never below 0).",
+      "effects": [
+        {"op": "energy_discount", "type": "fire", "amount": 30},
+        {"op": "energy_discount", "amount": 1}
+      ]
+    },
+    {
+      "id": "tp_rest_scrap",
+      "name": "TP Rest Scrap",
+      "description": "Tests rest_bonus (Rest restores 100% extra energy) and scrap_power (Scrap hits x3).",
+      "effects": [
+        {"op": "rest_bonus", "fraction": 1.0},
+        {"op": "scrap_power", "mult": 3.0}
+      ]
+    },
+    {
+      "id": "tp_stat_mod_all",
+      "name": "TP Stat Mod All",
+      "description": "Tests stat_mod on every stat, with multipliers above and below 1.",
+      "effects": [
+        {"op": "stat_mod", "stat": "patk", "mult": 1.1},
+        {"op": "stat_mod", "stat": "pdef", "mult": 0.9},
+        {"op": "stat_mod", "stat": "satk", "mult": 1.25},
+        {"op": "stat_mod", "stat": "sdef", "mult": 0.75},
+        {"op": "stat_mod", "stat": "spd", "mult": 0.5},
+        {"op": "stat_mod", "stat": "acc", "mult": 1.5},
+        {"op": "stat_mod", "stat": "resolve", "mult": 2.0},
+        {"op": "stat_mod", "stat": "luck", "mult": 5.0}
+      ]
+    }
   ]
 }

@@ -1,12 +1,89 @@
 {
   "schema": 1,
   "entries": [
-    {"id": "tp_hit_all_foes", "name": "TP Hit All Foes", "description": "Hits every standing foe, taking the spread reduction.", "type": "fire", "category": "special", "power": 55, "cost": 8, "accuracy": 90, "target": "all_enemies", "effects": [{"op": "damage"}]},
-    {"id": "tp_hit_everyone", "name": "TP Hit Everyone", "description": "Hits every creature on the field, allies included.", "type": "earth", "category": "physical", "power": 45, "cost": 10, "accuracy": 100, "target": "all", "effects": [{"op": "damage"}]},
-    {"id": "tp_hit_two_foes", "name": "TP Hit Two Foes", "description": "Hits two chosen foes.", "type": "water", "category": "special", "power": 50, "cost": 6, "accuracy": 100, "target": "two_enemies", "effects": [{"op": "damage"}]},
-    {"id": "tp_heal_self_full", "name": "TP Heal Self Full", "description": "Heals the user for 100% of max HP.", "type": "light", "category": "status", "power": 0, "cost": 12, "accuracy": 100, "target": "self", "effects": [{"op": "heal", "fraction": 1.0}]},
-    {"id": "tp_heal_ally_small", "name": "TP Heal Ally Small", "description": "Heals one ally for 5% of max HP.", "type": "grass", "category": "status", "power": 0, "cost": 1, "accuracy": 100, "target": "one_ally", "effects": [{"op": "heal", "fraction": 0.05}]},
-    {"id": "tp_restore_energy_small_allies", "name": "TP Restore Energy Small Allies", "description": "Restores 10% of max energy to every ally.", "type": "magic", "category": "status", "power": 0, "cost": 2, "accuracy": 100, "target": "all_allies", "effects": [{"op": "restore_energy", "fraction": 0.1}]},
-    {"id": "tp_restore_energy_full_self", "name": "TP Restore Energy Full Self", "description": "Refills the user's energy completely at no cost.", "type": "mental", "category": "status", "power": 0, "cost": 0, "accuracy": 100, "target": "self", "effects": [{"op": "restore_energy", "fraction": 1.0}]}
+    {
+      "id": "tp_hit_all_foes",
+      "name": "TP Hit All Foes",
+      "description": "Hits every standing foe, taking the spread reduction.",
+      "type": "fire",
+      "category": "special",
+      "power": 55,
+      "cost": 8,
+      "accuracy": 90,
+      "target": "all_enemies",
+      "effects": [{"op": "damage"}]
+    },
+    {
+      "id": "tp_hit_everyone",
+      "name": "TP Hit Everyone",
+      "description": "Hits every creature on the field, allies included.",
+      "type": "earth",
+      "category": "physical",
+      "power": 45,
+      "cost": 10,
+      "accuracy": 100,
+      "target": "all",
+      "effects": [{"op": "damage"}]
+    },
+    {
+      "id": "tp_hit_two_foes",
+      "name": "TP Hit Two Foes",
+      "description": "Hits two chosen foes.",
+      "type": "water",
+      "category": "special",
+      "power": 50,
+      "cost": 6,
+      "accuracy": 100,
+      "target": "two_enemies",
+      "effects": [{"op": "damage"}]
+    },
+    {
+      "id": "tp_heal_self_full",
+      "name": "TP Heal Self Full",
+      "description": "Heals the user for 100% of max HP.",
+      "type": "light",
+      "category": "status",
+      "power": 0,
+      "cost": 12,
+      "accuracy": 100,
+      "target": "self",
+      "effects": [{"op": "heal", "fraction": 1.0}]
+    },
+    {
+      "id": "tp_heal_ally_small",
+      "name": "TP Heal Ally Small",
+      "description": "Heals one ally for 5% of max HP.",
+      "type": "grass",
+      "category": "status",
+      "power": 0,
+      "cost": 1,
+      "accuracy": 100,
+      "target": "one_ally",
+      "effects": [{"op": "heal", "fraction": 0.05}]
+    },
+    {
+      "id": "tp_restore_energy_small_allies",
+      "name": "TP Restore Energy Small Allies",
+      "description": "Restores 10% of max energy to every ally.",
+      "type": "magic",
+      "category": "status",
+      "power": 0,
+      "cost": 2,
+      "accuracy": 100,
+      "target": "all_allies",
+      "effects": [{"op": "restore_energy", "fraction": 0.1}]
+    },
+    {
+      "id": "tp_restore_energy_full_self",
+      "name": "TP Restore Energy Full Self",
+      "description": "Refills the user's energy completely at no cost.",
+      "type": "mental",
+      "category": "status",
+      "power": 0,
+      "cost": 0,
+      "accuracy": 100,
+      "target": "self",
+      "effects": [{"op": "restore_energy", "fraction": 1.0}]
+    }
   ]
 }

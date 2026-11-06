@@ -1,0 +1,42 @@
+{
+  "schema": 1,
+  "entries": [
+    {
+      "id": "iron_bash",
+      "name": "Iron Bash",
+      "description": "A heavy, armoured slam.",
+      "type": "iron",
+      "category": "physical",
+      "power": 50,
+      "cost": 4,
+      "accuracy": 95,
+      "target": "one_enemy",
+      "effects": [{"op": "damage"}]
+    },
+    {
+      "id": "magnet_pulse",
+      "name": "Magnet Pulse",
+      "description": "A wave of magnetic force.",
+      "type": "iron",
+      "category": "special",
+      "power": 40,
+      "cost": 2,
+      "accuracy": 100,
+      "target": "one_enemy",
+      "effects": [{"op": "damage"}]
+    },
+    {
+      "id": "magnetize",
+      "name": "Magnetize",
+      "description": "Scatters iron filings across the enemy side.",
+      "type": "iron",
+      "category": "status",
+      "power": 0,
+      "cost": 4,
+      "accuracy": 100,
+      "always_hits": true,
+      "target": "enemy_side",
+      "effects": [{"op": "apply_field_state", "side": "enemy", "state": "magnetized"}]
+    }
+  ]
+}

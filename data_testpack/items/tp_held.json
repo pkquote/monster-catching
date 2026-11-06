@@ -1,39 +1,228 @@
 {
   "schema": 1,
   "entries": [
-    {"id": "tp_h_type_power", "name": "TP Held Type Power", "description": "Tests a permanent held type_power (stacks with TP Type Power Up): Water moves hit 10% harder.", "category": "held", "price": 0,
-      "held": {"effects": [{"op": "type_power", "type": "water", "mult": 1.1}]}},
-    {"id": "tp_h_stat_guard", "name": "TP Held Stat Guard", "description": "Tests permanent held effects with a when condition plus guard_stages (overlaps TP Guards): Speed x1.1 below half HP and foes can't lower its stats.", "category": "held", "price": 300,
-      "held": {"use": "permanent", "effects": [{"op": "stat_mod", "stat": "spd", "mult": 1.1, "when": {"hp_below": 0.5}}, {"op": "guard_stages"}]}},
-    {"id": "tp_h_aura", "name": "TP Held Aura", "description": "Tests a permanent held ally aura: allies on the field take 10% less damage.", "category": "held", "price": 800,
-      "held": {"scope": "allies", "effects": [{"op": "incoming_type_mod", "mult": 0.9}]}},
-    {"id": "tp_h_aura_trigger", "name": "TP Held Aura Trigger", "description": "Tests a held ally aura combined with a round_end trigger: allies are sheltered from Overgrown while the holder heals a sixteenth each round.", "category": "held", "price": 1200,
-      "held": {"scope": "allies", "effects": [{"op": "field_shelter", "state": "overgrown"}], "triggers": [{"on": "round_end", "effects": [{"op": "heal", "fraction": 0.0625}]}]}},
-    {"id": "tp_h_permanent_triggers", "name": "TP Held Permanent Triggers", "description": "Tests permanent held triggers that fire every time: 50% chance on entering to raise Luck, and a 1% non-contact hit trigger that Chills the attacker.", "category": "held", "price": 1500,
-      "held": {"use": "permanent", "triggers": [
-        {"on": "enter", "chance": 50, "effects": [{"op": "stat_stage", "stat": "luck", "stages": 1}]},
-        {"on": "hit", "chance": 1, "contact": false, "effects": [{"op": "apply_status", "status": "chill"}]}]}},
-    {"id": "tp_h_field", "name": "TP Held Field", "description": "Tests held overworld ops: fewer encounters, double XP and double Bond gains while it leads.", "category": "held", "price": 500,
-      "held": {"field": [{"op": "encounter_rate", "mult": 0.5}, {"op": "xp_mult", "mult": 2.0}, {"op": "bond_gain", "mult": 2.0}]}},
-    {"id": "tp_h_consumed_enter", "name": "TP Held Consumed Enter", "description": "Tests a consumed enter trigger: on entering, raises Resolve once and is used up.", "category": "held", "price": 100,
-      "held": {"use": "consumed", "triggers": [{"on": "enter", "effects": [{"op": "stat_stage", "stat": "resolve", "stages": 2}]}]}},
-    {"id": "tp_h_consumed_hit", "name": "TP Held Consumed Hit", "description": "Tests a consumed hit trigger with hp_below: eaten when hurt below half HP to heal a quarter.", "category": "held", "price": 200,
-      "held": {"use": "consumed", "triggers": [{"on": "hit", "when": {"hp_below": 0.5}, "effects": [{"op": "heal", "fraction": 0.25, "target": "self"}]}]}},
-    {"id": "tp_h_consumed_round_end", "name": "TP Held Consumed Round End", "description": "Tests a consumed round_end trigger at 50% chance: restores half its energy and is used up when it fires.", "category": "held", "price": 150,
-      "held": {"use": "consumed", "triggers": [{"on": "round_end", "chance": 50, "effects": [{"op": "restore_energy", "fraction": 0.5}]}]}},
-    {"id": "tp_h_consumed_knockout", "name": "TP Held Consumed Knockout", "description": "Tests a consumed knockout trigger: the first knockout fully heals the holder and uses the item up.", "category": "held", "price": 250,
-      "held": {"use": "consumed", "triggers": [{"on": "knockout", "effects": [{"op": "heal", "fraction": 1.0}]}]}},
-    {"id": "tp_h_consumed_faint", "name": "TP Held Consumed Faint", "description": "Tests a consumed faint trigger: when the holder faints, the attacker is Shocked (the item is used up).", "category": "held", "price": 250,
-      "held": {"use": "consumed", "triggers": [{"on": "faint", "effects": [{"op": "apply_status", "status": "shock"}]}]}},
-    {"id": "tp_h_pb_enter", "name": "TP Held Per Battle Enter", "description": "Tests a per_battle enter trigger: once per battle, entering scorches the enemy side.", "category": "held", "price": 400,
-      "held": {"use": "per_battle", "triggers": [{"on": "enter", "effects": [{"op": "apply_field_state", "side": "enemy", "state": "scorched"}]}]}},
-    {"id": "tp_h_pb_hit_contact", "name": "TP Held Per Battle Contact Hit", "description": "Tests a per_battle contact hit trigger: the first physical hit each battle lowers the attacker's Physical Attack.", "category": "held", "price": 500,
-      "held": {"use": "per_battle", "triggers": [{"on": "hit", "contact": true, "effects": [{"op": "stat_stage", "stat": "patk", "stages": -1, "target": "attacker"}]}]}},
-    {"id": "tp_h_pb_round_end", "name": "TP Held Per Battle Round End", "description": "Tests a per_battle round_end trigger with a field condition: once per battle, heals a tenth at round end if Overgrown is on its side.", "category": "held", "price": 450,
-      "held": {"use": "per_battle", "triggers": [{"on": "round_end", "when": {"field": "overgrown", "side": "own"}, "effects": [{"op": "heal", "fraction": 0.1}]}]}},
-    {"id": "tp_h_pb_knockout", "name": "TP Held Per Battle Knockout", "description": "Tests a per_battle knockout trigger with underdog: once per battle, a knockout while outnumbered restores half its energy.", "category": "held", "price": 450,
-      "held": {"use": "per_battle", "triggers": [{"on": "knockout", "when": {"underdog": true}, "effects": [{"op": "restore_energy", "fraction": 0.5}]}]}},
-    {"id": "tp_h_pb_faint", "name": "TP Held Per Battle Faint", "description": "Tests a per_battle faint trigger: when the holder faints, the attacker takes half its HP in damage.", "category": "held", "price": 600,
-      "held": {"use": "per_battle", "triggers": [{"on": "faint", "effects": [{"op": "damage_fraction", "fraction": 0.5}]}]}}
+    {
+      "id": "tp_h_type_power",
+      "name": "TP Held Type Power",
+      "description": "Tests a permanent held type_power (stacks with TP Type Power Up): Water moves hit 10% harder.",
+      "category": "held",
+      "price": 0,
+      "held": {"effects": [{"op": "type_power", "type": "water", "mult": 1.1}]}
+    },
+    {
+      "id": "tp_h_stat_guard",
+      "name": "TP Held Stat Guard",
+      "description": "Tests permanent held effects with a when condition plus guard_stages (overlaps TP Guards): Speed x1.1 below half HP and foes can't lower its stats.",
+      "category": "held",
+      "price": 300,
+      "held": {
+        "use": "permanent",
+        "effects": [
+          {
+            "op": "stat_mod",
+            "stat": "spd",
+            "mult": 1.1,
+            "when": {"hp_below": 0.5}
+          },
+          {"op": "guard_stages"}
+        ]
+      }
+    },
+    {
+      "id": "tp_h_aura",
+      "name": "TP Held Aura",
+      "description": "Tests a permanent held ally aura: allies on the field take 10% less damage.",
+      "category": "held",
+      "price": 800,
+      "held": {"scope": "allies", "effects": [{"op": "incoming_type_mod", "mult": 0.9}]}
+    },
+    {
+      "id": "tp_h_aura_trigger",
+      "name": "TP Held Aura Trigger",
+      "description": "Tests a held ally aura combined with a round_end trigger: allies are sheltered from Overgrown while the holder heals a sixteenth each round.",
+      "category": "held",
+      "price": 1200,
+      "held": {
+        "scope": "allies",
+        "effects": [{"op": "field_shelter", "state": "overgrown"}],
+        "triggers": [{"on": "round_end", "effects": [{"op": "heal", "fraction": 0.0625}]}]
+      }
+    },
+    {
+      "id": "tp_h_permanent_triggers",
+      "name": "TP Held Permanent Triggers",
+      "description": "Tests permanent held triggers that fire every time: 50% chance on entering to raise Luck, and a 1% non-contact hit trigger that Chills the attacker.",
+      "category": "held",
+      "price": 1500,
+      "held": {
+        "use": "permanent",
+        "triggers": [
+          {
+            "on": "enter",
+            "chance": 50,
+            "effects": [{"op": "stat_stage", "stat": "luck", "stages": 1}]
+          },
+          {
+            "on": "hit",
+            "chance": 1,
+            "contact": false,
+            "effects": [{"op": "apply_status", "status": "chill"}]
+          }
+        ]
+      }
+    },
+    {
+      "id": "tp_h_field",
+      "name": "TP Held Field",
+      "description": "Tests held overworld ops: fewer encounters, double XP and double Bond gains while it leads.",
+      "category": "held",
+      "price": 500,
+      "held": {
+        "field": [
+          {"op": "encounter_rate", "mult": 0.5},
+          {"op": "xp_mult", "mult": 2.0},
+          {"op": "bond_gain", "mult": 2.0}
+        ]
+      }
+    },
+    {
+      "id": "tp_h_consumed_enter",
+      "name": "TP Held Consumed Enter",
+      "description": "Tests a consumed enter trigger: on entering, raises Resolve once and is used up.",
+      "category": "held",
+      "price": 100,
+      "held": {
+        "use": "consumed",
+        "triggers": [{"on": "enter", "effects": [{"op": "stat_stage", "stat": "resolve", "stages": 2}]}]
+      }
+    },
+    {
+      "id": "tp_h_consumed_hit",
+      "name": "TP Held Consumed Hit",
+      "description": "Tests a consumed hit trigger with hp_below: eaten when hurt below half HP to heal a quarter.",
+      "category": "held",
+      "price": 200,
+      "held": {
+        "use": "consumed",
+        "triggers": [
+          {
+            "on": "hit",
+            "when": {"hp_below": 0.5},
+            "effects": [{"op": "heal", "fraction": 0.25, "target": "self"}]
+          }
+        ]
+      }
+    },
+    {
+      "id": "tp_h_consumed_round_end",
+      "name": "TP Held Consumed Round End",
+      "description": "Tests a consumed round_end trigger at 50% chance: restores half its energy and is used up when it fires.",
+      "category": "held",
+      "price": 150,
+      "held": {
+        "use": "consumed",
+        "triggers": [{"on": "round_end", "chance": 50, "effects": [{"op": "restore_energy", "fraction": 0.5}]}]
+      }
+    },
+    {
+      "id": "tp_h_consumed_knockout",
+      "name": "TP Held Consumed Knockout",
+      "description": "Tests a consumed knockout trigger: the first knockout fully heals the holder and uses the item up.",
+      "category": "held",
+      "price": 250,
+      "held": {
+        "use": "consumed",
+        "triggers": [{"on": "knockout", "effects": [{"op": "heal", "fraction": 1.0}]}]
+      }
+    },
+    {
+      "id": "tp_h_consumed_faint",
+      "name": "TP Held Consumed Faint",
+      "description": "Tests a consumed faint trigger: when the holder faints, the attacker is Shocked (the item is used up).",
+      "category": "held",
+      "price": 250,
+      "held": {
+        "use": "consumed",
+        "triggers": [{"on": "faint", "effects": [{"op": "apply_status", "status": "shock"}]}]
+      }
+    },
+    {
+      "id": "tp_h_pb_enter",
+      "name": "TP Held Per Battle Enter",
+      "description": "Tests a per_battle enter trigger: once per battle, entering scorches the enemy side.",
+      "category": "held",
+      "price": 400,
+      "held": {
+        "use": "per_battle",
+        "triggers": [
+          {
+            "on": "enter",
+            "effects": [{"op": "apply_field_state", "side": "enemy", "state": "scorched"}]
+          }
+        ]
+      }
+    },
+    {
+      "id": "tp_h_pb_hit_contact",
+      "name": "TP Held Per Battle Contact Hit",
+      "description": "Tests a per_battle contact hit trigger: the first physical hit each battle lowers the attacker's Physical Attack.",
+      "category": "held",
+      "price": 500,
+      "held": {
+        "use": "per_battle",
+        "triggers": [
+          {
+            "on": "hit",
+            "contact": true,
+            "effects": [{"op": "stat_stage", "stat": "patk", "stages": -1, "target": "attacker"}]
+          }
+        ]
+      }
+    },
+    {
+      "id": "tp_h_pb_round_end",
+      "name": "TP Held Per Battle Round End",
+      "description": "Tests a per_battle round_end trigger with a field condition: once per battle, heals a tenth at round end if Overgrown is on its side.",
+      "category": "held",
+      "price": 450,
+      "held": {
+        "use": "per_battle",
+        "triggers": [
+          {
+            "on": "round_end",
+            "when": {"field": "overgrown", "side": "own"},
+            "effects": [{"op": "heal", "fraction": 0.1}]
+          }
+        ]
+      }
+    },
+    {
+      "id": "tp_h_pb_knockout",
+      "name": "TP Held Per Battle Knockout",
+      "description": "Tests a per_battle knockout trigger with underdog: once per battle, a knockout while outnumbered restores half its energy.",
+      "category": "held",
+      "price": 450,
+      "held": {
+        "use": "per_battle",
+        "triggers": [
+          {
+            "on": "knockout",
+            "when": {"underdog": true},
+            "effects": [{"op": "restore_energy", "fraction": 0.5}]
+          }
+        ]
+      }
+    },
+    {
+      "id": "tp_h_pb_faint",
+      "name": "TP Held Per Battle Faint",
+      "description": "Tests a per_battle faint trigger: when the holder faints, the attacker takes half its HP in damage.",
+      "category": "held",
+      "price": 600,
+      "held": {
+        "use": "per_battle",
+        "triggers": [{"on": "faint", "effects": [{"op": "damage_fraction", "fraction": 0.5}]}]
+      }
+    }
   ]
 }

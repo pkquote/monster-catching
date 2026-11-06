@@ -1,0 +1,42 @@
+{
+  "schema": 1,
+  "entries": [
+    {
+      "id": "shadow_claw",
+      "name": "Shadow Claw",
+      "description": "A slash from the darkness.",
+      "type": "dark",
+      "category": "physical",
+      "power": 50,
+      "cost": 4,
+      "accuracy": 100,
+      "target": "one_enemy",
+      "effects": [{"op": "damage"}]
+    },
+    {
+      "id": "dusk_pulse",
+      "name": "Dusk Pulse",
+      "description": "A ripple of cold shadow.",
+      "type": "dark",
+      "category": "special",
+      "power": 40,
+      "cost": 2,
+      "accuracy": 100,
+      "target": "one_enemy",
+      "effects": [{"op": "damage"}]
+    },
+    {
+      "id": "shroud",
+      "name": "Shroud",
+      "description": "Smothers the enemy side in shadow.",
+      "type": "dark",
+      "category": "status",
+      "power": 0,
+      "cost": 4,
+      "accuracy": 100,
+      "always_hits": true,
+      "target": "enemy_side",
+      "effects": [{"op": "apply_field_state", "side": "enemy", "state": "shrouded"}]
+    }
+  ]
+}

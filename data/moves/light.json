@@ -1,0 +1,43 @@
+{
+  "schema": 1,
+  "entries": [
+    {
+      "id": "flash_strike",
+      "name": "Flash Strike",
+      "description": "A strike quick as a flash of light.",
+      "type": "light",
+      "category": "physical",
+      "power": 40,
+      "cost": 2,
+      "accuracy": 100,
+      "priority": 1,
+      "target": "one_enemy",
+      "effects": [{"op": "damage"}]
+    },
+    {
+      "id": "light_beam",
+      "name": "Light Beam",
+      "description": "A focused beam of radiance.",
+      "type": "light",
+      "category": "special",
+      "power": 50,
+      "cost": 4,
+      "accuracy": 100,
+      "target": "one_enemy",
+      "effects": [{"op": "damage"}]
+    },
+    {
+      "id": "radiance",
+      "name": "Radiance",
+      "description": "Bathes your own side in warm light.",
+      "type": "light",
+      "category": "status",
+      "power": 0,
+      "cost": 4,
+      "accuracy": 100,
+      "always_hits": true,
+      "target": "own_side",
+      "effects": [{"op": "apply_field_state", "side": "own", "state": "radiant"}]
+    }
+  ]
+}

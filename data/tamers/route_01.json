@@ -8,14 +8,8 @@
       "ai": "basic",
       "reward_money": 200,
       "party": [
-        {
-          "species": "sprigling",
-          "level": 5
-        },
-        {
-          "species": "emberkit",
-          "level": 6
-        }
+        {"species": "sprigling", "level": 5},
+        {"species": "emberkit", "level": 6}
       ]
     },
     {
@@ -25,25 +19,10 @@
       "ai": "tactician",
       "reward_money": 500,
       "party": [
-        {
-          "species": "voltmoth",
-          "level": 7,
-          "moves": [
-            "spark_bite",
-            "static_field"
-          ]
-        },
-        {
-          "species": "frostling",
-          "level": 7
-        }
+        {"species": "voltmoth", "level": 7, "moves": ["spark_bite", "static_field"]},
+        {"species": "frostling", "level": 7}
       ],
-      "items": [
-        {
-          "item": "salve",
-          "count": 1
-        }
-      ]
+      "items": [{"item": "salve", "count": 1}]
     },
     {
       "id": "rival_lab",
@@ -51,12 +30,7 @@
       "max_active": 1,
       "ai": "basic",
       "reward_money": 100,
-      "party": [
-        {
-          "species": "sprigling",
-          "level": 5
-        }
-      ]
+      "party": [{"species": "sprigling", "level": 5}]
     },
     {
       "id": "hiker_tom",
@@ -65,14 +39,8 @@
       "ai": "basic",
       "reward_money": 250,
       "party": [
-        {
-          "species": "pebblet",
-          "level": 6
-        },
-        {
-          "species": "sprigling",
-          "level": 6
-        }
+        {"species": "pebblet", "level": 6},
+        {"species": "sprigling", "level": 6}
       ]
     }
   ]

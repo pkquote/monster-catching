@@ -7,6 +7,7 @@ extends Control
 ## overworld does this so a map and any running conversation survive the battle).
 ## Optional params: "seed" (int), "return_to" (scene path, default the world).
 
+const NO_ROOM := "No room for another creature."
 const STAGE_H := 236
 ## Rows of options that fit the bottom panel under the menu title.
 const MENU_ROWS := 3
@@ -244,6 +245,11 @@ func _foe_options(pool: Array) -> Array:
 		"value": t.bid, "hint": t.bid})
 
 
+## True when a catch would have nowhere to go (exhibitions keep nothing, so they are never full).
+func _no_room_to_catch() -> bool:
+	return not setup.exhibition and GameState.has_game() and BattleLauncher.room_left(db, GameState.current) == 0
+
+
 func _item_choices() -> Array:
 	var out: Array = []
 	var bag: Dictionary = engine.sides[0].items
@@ -254,7 +260,11 @@ func _item_choices() -> Array:
 			continue
 		if item.category == "capture" and not setup.is_wild:
 			continue
-		out.append({"label": "%s ×%d" % [item.name, count], "value": id})
+		var label := "%s ×%d" % [item.name, count]
+		var full := item.category == "capture" and _no_room_to_catch()
+		if full:
+			label += " — " + NO_ROOM
+		out.append({"label": label, "value": id, "disabled": full})
 	return out
 
 

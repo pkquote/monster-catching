@@ -322,3 +322,61 @@ func test_other_target_kinds_are_unchanged() -> void:
 	await _pick(scene, "Wild Voltmoth")
 	assert_array(await _damaged_foes(scene, foes)).is_equal([foes[2]])
 	remove_child(scene)
+
+
+# --- Capture needs room ---------------------------------------------------------------
+
+func _capture_scene_with_room(empty_slots: int) -> Node:
+	GameState.close_game()
+	assert_str(GameState.start_new_game("Ana")).is_empty()
+	var save := GameState.current
+	for i in db.balance.party_size:
+		save.party.append(CreatureInstance.create(db, "tidepup", 10))
+	for i in save.storage.size() - empty_slots:
+		save.storage[i] = CreatureInstance.create(db, "tidepup", 5)
+	var party := [CreatureInstance.create(db, "tidepup", 12)]
+	var pack := [CreatureInstance.create(db, "sprigling", 3)]
+	return _scene(BattleSetup.wild(party, pack, 1, {"lure_cage": 2, "salve": 1}))
+
+
+func test_capture_items_are_disabled_when_nothing_has_room() -> void:
+	var scene: Node = await _capture_scene_with_room(0)
+	await _wait_phase(scene, ["command"])
+	assert_bool(scene.menu.pick_label("Items")).is_true()
+	await get_tree().process_frame
+	var labels := Array(scene.menu.labels())
+	assert_bool(labels.any(func(l): return l.begins_with("Lure Cage") and l.contains("No room for another creature."))).is_true()
+	assert_bool(scene.menu.pick_label("Lure Cage")).is_false()  # disabled
+	remove_child(scene)
+	GameState.close_game()
+
+
+func test_capture_items_work_with_one_empty_slot() -> void:
+	var scene: Node = await _capture_scene_with_room(1)
+	await _wait_phase(scene, ["command"])
+	assert_bool(scene.menu.pick_label("Items")).is_true()
+	await get_tree().process_frame
+	var labels := Array(scene.menu.labels())
+	assert_bool(labels.any(func(l): return l.begins_with("Lure Cage") and not l.contains("No room"))).is_true()
+	assert_bool(scene.menu.pick_label("Lure Cage")).is_true()
+	remove_child(scene)
+	GameState.close_game()
+
+
+func test_exhibition_capture_is_not_limited_by_room() -> void:
+	GameState.close_game()
+	assert_str(GameState.start_new_game("Ana")).is_empty()
+	var save := GameState.current
+	for i in db.balance.party_size:
+		save.party.append(CreatureInstance.create(db, "tidepup", 10))
+	for i in save.storage.size():
+		save.storage[i] = CreatureInstance.create(db, "tidepup", 5)
+	var setup := BattleSetup.wild([CreatureInstance.create(db, "tidepup", 12)], [CreatureInstance.create(db, "sprigling", 3)], 1, {"lure_cage": 2})
+	setup.exhibition = true
+	var scene: Node = _scene(setup)
+	await _wait_phase(scene, ["command"])
+	assert_bool(scene.menu.pick_label("Items")).is_true()
+	await get_tree().process_frame
+	assert_bool(scene.menu.pick_label("Lure Cage")).is_true()
+	remove_child(scene)
+	GameState.close_game()

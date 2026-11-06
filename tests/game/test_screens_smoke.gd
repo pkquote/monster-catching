@@ -104,7 +104,7 @@ func _big_save(box: int = 0) -> SaveGame:
 	for i: int in BIG:
 		save.party.append(_mon(i))
 	for i: int in box:
-		save.storage.append(_mon(i, "Box"))
+		BoxStorage.add(save, _mon(i, "Box"))
 	return save
 
 
@@ -196,74 +196,6 @@ func test_big_party_summary_steps_through_everyone() -> void:
 	for i: int in BIG:
 		want.append("Mon%02d" % (i + 1))
 	assert_array(seen).is_equal(want)
-	s.close()
-
-
-func test_big_party_storage_fits_and_reaches_everyone() -> void:
-	var save: SaveGame = _big_save(15)
-	StorageScreen.run(self, save, DataRegistry.db)
-	await get_tree().process_frame
-	var s: StorageScreen = WorldTest.find_screen(self, StorageScreen) as StorageScreen
-	await get_tree().process_frame
-	ScreenFit.check(self, s)
-	var area: Rect2 = s.menu_area().get_global_rect()
-	_expect_all(await _reach(s.menu, "Party: Mon", area, "Party page"), "Mon", BIG)
-	ScreenFit.check(self, s)
-	_expect_all(await _reach(s.menu, "Box: Box", area, "Next page"), "Box", 15)
-	# Swap a box creature with the last party creature, picked from the party pages.
-	assert_bool(s.menu.pick_label("Previous page")).is_true()
-	await get_tree().process_frame
-	await get_tree().process_frame
-	assert_bool(s.menu.pick_label("Box: Box01")).is_true()
-	await get_tree().process_frame
-	assert_bool(s.menu.pick_label("Swap with a party creature")).is_true()
-	await get_tree().process_frame
-	await get_tree().process_frame
-	ScreenFit.check(self, s)
-	_expect_all(await _reach(s.menu, "Party: Mon", area, "Party page"), "Mon", BIG)
-	var box01: CreatureInstance = save.storage[0]
-	for i: int in 3:
-		await get_tree().process_frame
-		await get_tree().process_frame
-		if s.menu.pick_label("Party: Mon12"):
-			break
-		assert_bool(s.menu.pick_label("Party page")).is_true()
-	await get_tree().process_frame
-	assert_object(save.party[11]).is_same(box01)
-	s.close()
-
-
-func _storage_pick(s: StorageScreen, label: String) -> void:
-	await get_tree().process_frame
-	await get_tree().process_frame
-	assert_bool(s.menu.pick_label(label)).override_failure_message("no option " + label).is_true()
-	await get_tree().process_frame
-
-
-## Deposit and withdraw act on the creature picked on party page 2, by identity.
-func test_big_party_storage_deposit_and_withdraw_from_party_page_two() -> void:
-	var save: SaveGame = _big_save(3)
-	var mon10: CreatureInstance = save.party[9]
-	StorageScreen.run(self, save, DataRegistry.db)
-	await get_tree().process_frame
-	var s: StorageScreen = WorldTest.find_screen(self, StorageScreen) as StorageScreen
-	await _storage_pick(s, "Party page")
-	assert_bool(Array(s.menu.labels()).has("Party page 2 of 2")).is_true()
-	await _storage_pick(s, "Party: Mon10")
-	await _storage_pick(s, "Deposit")
-	assert_int(save.party.size()).is_equal(BIG - 1)
-	assert_bool(save.party.has(mon10)).is_false()
-	assert_object(save.storage.back()).is_same(mon10)
-	assert_str(save.party[9].nickname).is_equal("Mon11")
-	# Still on party page 2, which now ends with Mon12; withdraw Mon10 back from the box.
-	assert_bool(Array(s.menu.labels()).any(func(l: String) -> bool: return l.begins_with("Party: Mon12"))).is_true()
-	await _storage_pick(s, "Box: Mon10")
-	await _storage_pick(s, "Withdraw")
-	assert_int(save.party.size()).is_equal(BIG)
-	assert_object(save.party.back()).is_same(mon10)
-	assert_bool(save.storage.has(mon10)).is_false()
-	assert_bool(Array(s.menu.labels()).any(func(l: String) -> bool: return l.begins_with("Party: Mon10"))).is_true()
-	ScreenFit.check(self, s)
 	s.close()
 
 
@@ -367,15 +299,6 @@ func test_big_party_results_panel_fits() -> void:
 func test_six_creature_lists_do_not_page() -> void:
 	var save: SaveGame = _big_save(15)
 	save.party.resize(6)
-	StorageScreen.run(self, save, DataRegistry.db)
-	await get_tree().process_frame
-	var s: StorageScreen = WorldTest.find_screen(self, StorageScreen) as StorageScreen
-	await get_tree().process_frame
-	ScreenFit.check(self, s)
-	var party_rows: int = Array(s.menu.labels()).filter(func(l: String) -> bool: return l.begins_with("Party: ")).size()
-	assert_int(party_rows).is_equal(6)
-	assert_bool(Array(s.menu.labels()).any(func(l: String) -> bool: return l.begins_with("Party page"))).is_false()
-	s.close()
 	save.inventory = {"salve": 3}
 	GameState.current = save
 	var m: PauseMenu = auto_free(PauseMenu.new())

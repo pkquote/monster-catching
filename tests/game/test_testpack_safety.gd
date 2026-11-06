@@ -45,8 +45,8 @@ func test_fill_box_never_adds_a_pack_creature() -> void:
 	var save: SaveGame = SaveGame.new_game("Ana", 1000, rng)
 	for batch: int in 10:
 		BattleLauncher.fill_box(db, save, 12, 7, rng)
-	assert_int(save.storage.size()).is_equal(120)
-	for c: CreatureInstance in save.storage:
+	assert_int(BoxStorage.count(save)).is_equal(120)
+	for c: CreatureInstance in BoxStorage.all_creatures(save):
 		assert_bool(Database.is_test_content(c.species)).override_failure_message(c.species).is_false()
 		assert_int(c.level).is_equal(7)
 

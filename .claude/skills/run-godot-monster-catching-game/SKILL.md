@@ -122,6 +122,12 @@ to `qNN_12_...` (NN = the party size), so runs at 6 and 12 can share a folder. A
 timeout 300 "$GODOT" --path . --script res://.claude/skills/run-godot-monster-catching-game/driver.gd -- --mode=party --party-size=12 --out="$TMPDIR/party_shots" 2>&1 | grep "\[driver\]"
 ```
 
+**Box tour** (`--mode=box`): new game -> F1 test party, Fill box x4 -> the centre's Storage Box -> browse (the card follows the cursor) -> pick up and place -> mark three (V) and carry them to the next box -> a refusal in the help line -> F1 Unlock a box -> Menu > Party with its card. About 15 s.
+
+```bash
+timeout 300 "$GODOT" --path . --script res://.claude/skills/run-godot-monster-catching-game/driver.gd -- --mode=box --out="$TMPDIR/box_shots" 2>&1 | grep "\[driver\]"
+```
+
 **Bag tour** (`--mode=bag`): new game -> F1 test party (Tidepup set to 1 HP) -> a Salve, an Oran Berry, a Lure Cage
 and an item with a very long description (added to the loaded content in memory only, never to `data/`) in the bag ->
 Menu -> Bag -> real Down keys through the list: the left pane shows each focused item (icon, name, category, count,
@@ -148,6 +154,7 @@ timeout 60 "$GODOT" --path . --script res://.claude/skills/run-godot-monster-cat
 | `--mode=held` | the held-items tour above (`h01_…` to `h06_…` screenshots) |
 | `--mode=builder` | the team-builder tour above (`t01_…` to `t12_…` screenshots) |
 | `--mode=party` | the party tour above (`qNN_01_…` to `qNN_12_…`); `--party-size=N` sets the party size in memory |
+| `--mode=box` | the box tour (`bx01_…` to `bx07_…`): browse, pick up and place, a marked group moved to another box, a refusal, Unlock a box, the Party screen with its card |
 | `--mode=bag` | the bag tour above (`bag01_…` to `bag07_…` screenshots) |
 | `--mode=ui` | the F1 UI gallery: the creature card at Lv 5, 50, 99 and a dual-type creature with a long nickname (`u01_…` to `u04_…`) |
 | `--mode=scene` | open `--scene` (default: main scene), wait `--frames` (default 60), screenshot |

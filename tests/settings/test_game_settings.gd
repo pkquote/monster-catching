@@ -71,3 +71,34 @@ func test_reset_bindings() -> void:
 	s.rebind("accept", "keyboard", {"type": "key", "keycode": KEY_SPACE})
 	s.reset_bindings()
 	assert_dict(s.bindings).is_equal(GameSettings.default_bindings())
+
+
+func test_mark_is_a_rebindable_action_with_defaults() -> void:
+	assert_bool(GameSettings.ACTIONS.has("mark")).is_true()
+	assert_bool(GameSettings.ACTION_LABELS.has("mark")).is_true()
+	var b := GameSettings.default_bindings()
+	assert_int(b.mark.keyboard[0].keycode).is_equal(KEY_V)
+	assert_int(b.mark.gamepad[0].button).is_equal(JOY_BUTTON_Y)
+
+
+func test_old_settings_without_mark_get_the_default() -> void:
+	var d := GameSettings.new().to_dict()
+	d.controls.erase("mark")
+	var s := GameSettings.from_dict(d)
+	assert_dict(s.bindings.mark).is_equal(GameSettings.default_bindings().mark)
+
+
+func test_mark_is_registered_in_the_input_map() -> void:
+	Settings.apply_controls()
+	assert_bool(InputMap.has_action("mark")).is_true()
+
+
+func test_shoulder_actions_are_rebindable_with_defaults() -> void:
+	for a in ["prev_creature", "next_creature"]:
+		assert_bool(GameSettings.ACTIONS.has(a)).is_true()
+		assert_bool(GameSettings.ACTION_LABELS.has(a)).is_true()
+	var b := GameSettings.default_bindings()
+	assert_int(b.prev_creature.keyboard[0].keycode).is_equal(KEY_PAGEUP)
+	assert_int(b.next_creature.keyboard[0].keycode).is_equal(KEY_PAGEDOWN)
+	assert_int(b.prev_creature.gamepad[0].button).is_equal(JOY_BUTTON_LEFT_SHOULDER)
+	assert_int(b.next_creature.gamepad[0].button).is_equal(JOY_BUTTON_RIGHT_SHOULDER)

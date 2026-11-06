@@ -45,7 +45,7 @@ func test_team_add_respects_changed_size() -> void:
 	assert_int(s.party.size()).is_equal(8)
 	assert_bool(BattleLauncher.add_to_party(db, s, FixtureDB.make(db, "fish", 3))).is_false()
 	assert_int(s.party.size()).is_equal(8)
-	assert_int(s.storage.size()).is_equal(1)
+	assert_int(BoxStorage.count(s)).is_equal(1)
 
 
 func test_oversized_party_in_save_is_kept() -> void:
@@ -53,7 +53,7 @@ func test_oversized_party_in_save_is_kept() -> void:
 	var s: SaveGame = _save_with(db, 5)
 	assert_bool(BattleLauncher.add_to_party(db, s, FixtureDB.make(db, "fish", 3))).is_false()
 	assert_int(s.party.size()).is_equal(5)
-	assert_int(s.storage.size()).is_equal(1)
+	assert_int(BoxStorage.count(s)).is_equal(1)
 
 
 func test_shipped_balance_allows_one_field_state() -> void:

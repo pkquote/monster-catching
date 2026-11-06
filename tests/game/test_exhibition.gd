@@ -142,7 +142,7 @@ func test_a_wild_exhibition_capture_does_not_reach_party_or_storage() -> void:
 	assert_int(scene.engine.result().captured.size()).is_equal(1)
 	assert_int(int(scene.engine.sides[0].items.get("lure_cage", 0))).is_less(20)
 	assert_int(GameState.current.party.size()).is_equal(party_before)
-	assert_int(GameState.current.storage.size()).is_equal(0)
+	assert_int(BoxStorage.count(GameState.current)).is_equal(0)
 	assert_int(int(GameState.current.inventory.lure_cage)).is_equal(20)
 	assert_str(_snapshot()).is_equal(before_snap)
 	scene.queue_free()

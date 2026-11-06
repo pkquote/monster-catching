@@ -29,12 +29,14 @@ static func save_safe_species(db: Database) -> Array:
 	return out
 
 
-## Debug helper: adds `count` random save-safe creatures at `level` to the box.
+## Debug helper: adds up to `count` random save-safe creatures at `level` to the box.
 static func fill_box(db: Database, save: SaveGame, count: int, level: int, rng: RandomNumberGenerator) -> void:
 	var species: Array = save_safe_species(db)
 	for i: int in count:
-		save.storage.append(CreatureInstance.create(db, species[rng.randi() % species.size()], level,
-			PackedStringArray(), rng))
+		var c := CreatureInstance.create(db, species[rng.randi() % species.size()], level,
+			PackedStringArray(), rng)
+		if not BoxStorage.add(save, c):
+			return
 
 
 ## Debug helper until starters exist (M3): a small party and bag, once per playthrough.
@@ -171,10 +173,19 @@ static func apply_results(db: Database, save: SaveGame, engine: BattleEngine) ->
 	return summary
 
 
+## Places a new creature could still go: free party room plus empty box slots.
+static func room_left(db: Database, save: SaveGame) -> int:
+	return maxi(int(db.balance.party_size) - save.party.size(), 0) + BoxStorage.empty_count(save)
+
+
 ## Adds to the party, or to storage when the party is full. Returns true for party.
 static func add_to_party(db: Database, save: SaveGame, c: CreatureInstance) -> bool:
 	if save.party.size() < db.balance.party_size:
 		save.party.append(c)
 		return true
-	save.storage.append(c)
+	if not BoxStorage.add(save, c):
+		# Never lose a creature: open another box (capture is refused up front when full).
+		if not BoxStorage.unlock_box(save) or not BoxStorage.add(save, c):
+			save.storage.append(c)
+			save.boxes_unlocked = ceili(save.storage.size() / float(BoxStorage.BOX_SIZE))
 	return false

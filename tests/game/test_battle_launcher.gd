@@ -79,7 +79,7 @@ func test_full_party_sends_catches_to_storage() -> void:
 	e.resolve_round([BattleAction.use_item(e.sides[0].active()[0].bid, "master_cage", e.sides[1].active()[0].bid)])
 	var summary := BattleLauncher.apply_results(db, s, e)
 	assert_int(summary.to_storage).is_equal(1)
-	assert_int(s.storage.size()).is_equal(1)
+	assert_int(BoxStorage.count(s)).is_equal(1)
 
 
 func test_loss_no_longer_heals() -> void:

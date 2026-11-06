@@ -238,7 +238,7 @@ func test_fill_box_adds_12() -> void:
 	DebugMenu.open()
 	_labels()["Fill box"].pressed.emit()
 	await get_tree().process_frame
-	var box := GameState.current.storage
+	var box := BoxStorage.all_creatures(GameState.current)
 	assert_int(box.size()).is_equal(12)
 	for b: CreatureInstance in box:
 		assert_int(b.level).is_equal(9)
@@ -425,4 +425,36 @@ func test_battle_starts_after_the_count_even_if_the_menu_was_closed() -> void:
 	for i in 10:
 		await get_tree().process_frame
 	assert_bool(world.battles.in_battle()).is_true()
+	WorldTest.close(world)
+
+
+func test_unlock_a_box_adds_one_box_and_reports_it() -> void:
+	var world := await _open_world_with(CreatureInstance.create(DataRegistry.db, "tidepup", 9))
+	DebugMenu.open()
+	_labels()["Unlock a box"].pressed.emit()
+	await get_tree().process_frame
+	var save := GameState.current
+	assert_int(save.boxes_unlocked).is_equal(9)
+	assert_int(BoxStorage.slot_count(save)).is_equal(270)
+	assert_str(DebugMenu._status.text).is_equal("9 boxes.")
+	while BoxStorage.unlock_box(save):
+		pass
+	DebugMenu.show_page(DebugMainPage.new())
+	await get_tree().process_frame
+	assert_bool(_labels()["Unlock a box"].disabled).is_true()
+	DebugMenu.close()
+	WorldTest.close(world)
+
+
+func test_fill_box_stops_at_capacity() -> void:
+	var world := await _open_world_with(CreatureInstance.create(DataRegistry.db, "tidepup", 9))
+	var save := GameState.current
+	for i in 235:
+		save.storage[i] = CreatureInstance.create(DataRegistry.db, "tidepup", 9)
+	DebugMenu.open()
+	_labels()["Fill box"].pressed.emit()
+	await get_tree().process_frame
+	assert_int(BoxStorage.count(save)).is_equal(240)
+	assert_int(BoxStorage.slot_count(save)).is_equal(240)
+	DebugMenu.close()
 	WorldTest.close(world)

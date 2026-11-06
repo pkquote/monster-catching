@@ -20,6 +20,8 @@ extends SceneTree
 ##                        sets balance.party_size in memory only (data/balance.json is untouched).
 ##   --mode=bag           Menu -> Bag: the left pane follows the focused item (heal, held, capture and a
 ##                        very long description added in memory), Back shows "Pick an item.".
+##   --mode=box           the slot boxes: browse, pick up and place, a marked group carried to another box, a refusal,
+##                        F1 Unlock a box, the Party screen with its card
 ##   --mode=ui            F1 UI gallery: the creature card (sprite, radar, bars, moves) at Lv 5, 50 and 99
 ##   --mode=scene         open one scene, wait, screenshot. Use with --scene / --frames.
 ##   --scene=res://...    scene for --mode=scene (default: the project's main scene)
@@ -47,7 +49,7 @@ func _initialize() -> void:
 	match _opts.mode:
 		"scene":
 			_run_scene()
-		"battle", "overworld", "progress", "passives", "held", "builder", "party", "bag", "ui":
+		"battle", "overworld", "progress", "passives", "held", "builder", "party", "bag", "ui", "box":
 			_tour(_opts.mode)
 		_:
 			_tour("frontend")

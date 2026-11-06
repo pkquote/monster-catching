@@ -26,6 +26,20 @@ func test_header_shows_name_and_level() -> void:
 	assert_str(card.header_text()).is_equal("Tidepup  Lv 12")
 
 
+func test_show_empty_replaces_the_creature_with_a_label() -> void:
+	var card := _card()
+	card.show_creature(db, CreatureInstance.create(db, "tidepup", 12))
+	card.show_empty()
+	await _settle()
+	assert_str(card.header_text()).is_equal("Empty")
+	assert_array(card.move_texts()).is_empty()
+	assert_str(card.passive_text()).is_empty()
+	assert_vector(card.size).is_equal(CreatureCard.SIZE)
+	card.show_creature(db, CreatureInstance.create(db, "tidepup", 3))
+	await _settle()
+	assert_str(card.header_text()).is_equal("Tidepup  Lv 3")
+
+
 func test_moves_listed_for_four_two_and_zero_moves() -> void:
 	var card := _card()
 	var c := CreatureInstance.create(db, "tidepup", 16)

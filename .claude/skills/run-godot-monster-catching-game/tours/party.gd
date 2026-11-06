@@ -30,7 +30,7 @@ func run() -> void:
 	for i: int in size:
 		gs.current.party.append(CreatureInstance.create(db, species[i % species.size()], 8 + i))
 	for i: int in 12:
-		gs.current.storage.append(CreatureInstance.create(db, species[(i + 1) % species.size()], 5))
+		BoxStorage.add(gs.current, CreatureInstance.create(db, species[(i + 1) % species.size()], 5))
 	gs.current.inventory["salve"] = 3
 	d.expect(gs.current.party.size() == size, "a party of %d" % size)
 
@@ -80,29 +80,35 @@ func run() -> void:
 	await d.pick_menu("Close")
 	await d.wait_unlocked(ow)
 
-	# 4. The centre's Storage Box: party rows beside box rows.
+	# 4. The centre's Storage Box: the party column, the box grid and the card.
 	await ow.change_map("town_01_center", "entry")
 	await d._frames(10)
 	ow.player.place(d._tile_centre(8, 3), Vector2i.UP)
 	await d.key(KEY_Z)
 	await d._frames(5)
 	await d.shot(tag + "07_storage")
-	var sm = d._find_menu()
-	var screen = d._screen_of(sm) if sm != null else null
-	d.expect(screen != null and ScreenFit.problems(screen).is_empty() and not ScreenFit.needs_scroll(screen),
-		"the storage screen fits without scrolling")
-	if sm != null and sm.labels().size() > 0 and Array(sm.labels()).any(func(l): return l.begins_with("Party page")):
-		await d.pick_menu("Party page")
-		await d._frames(5)
-		await d.shot(tag + "08_storage_party_page2")
-		d.expect(not ScreenFit.needs_scroll(screen), "party page 2 fits without scrolling")
-	await d.pick_menu("Box: ")
-	await d.pick_menu("Swap with a party creature")
-	await d._frames(5)
-	await d.shot(tag + "09_storage_swap_pick_party")
-	d.expect(not ScreenFit.needs_scroll(screen), "the swap party list fits without scrolling")
-	await d.pick_menu("Cancel")
-	await d.pick_menu("Back")
+	var screen = null
+	for n in d._find_all(d.current_scene, "CanvasLayer"):
+		if n.get_script() != null and n.get_script().get_global_name() == "StorageScreen":
+			screen = n
+	d.expect(screen != null, "the Storage Box opens the box screen")
+	if screen != null:
+		d.expect(screen.party_buttons().size() >= size, "the party column has a slot for each of the %d" % size)
+		var all_in := true
+		for b in screen.party_buttons() + screen.box_buttons() + [screen.card()]:
+			all_in = all_in and ScreenFit.VIEW.encloses(b.get_global_rect().grow(-0.5))
+		d.expect(all_in, "every slot and the card are on the screen")
+		screen.party_buttons()[size - 1].grab_focus()
+		await d._frames(3)
+		await d.shot(tag + "08_storage_last_party_slot")
+		d.expect(screen.card().header_text().begins_with(gs.current.party[size - 1].display_name(db)),
+			"the card follows the cursor to the last party creature")
+		await d.key(KEY_Z)
+		screen.box_buttons()[20].grab_focus()
+		await d._frames(3)
+		await d.shot(tag + "09_storage_carrying")
+		await d.key(KEY_X)  # put it down again
+		await d.key(KEY_X)  # and close
 	await d.wait_unlocked(ow)
 
 	# 5. A singles wild battle: the Swap menu holds the whole bench, then an item's targets.

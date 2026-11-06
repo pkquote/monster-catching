@@ -60,7 +60,7 @@ don't rename collected items or beaten tamers after release.
 | `HealSpot` | `respawn` | Place it on a counter. "Rest your team?" heals everyone, and you wake at `respawn` after losing. |
 | `ShopCounter` | `stock` | Place it on a counter. Opens the shop with these item ids; prices come from the item data. |
 | `MinigameSpot` | `minigame`, `dialogue`, `title` | Accept runs `title`; the script starts the game with `Story.start_minigame("<id>")`. |
-| `StorageBox` | none | Solid terminal. Accept while facing it opens the creature storage (deposit, withdraw, swap). |
+| `StorageBox` | none | Solid terminal. Accept while facing it opens the creature boxes: a grid of slots (8 boxes of 30 to start), pick up and place one creature or a marked group, with the creature card following the cursor. |
 | `UnsafeArea` | `size` | Marks a rectangle where creatures can't be swapped from the Party screen (the Storage option is disabled and says so). Put it over deep grass or wherever a safe swap would feel wrong. |
 | `Sign` | `text` | Accept shows the text. |
 

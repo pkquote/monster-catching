@@ -16,10 +16,12 @@ const BATTLE_SPEEDS := [1, 2, 4]
 const WINDOW_SCALES := [2, 3, 4]
 
 ## Rebindable game actions, in the order the Controls tab shows them.
-const ACTIONS := ["move_up", "move_down", "move_left", "move_right", "accept", "cancel", "menu", "run"]
+const ACTIONS := ["move_up", "move_down", "move_left", "move_right", "accept", "cancel", "menu", "run", "mark",
+	"prev_creature", "next_creature"]
 const ACTION_LABELS := {
 	"move_up": "Move up", "move_down": "Move down", "move_left": "Move left", "move_right": "Move right",
-	"accept": "Accept", "cancel": "Cancel / back", "menu": "Menu", "run": "Run",
+	"accept": "Accept", "cancel": "Cancel / back", "menu": "Menu", "run": "Run", "mark": "Mark",
+	"prev_creature": "Previous creature / box", "next_creature": "Next creature / box",
 }
 
 var master_volume := 0.8
@@ -45,6 +47,9 @@ static func default_bindings() -> Dictionary:
 		"cancel": {"keyboard": [_key(KEY_X), _key(KEY_ESCAPE)], "gamepad": [_jbtn(JOY_BUTTON_B)]},
 		"menu": {"keyboard": [_key(KEY_C), _key(KEY_TAB)], "gamepad": [_jbtn(JOY_BUTTON_START)]},
 		"run": {"keyboard": [_key(KEY_SHIFT)], "gamepad": [_jbtn(JOY_BUTTON_X)]},
+		"mark": {"keyboard": [_key(KEY_V)], "gamepad": [_jbtn(JOY_BUTTON_Y)]},
+		"prev_creature": {"keyboard": [_key(KEY_PAGEUP)], "gamepad": [_jbtn(JOY_BUTTON_LEFT_SHOULDER)]},
+		"next_creature": {"keyboard": [_key(KEY_PAGEDOWN)], "gamepad": [_jbtn(JOY_BUTTON_RIGHT_SHOULDER)]},
 	}
 
 

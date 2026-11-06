@@ -5,7 +5,13 @@ extends ProgressScreen
 
 const UNSAFE_TEXT := "It isn't safe to swap creatures here."
 
+## Width of a row: the card takes the left of the screen (set_side).
+const COLUMN_WIDTH := 306
+const ROW_SPRITE := 18
+const BAR_WIDTH := 56
+
 var _world: Overworld
+var _card: CreatureCard
 
 
 ## Runs until the player closes the list.
@@ -18,13 +24,32 @@ static func run(world: Overworld, save: SaveGame = null, db: Database = null) ->
 	screen.close()
 
 
+func _init() -> void:
+	_card = CreatureCard.new()  # built before the screen joins the tree, as the Summary does
+	set_side(_card)
+
+
+func _ready() -> void:
+	super()
+	menu.button_width = COLUMN_WIDTH
+
+
+func card() -> CreatureCard:
+	return _card
+
+
+## The row's text: name, level and HP, then (on a second line) the status and growth badges.
+## Energy is the second bar.
 static func row_text(db: Database, c: CreatureInstance) -> String:
-	var line := "%s  Lv %d  HP %d/%d  EN %d/%d" % [c.display_name(db), c.level,
-		c.hp, c.max_hp(db), c.energy, c.max_energy(db)]
+	var line := "%s  Lv %d  HP %d/%d" % [c.display_name(db), c.level, c.hp, c.max_hp(db)]
+	var badges: Array[String] = []
 	if c.status != "":
-		line += "  " + db.status(c.status).name.to_upper()
+		badges.append(db.status(c.status).name.to_upper())
 	if Progression.growth_target(db, c) != "":
-		line += "  Ready to grow"
+		badges.append("Ready to grow")
+	if not badges.is_empty():
+		line += "
+" + "  ".join(badges)
 	return line
 
 
@@ -37,14 +62,24 @@ static func lead_line(db: Database, save: SaveGame) -> String:
 	return "Lead passive: " + def.name if def != null and not def.field.is_empty() else ""
 
 
-## A list row: the text, a placeholder sprite as the button icon, and HP / energy bars.
+## A list row: the text, a sprite on the left, and HP / energy bars on the right. The hint is the
+## party index, so the card can follow the cursor.
 static func _row_option(db: Database, c: CreatureInstance, value: int) -> Dictionary:
-	return {"label": row_text(db, c), "value": value, "decorate": func(b: Button) -> void:
-		var img := Image.create(14, 14, false, Image.FORMAT_RGBA8)
-		img.fill(species_color(c.species, db))
-		b.icon = ImageTexture.create_from_image(img)
-		_add_bar(b, 3, c.hp, c.max_hp(db), Color(0.35, 0.8, 0.4))
-		_add_bar(b, 12, c.energy, c.max_energy(db), Color(0.35, 0.6, 0.95))}
+	return {"label": row_text(db, c), "value": value, "hint": value, "decorate": func(b: Button) -> void:
+		# Keep the text clear of the sprite and the bars.
+		for style_name in ["normal", "hover", "pressed", "focus", "disabled"]:
+			var style := b.get_theme_stylebox(style_name).duplicate() as StyleBox
+			style.content_margin_left = ROW_SPRITE + 10
+			style.content_margin_right = BAR_WIDTH + 12
+			b.add_theme_stylebox_override(style_name, style)
+		b.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+		var sprite := CreatureSpriteSlot.new()
+		sprite.configure(db, c.species, ROW_SPRITE)
+		sprite.position = Vector2(5, 2)
+		sprite.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		b.add_child(sprite)
+		_add_bar(b, 4, c.hp, c.max_hp(db), Color(0.35, 0.8, 0.4))
+		_add_bar(b, 13, c.energy, c.max_energy(db), Color(0.35, 0.6, 0.95))}
 
 
 static func _add_bar(parent: Control, y: float, value: float, max_value: float, colour: Color) -> void:
@@ -53,8 +88,8 @@ static func _add_bar(parent: Control, y: float, value: float, max_value: float, 
 	bar.max_value = max_value
 	bar.value = value
 	bar.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	bar.position = Vector2(440, y)
-	bar.size = Vector2(150, 6)
+	bar.position = Vector2(COLUMN_WIDTH - BAR_WIDTH - 6, y)
+	bar.size = Vector2(BAR_WIDTH, 6)
 	var fill := StyleBoxFlat.new()
 	fill.bg_color = colour
 	var back := StyleBoxFlat.new()
@@ -75,10 +110,25 @@ func _loop() -> void:
 		for i in save.party.size():
 			options.append(_row_option(db, save.party[i], i))
 		options.append({"label": "Back", "value": -1})
+		_show_card(0)
+		menu.hovered.connect(_on_hover)
 		var i = await menu.choose("", options, true, 1)
+		menu.hovered.disconnect(_on_hover)
 		if i == null or i < 0:
 			return
 		await _row(i)
+
+
+func _on_hover(hint: Variant) -> void:
+	if hint is int:
+		_show_card(hint)  # Back and the end of a choice carry no hint: the card stays
+
+
+func _show_card(index: int) -> void:
+	if index >= 0 and index < _save.party.size():
+		_card.show_creature(_db, _save.party[index])
+	elif _save.party.is_empty():
+		_card.show_empty("No creatures")
 
 
 func _row(index: int) -> void:

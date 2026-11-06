@@ -2,7 +2,7 @@ class_name SaveGame
 extends RefCounted
 ## Everything a save file holds. Pure data; SaveStore handles files.
 
-const SCHEMA := 5
+const SCHEMA := 6
 const KIND_MANUAL := "manual"
 const KIND_AUTO := "auto"
 ## Where a new game starts (and where a save with no usable position resumes).
@@ -19,7 +19,9 @@ var playtime_sec: float = 0.0
 var location: String = ""
 ## Array[CreatureInstance]
 var party: Array = []
+## Fixed length: boxes_unlocked * BoxStorage.BOX_SIZE entries, each a CreatureInstance or null.
 var storage: Array = []
+var boxes_unlocked: int = BoxStorage.START_BOXES
 ## item id -> count
 var inventory: Dictionary = {}
 var money: int = 0
@@ -28,6 +30,10 @@ var story := StoryState.new()
 ## Exact overworld position: { map, x, y (pixels), facing ("up"|"down"|"left"|"right") }.
 ## An empty map means "start at the new-game spawn".
 var position: Dictionary = {}
+
+
+func _init() -> void:
+	BoxStorage.pad(self)
 
 
 static func new_game(player: String, now_unix: int, rng: RandomNumberGenerator) -> SaveGame:
@@ -51,7 +57,8 @@ func to_dict() -> Dictionary:
 		"playtime_sec": playtime_sec,
 		"location": location,
 		"party": party.map(func(c: CreatureInstance): return c.to_dict()),
-		"storage": storage.map(func(c: CreatureInstance): return c.to_dict()),
+		"storage": storage.map(func(c): return null if c == null else c.to_dict()),
+		"boxes_unlocked": boxes_unlocked,
 		"inventory": inventory.duplicate(),
 		"money": money,
 		"story": story.to_dict(),
@@ -77,8 +84,14 @@ static func from_dict(d: Dictionary) -> SaveGame:
 	s.location = str(d.get("location", ""))
 	for c in d.get("party", []):
 		s.party.append(CreatureInstance.from_dict(c))
+	s.storage = []
 	for c in d.get("storage", []):
-		s.storage.append(CreatureInstance.from_dict(c))
+		s.storage.append(CreatureInstance.from_dict(c) if c is Dictionary else null)
+	# Never drop a creature: raise the box count to fit every slot we were given.
+	var boxes := maxi(int(d.get("boxes_unlocked", BoxStorage.START_BOXES)), BoxStorage.START_BOXES)
+	boxes = maxi(boxes, ceili(s.storage.size() / float(BoxStorage.BOX_SIZE)))
+	s.boxes_unlocked = boxes
+	BoxStorage.pad(s)
 	for k in d.get("inventory", {}):
 		s.inventory[k] = int(d.inventory[k])
 	s.money = int(d.get("money", 0))

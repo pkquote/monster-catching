@@ -32,11 +32,22 @@ func held_text() -> String:
 	return _held.text if _held != null else ""
 
 
-func show_creature(db: Database, c: CreatureInstance) -> void:
+## An empty card (nothing under the cursor): the same panel with `text` centred.
+func show_empty(text := "Empty") -> void:
+	_reset()
+	_header = _line(self, text, UIKit.MUTED, 13)
+	_header.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_header.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+
+
+func _reset() -> void:
 	for child in get_children():
 		remove_child(child)  # now, not at the end of the frame, so a rebuild never doubles up
 		child.queue_free()
 	_moves.clear()
+	_header = null
+	_passive = null
+	_held = null
 	custom_minimum_size = SIZE
 	size = SIZE
 	clip_contents = true
@@ -45,6 +56,10 @@ func show_creature(db: Database, c: CreatureInstance) -> void:
 	style.set_corner_radius_all(6)
 	style.set_content_margin_all(8)
 	add_theme_stylebox_override("panel", style)
+
+
+func show_creature(db: Database, c: CreatureInstance) -> void:
+	_reset()
 
 	var col := VBoxContainer.new()
 	col.add_theme_constant_override("separation", 3)

@@ -166,7 +166,7 @@ func test_v2_round_trip_keeps_position() -> void:
 	var back: SaveGame = r.save
 	assert_dict(back.position).is_equal({"map": "test_b", "x": 123.5, "y": 77.0, "facing": "left"})
 	assert_bool(back.story.is_done("test_b/Door1")).is_true()
-	assert_int(SaveGame.SCHEMA).is_equal(5)
+	assert_int(SaveGame.SCHEMA).is_greater_equal(5)
 
 
 func test_v2_save_migrates_to_v3() -> void:
@@ -243,7 +243,7 @@ func test_v4_to_v5_adds_held_item() -> void:
 	assert_bool(out.party[0].has("held_item")).is_true()
 	assert_str(out.party[0].held_item).is_empty()
 	assert_str(out.storage[0].held_item).is_empty()
-	assert_int(SaveGame.SCHEMA).is_equal(5)
+	assert_int(SaveGame.SCHEMA).is_greater_equal(5)
 
 
 func test_loading_a_v4_save_succeeds() -> void:
@@ -288,3 +288,71 @@ func test_loading_a_v3_save_backfills_passives() -> void:
 	assert_bool(DataRegistry.db.creature("tidepup").passives.has(passives[0])).is_true()
 	assert_str(passives[1]).is_equal(passives[0])
 	assert_str(passives[2]).is_empty()
+
+
+# --- schema 6: slot-addressed boxes ---
+
+func _v5_dict(stored: int) -> Dictionary:
+	var d := _v4_dict()
+	d.schema = 5
+	var list: Array = []
+	for i in stored:
+		var mon := {"species": "tidepup", "level": 1 + i % 90, "xp": 0, "hp": 10, "moves": ["tackle"],
+			"move_pool": ["tackle"], "passive": "", "affinity_passive": "", "active_passive": "rolled",
+			"held_item": ""}
+		list.append(mon)
+	d.storage = list
+	d.party = []
+	return d
+
+
+func test_current_schema_is_6() -> void:
+	assert_int(SaveGame.SCHEMA).is_equal(6)
+
+
+func test_schema_5_save_migrates_to_6() -> void:
+	for n in [0, 1, 30, 31, 300]:
+		var out := SaveStore._v5_to_v6(_v5_dict(n))
+		assert_int(out.schema).is_equal(6)
+		var want := maxi(BoxStorage.START_BOXES, ceili(n / 30.0))
+		assert_int(out.boxes_unlocked).is_equal(want)
+		assert_int(out.storage.size()).is_equal(want * 30)
+		var path := store.root.path_join("1700000000_abcdef")
+		DirAccess.make_dir_recursive_absolute(path)
+		_write(path.path_join("save_%d.json" % n), JSON.stringify(_v5_dict(n)))
+		var r := store.read(path.path_join("save_%d.json" % n))
+		assert_bool(r.ok).is_true()
+		var save: SaveGame = r.save
+		assert_int(BoxStorage.count(save)).is_equal(n)
+		var all := BoxStorage.all_creatures(save)
+		for i in n:
+			assert_int(all[i].level).is_equal(1 + i % 90)
+			assert_that(save.storage[i]).is_same(all[i])  # packed into the first slots
+		assert_int(save.boxes_unlocked).is_equal(want)
+
+
+func test_schema_6_round_trip_keeps_holes() -> void:
+	var s := _game()
+	for slot in [0, 7, 30]:
+		s.storage[slot] = FixtureDB.make(db, "blob", 3 + slot)
+	var path := store.write(s, SaveGame.KIND_MANUAL, 1_700_000_100_000)
+	var back: SaveGame = store.read(path).save
+	assert_int(back.storage.size()).is_equal(240)
+	for slot in [0, 7, 30]:
+		assert_int(back.storage[slot].level).is_equal(3 + slot)
+	assert_object(back.storage[1]).is_null()
+	assert_int(BoxStorage.count(back)).is_equal(3)
+
+
+func test_loading_more_creatures_than_boxes_raises_boxes_unlocked() -> void:
+	var s := _game()
+	var d := s.to_dict()
+	var list: Array = []
+	for i in 250:
+		list.append(FixtureDB.make(db, "blob", 5).to_dict())
+	d.storage = list
+	d.boxes_unlocked = 8
+	var back := SaveGame.from_dict(d)
+	assert_int(BoxStorage.count(back)).is_equal(250)
+	assert_int(back.boxes_unlocked).is_equal(9)
+	assert_int(back.storage.size()).is_equal(270)

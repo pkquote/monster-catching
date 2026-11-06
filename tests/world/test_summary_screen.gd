@@ -245,11 +245,11 @@ func test_summary_of_a_stored_creature_with_odd_passives() -> void:
 	c.passive = "no_such_passive"
 	c.affinity_passive = "finisher"
 	c.active_passive = "affinity"
-	save.storage.append(c)
+	BoxStorage.add(save, c)
 	var bare := CreatureInstance.create(DataRegistry.db, "emberkit", 5)
 	bare.passive = ""
-	save.storage.append(bare)
-	SummaryScreen.run(world, save.storage, 0, save)
+	BoxStorage.add(save, bare)
+	SummaryScreen.run(world, BoxStorage.all_creatures(save), 0, save)
 	await get_tree().process_frame
 	var s := _screen(SummaryScreen) as SummaryScreen
 	await get_tree().process_frame

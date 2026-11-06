@@ -42,7 +42,7 @@ func load_from(path: String) -> String:
 		Log.warn(Log.SAVE, "Load failed", {"path": path, "error": r.error})
 		return r.error
 	current = r.save
-	for c: CreatureInstance in current.party + current.storage:
+	for c: CreatureInstance in current.party + BoxStorage.all_creatures(current):
 		c.clamp_to_cap(DataRegistry.db)
 		Progression.backfill_pool(DataRegistry.db, c)
 		Passives.backfill(DataRegistry.db, c)
@@ -51,7 +51,7 @@ func load_from(path: String) -> String:
 	current_path = path
 	store.set_last(path)
 	Log.info(Log.SAVE, "Loaded", {"path": path, "player": current.player_name,
-		"location": current.location, "party": current.party.size(), "storage": current.storage.size()})
+		"location": current.location, "party": current.party.size(), "storage": BoxStorage.count(current)})
 	return ""
 
 

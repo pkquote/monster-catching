@@ -25,6 +25,7 @@ func build(box: VBoxContainer) -> void:
 		UIKit.button(box, "Set Affinity...", func(): menu.show_page(DebugAffinityPage.new())).disabled = not can_tune
 		UIKit.button(box, "Set passive...", func(): menu.show_page(DebugPassivePage.new())).disabled = not can_tune
 		UIKit.button(box, "Fill box", _fill_box).disabled = blocked
+		UIKit.button(box, "Unlock a box", _unlock_box).disabled = blocked or s.boxes_unlocked >= BoxStorage.MAX_BOXES
 		UIKit.spacer(box, 4)
 		UIKit.label(box, "Test battles", UIKit.BODY_SIZE, UIKit.MUTED)
 		var can_fight := BattleLauncher.healthy_count(s) > 0 and not blocked
@@ -65,6 +66,12 @@ func _fill_box() -> void:
 		BattleLauncher.party_level(GameState.current), menu.rng)
 	GameState.autosave()
 	menu.show_page(DebugMainPage.new(), "Added %d creatures to the box." % BOX_FILL)
+
+
+func _unlock_box() -> void:
+	BoxStorage.unlock_box(GameState.current)
+	GameState.autosave()
+	menu.show_page(DebugMainPage.new(), "%d boxes." % GameState.current.boxes_unlocked)
 
 
 func _start_wild() -> void:

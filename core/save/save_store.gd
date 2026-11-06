@@ -15,7 +15,7 @@ const LAST_FILE := "last.json"
 ## schema -> Callable(Dictionary) -> Dictionary that upgrades a save by one version.
 ## Add an entry here whenever SaveGame.SCHEMA goes up.
 static func migrations() -> Dictionary:
-	return {1: _v1_to_v2, 2: _v2_to_v3, 3: _v3_to_v4, 4: _v4_to_v5}
+	return {1: _v1_to_v2, 2: _v2_to_v3, 3: _v3_to_v4, 4: _v4_to_v5, 5: _v5_to_v6}
 
 var root: String
 
@@ -37,6 +37,8 @@ static func _v2_to_v3(d: Dictionary) -> Dictionary:
 	var out := d.duplicate(true)
 	for key in ["party", "storage"]:
 		for c in out.get(key, []):
+			if not c is Dictionary:
+				continue
 			c["move_pool"] = c.get("moves", []).duplicate()
 	out["schema"] = 3
 	return out
@@ -48,6 +50,8 @@ static func _v3_to_v4(d: Dictionary) -> Dictionary:
 	var out := d.duplicate(true)
 	for key in ["party", "storage"]:
 		for c in out.get(key, []):
+			if not c is Dictionary:
+				continue
 			c["passive"] = ""
 			c["affinity_passive"] = ""
 			c["active_passive"] = Passives.SLOT_ROLLED
@@ -60,8 +64,24 @@ static func _v4_to_v5(d: Dictionary) -> Dictionary:
 	var out := d.duplicate(true)
 	for key in ["party", "storage"]:
 		for c in out.get(key, []):
+			if not c is Dictionary:
+				continue
 			c["held_item"] = ""
 	out["schema"] = 5
+	return out
+
+
+## Schema 5 -> 6 (boxes): storage becomes slot-addressed. The old list keeps its order,
+## packed into the first slots, padded with null to at least the starting boxes.
+static func _v5_to_v6(d: Dictionary) -> Dictionary:
+	var out := d.duplicate(true)
+	var list: Array = out.get("storage", [])
+	var boxes := maxi(BoxStorage.START_BOXES, ceili(list.size() / float(BoxStorage.BOX_SIZE)))
+	while list.size() < boxes * BoxStorage.BOX_SIZE:
+		list.append(null)
+	out["storage"] = list
+	out["boxes_unlocked"] = boxes
+	out["schema"] = 6
 	return out
 
 

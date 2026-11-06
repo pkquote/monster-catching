@@ -153,20 +153,30 @@ func run() -> void:
 	await d.key(KEY_Z)
 	await d._frames(5)
 	await d.shot("p17_storage_open")
-	d.expect(d._find_menu() != null and d._screen_title(d._find_menu()).begins_with("Box"), "the Storage Box opens the storage screen")
-	await d.pick_menu("Party: Voltmoth")
+	var box = _storage(d)
+	d.expect(box != null, "the Storage Box opens the box screen")
+	d.expect(box != null and box.card().header_text().begins_with(gs.current.party[0].display_name(d.root.get_node("DataRegistry").db)),
+		"the card shows the first party creature")
+	box.party_buttons()[2].grab_focus()
 	await d._frames(3)
 	await d.shot("p18_storage_party_row")
-	await d.pick_menu("Deposit")
+	await d.key(KEY_Z)  # pick Voltmoth up
+	box.box_buttons()[0].grab_focus()
+	await d._frames(3)
+	await d.key(KEY_Z)  # put it in the first slot
 	await d._frames(5)
 	await d.shot("p19_storage_deposited")
-	d.expect(gs.current.party.size() == 2 and gs.current.storage.size() == 1, "Voltmoth deposited into the box")
-	await d.pick_menu("Box: Voltmoth")
-	await d.pick_menu("Withdraw")
+	d.expect(gs.current.party.size() == 2 and BoxStorage.count(gs.current) == 1, "Voltmoth deposited into the box")
+	box.box_buttons()[0].grab_focus()
+	await d._frames(3)
+	await d.key(KEY_Z)  # pick it up again
+	box.party_buttons()[2].grab_focus()
+	await d._frames(3)
+	await d.key(KEY_Z)  # and back into the party
 	await d._frames(5)
 	await d.shot("p20_storage_withdrawn")
-	d.expect(gs.current.party.size() == 3 and gs.current.storage.size() == 0, "Voltmoth withdrawn again")
-	await d.pick_menu("Back")
+	d.expect(gs.current.party.size() == 3 and BoxStorage.count(gs.current) == 0, "Voltmoth withdrawn again")
+	await d.key(KEY_X)  # nothing held: Back closes the screen
 	await d.wait_unlocked(ow)
 
 	# 10. Route 1's deep grass is unsafe: Party -> a row shows the message, Storage is disabled.
@@ -189,3 +199,11 @@ func run() -> void:
 	await d.pick_menu("Close")
 	d._clear(d.RUN_SAVES)
 	d._finish()
+
+
+## The open box screen, or null.
+func _storage(d):
+	for n in d._find_all(d.current_scene, "CanvasLayer"):
+		if n.get_script() != null and n.get_script().get_global_name() == "StorageScreen":
+			return n
+	return null

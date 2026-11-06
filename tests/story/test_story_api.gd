@@ -47,4 +47,4 @@ func test_give_creature_party_then_storage() -> void:
 		Story.give_creature("sprigling", 3)
 	Story.give_creature("pebblet", 3)
 	assert_int(Story.party_size()).is_equal(DataRegistry.db.balance.party_size)
-	assert_int(GameState.current.storage.size()).is_equal(1)
+	assert_int(BoxStorage.count(GameState.current)).is_equal(1)

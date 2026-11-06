@@ -124,7 +124,7 @@ func test_rows_show_sprite_and_hp_energy_bars() -> void:
 		if n.text.begins_with("Tidepup"):
 			btn = n
 	assert_object(btn).is_not_null()
-	assert_object(btn.icon).is_not_null()
+	assert_bool(btn.get_children().any(func(n): return n is CreatureSpriteSlot)).is_true()
 	var bars := _bars(btn)
 	assert_int(bars.size()).is_equal(2)
 	assert_float(bars[0].max_value).is_equal(float(c.max_hp(db)))
@@ -184,8 +184,11 @@ func test_long_row_text_clears_the_bars() -> void:
 	assert_str(btn.text).contains(longest.to_upper())
 	var font := btn.get_theme_font("font")
 	var size := btn.get_theme_font_size("font_size")
-	var text_end: float = btn.icon.get_width() + 12.0 \
-		+ font.get_string_size(btn.text, HORIZONTAL_ALIGNMENT_LEFT, -1, size).x
+	var widest := 0.0
+	for line in btn.text.split("
+"):
+		widest = maxf(widest, font.get_string_size(line, HORIZONTAL_ALIGNMENT_LEFT, -1, size).x)
+	var text_end: float = btn.get_theme_stylebox("normal").content_margin_left + widest
 	for bar in _bars(btn):
 		assert_float(text_end).is_less_equal(bar.position.x)
 
@@ -209,3 +212,62 @@ func test_party_lead_passive_line() -> void:
 	lead.passive = "undertow"  # not active, so it doesn't count
 	s = await _open()
 	assert_str(s.page_text()).is_empty()
+
+
+func _row_buttons(s: PartyScreen) -> Array:
+	return s.menu.find_children("*", "Button", true, false)
+
+
+func test_the_card_shows_the_first_creature_and_follows_the_cursor() -> void:
+	Story.give_creature("tidepup", 5)
+	Story.give_creature("emberkit", 6)
+	Story.give_creature("sprigling", 7)
+	var s := await _open()
+	await get_tree().process_frame
+	assert_object(s.card()).is_not_null()
+	assert_str(s.card().header_text()).is_equal("Tidepup  Lv 5")
+	_row_buttons(s)[2].grab_focus()
+	await get_tree().process_frame
+	assert_str(s.card().header_text()).is_equal("Sprigling  Lv 7")
+	_row_buttons(s)[1].grab_focus()
+	await get_tree().process_frame
+	assert_str(s.card().header_text()).is_equal("Emberkit  Lv 6")
+
+
+func test_focusing_back_keeps_the_last_creature_on_the_card() -> void:
+	Story.give_creature("tidepup", 5)
+	Story.give_creature("emberkit", 6)
+	var s := await _open()
+	await get_tree().process_frame
+	_row_buttons(s)[1].grab_focus()
+	await get_tree().process_frame
+	var back: Button = null
+	for b in _row_buttons(s):
+		if b.text == "Back":
+			back = b
+	back.grab_focus()
+	await get_tree().process_frame
+	assert_str(s.card().header_text()).is_equal("Emberkit  Lv 6")
+
+
+func test_rows_have_a_sprite_instead_of_a_swatch_icon() -> void:
+	Story.give_creature("tidepup", 5)
+	var s := await _open()
+	var row: Button = _row_buttons(s)[0]
+	var sprites := row.get_children().filter(func(n): return n is CreatureSpriteSlot)
+	assert_int(sprites.size()).is_equal(1)
+	assert_object(row.icon).is_null()
+
+
+func test_a_party_of_twelve_fits_and_the_card_stays_on_screen() -> void:
+	var db := DataRegistry.db
+	var old: int = db.balance.party_size
+	db.balance.party_size = 12
+	for i in 12:
+		Story.give_creature("tidepup", 8 + i)
+	var s := await _open()
+	await get_tree().process_frame
+	ScreenFit.check(self, s, true)
+	assert_bool(ScreenFit.VIEW.encloses(s.card().get_global_rect().grow(-0.5))).is_true()
+	s.close()
+	db.balance.party_size = old

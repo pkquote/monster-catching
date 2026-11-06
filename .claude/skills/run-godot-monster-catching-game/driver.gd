@@ -13,6 +13,11 @@ extends SceneTree
 ##                        unlocks Finisher, the Passive Unlocked screen, Summary -> Use Finisher.
 ##   --mode=held          held-items tour: Summary -> Give held item (Oran Berry), a battle where it fires
 ##                        (banner naming it, "used up"), the Summary again with the item gone.
+##   --mode=builder       F1 Custom battle team builder: full teams, All levels, slot editor, bag page,
+##                        a 2v3 exhibition to the results; the save must be unchanged.
+##   --mode=party         every screen that lists the party (Party, Summary, Bag targets, Storage,
+##                        battle Swap and item targets) with a full party; --party-size=N (1-12)
+##                        sets balance.party_size in memory only (data/balance.json is untouched).
 ##   --mode=scene         open one scene, wait, screenshot. Use with --scene / --frames.
 ##   --scene=res://...    scene for --mode=scene (default: the project's main scene)
 ##   --frames=N           frames to wait before the screenshot in scene mode (default 60)
@@ -39,7 +44,7 @@ func _initialize() -> void:
 	match _opts.mode:
 		"scene":
 			_run_scene()
-		"battle", "overworld", "progress", "passives", "held":
+		"battle", "overworld", "progress", "passives", "held", "builder", "party":
 			_tour(_opts.mode)
 		_:
 			_tour("frontend")

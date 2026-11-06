@@ -101,6 +101,27 @@ back in the world the Summary reads "Held item: none". The tour puts the berry i
 timeout 300 "$GODOT" --path . --script res://.claude/skills/run-godot-monster-catching-game/driver.gd -- --mode=held --out="$TMPDIR/held_shots" 2>&1 | grep "\[driver\]"
 ```
 
+**Team-builder tour** (`--mode=builder`): new game -> F1 test party -> Custom battle -> grow your team to
+`party_size`, All levels 40, You field 2 -> Foe team: Tamer, Foes field 3, `party_size` foes -> Edit foe 1 (a
+"✗ can't learn" move, the move list open) -> Your team -> Bag... -> Start a 2v3 exhibition -> fight to the results
+("Exhibition — nothing was saved.") -> the save is unchanged and nothing was autosaved. Every page is checked to
+fit the 640x360 screen inside its 340px column. 25 expectations, about 30 s.
+
+```bash
+timeout 300 "$GODOT" --path . --script res://.claude/skills/run-godot-monster-catching-game/driver.gd -- --mode=builder --out="$TMPDIR/builder_shots" 2>&1 | grep "\[driver\]"
+```
+
+**Party tour** (`--mode=party`, optional `--party-size=N`, 1-12): a new game with a full party of N (default
+`balance.party_size`) and 12 creatures in the box -> Menu -> Party (Down to the last row) -> Summary -> Next creature
+all the way round -> Bag -> Salve's "use on who?" list -> the centre's Storage Box (party page 2 when the party is
+paged, the swap-with-party list) -> a singles wild battle's Swap menu (Next page, Accept wraps) and Salve's targets.
+N is set on the loaded content in memory only, so `data/balance.json` is never edited. Screenshots are `qNN_01_...`
+to `qNN_12_...` (NN = the party size), so runs at 6 and 12 can share a folder. About 15 s.
+
+```bash
+timeout 300 "$GODOT" --path . --script res://.claude/skills/run-godot-monster-catching-game/driver.gd -- --mode=party --party-size=12 --out="$TMPDIR/party_shots" 2>&1 | grep "\[driver\]"
+```
+
 Screenshot a single scene:
 
 ```bash
@@ -115,11 +136,13 @@ timeout 60 "$GODOT" --path . --script res://.claude/skills/run-godot-monster-cat
 | `--mode=progress` | the progress tour above (`p01_…` to `p21_…` screenshots) |
 | `--mode=passives` | the passives tour above (`x01_…` to `x08_…` screenshots) |
 | `--mode=held` | the held-items tour above (`h01_…` to `h06_…` screenshots) |
+| `--mode=builder` | the team-builder tour above (`t01_…` to `t12_…` screenshots) |
+| `--mode=party` | the party tour above (`qNN_01_…` to `qNN_12_…`); `--party-size=N` sets the party size in memory |
 | `--mode=scene` | open `--scene` (default: main scene), wait `--frames` (default 60), screenshot |
 | `--out=<dir>` | screenshot folder; `user://` paths allowed (default `user://run_shots`) |
 
 Each tour is its own file in `tours/` (`frontend.gd`, `battle.gd`, `overworld.gd`, `progress.gd`,
-`passives.gd`, `held.gd`):
+`passives.gd`, `held.gd`, `builder.gd`, `party.gd`):
 a `RefCounted` with `var d` (the driver) and `func run()`. To drive a new flow, add
 `tours/<name>.gd`, add `<name>` to the `match` in `driver.gd`'s `_initialize`, and call the
 driver's helpers through `d.`: `wait_scene(name, max_frames)`,
@@ -129,8 +152,9 @@ first enabled option), and for the overworld `hold(KEY_W, frames)` (real movemen
 `talk_until(func(): ...)` (presses Accept through conversations) and `_battle()` (the battle node,
 whether it's the scene or an overlay on the map). You can also open a battle directly:
 `router.goto("res://game/battle/battle_scene.tscn", {"setup": BattleSetup, "seed": 11})`.
-For any N-vs-M format (up to 3 per side), build the setup with
-`BattleLauncher.custom_setup(db, save, mine, foes, level, wild, rng)`.
+For any N-vs-M format (up to 3 per side on the field), build an exhibition (nothing saved) from
+hand-built teams: `BattleLauncher.exhibition_setup(db, mine, mine_field, foes, foe_field, wild, bag, rng)`,
+where `mine`/`foes` are arrays of `CreatureSpec.natural(db, species, level, rng)`.
 
 ## Run (human path)
 

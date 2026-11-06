@@ -3,6 +3,9 @@ extends CanvasLayer
 ## Base for the overworld's menus (pause menu, shop): a command list on the right
 ## and an info page on the left, over a dimmed map.
 
+## Rows of options that fit the side panel (a longer list, e.g. a party of 12, pages).
+const MENU_ROWS := 11
+
 var menu: CommandMenu
 
 var _root: Control
@@ -32,6 +35,7 @@ func _ready() -> void:
 	_money = UIKit.label(col, "", 11, UIKit.MUTED)
 	menu = CommandMenu.new()
 	menu.button_width = 192
+	menu.max_rows = MENU_ROWS
 	col.add_child(menu)
 	_page = UIKit.panel(_root, 10)
 	_page.position = Vector2(8, 8)

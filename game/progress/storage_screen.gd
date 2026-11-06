@@ -2,15 +2,24 @@ class_name StorageScreen
 extends ProgressScreen
 ## The creature box: party on the left, the current box page on the right.
 ## Pick a creature, then Deposit / Withdraw, or Swap with one on the other side.
+## A party too long for the left column (more than PAGE_SIZE rows with the page and
+## Back entries) shows PARTY_PAGE_SIZE creatures at a time, with a "Party page" entry.
 
 const PAGE_SIZE := 10
+const PARTY_PAGE_SIZE := 6
+## The most entries that follow the party rows: Previous / Next page and Back.
+const MAX_EXTRAS := 3
 const LAST_HEALTHY_TEXT := "Keep at least one creature that can fight."
 const PARTY_FULL_TEXT := "Your party is full."
 const ROW_HEIGHT := 18.0
 
 var page := 0
+## The party page shown when the party is paged.
+var party_page := 0
 
 var _message := ""
+## Start on the "Party page" entry (just after turning the party page).
+var _focus_party_page := false
 
 
 ## Runs until the player closes the screen.
@@ -25,6 +34,13 @@ static func run(world: Node, save: SaveGame = null, db: Database = null) -> void
 ## Number of box pages (at least one).
 static func page_count(box_size: int) -> int:
 	return maxi(1, ceili(float(box_size) / PAGE_SIZE))
+
+
+## Number of party pages (1 when the whole party fits the left column).
+static func party_page_count(party_size: int) -> int:
+	if party_size + MAX_EXTRAS <= PAGE_SIZE:
+		return 1
+	return ceili(float(party_size) / PARTY_PAGE_SIZE)
 
 
 static func refusal_text(reason: String) -> String:
@@ -60,6 +76,7 @@ func _plain(label: String, value: Variant) -> Dictionary:
 func _show_header() -> void:
 	var save := _save
 	page = clampi(page, 0, page_count(save.storage.size()) - 1)
+	party_page = clampi(party_page, 0, party_page_count(save.party.size()) - 1)
 	_title.text = "Box — page %d of %d" % [page + 1, page_count(save.storage.size())]
 	if _message != "":
 		_body.text = _message
@@ -83,8 +100,15 @@ func _grid_options(party: bool, box: bool, extras: Array) -> Array:
 	var r := _page_range()
 	var left: Array = []
 	if party:
-		for k in save.party.size():
+		var pages: int = party_page_count(save.party.size())
+		var from: int = party_page * PARTY_PAGE_SIZE if pages > 1 else 0
+		var to: int = mini(from + PARTY_PAGE_SIZE, save.party.size()) if pages > 1 else save.party.size()
+		for k: int in range(from, to):
 			left.append(_row("Party: ", save.party[k], ["party", k]))
+		if pages > 1:
+			var turn: Dictionary = _plain("Party page %d of %d" % [party_page + 1, pages], ["party_page", 0])
+			turn["focus"] = _focus_party_page
+			left.append(turn)
 	left.append_array(extras)
 	var right: Array = []
 	if box:
@@ -112,9 +136,12 @@ func _loop() -> void:
 	while true:
 		_show_header()
 		var pick = await menu.choose("", _grid_options(true, true, _nav_extras()), true, 2)
+		_focus_party_page = false
 		if pick == null or pick[0] == "back":
 			return
 		match pick[0]:
+			"party_page":
+				_turn_party_page()
 			"prev":
 				page -= 1
 				_message = ""
@@ -174,14 +201,25 @@ func _box_creature(box_i: int) -> void:
 			_finish(Team.withdraw(_db, save, box_i))
 		"swap":
 			_body.text = "Swap with which party creature?"
-			var pick = await menu.choose("", _grid_options(true, false,
-					[_plain("Cancel", ["back", 0])]), true, 2)
-			if pick != null and pick[0] == "party":
-				_finish(Team.swap(_db, save, pick[1], box_i))
-			else:
-				_message = ""
+			while true:  # the party creature may be on another party page
+				var pick = await menu.choose("", _grid_options(true, false,
+						[_plain("Cancel", ["back", 0])]), true, 2)
+				_focus_party_page = false
+				if pick != null and pick[0] == "party_page":
+					_turn_party_page()
+					continue
+				if pick != null and pick[0] == "party":
+					_finish(Team.swap(_db, save, pick[1], box_i))
+				else:
+					_message = ""
+				return
 		_:
 			_message = ""
+
+
+func _turn_party_page() -> void:
+	party_page = (party_page + 1) % party_page_count(_save.party.size())
+	_focus_party_page = true
 
 
 ## A single-column action list.

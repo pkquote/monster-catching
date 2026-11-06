@@ -170,6 +170,30 @@ static func make(db: Database, species: String, level: int = 10, moves: Array = 
 	return CreatureInstance.create(db, species, level, PackedStringArray(moves))
 
 
+## `n` creatures of one species, all at `level` and knowing `moves` (a party or a bench).
+static func team(db: Database, n: int, species: String = "blob", moves: Array = ["hit"], level: int = 10) -> Array:
+	var out: Array = []
+	for i: int in n:
+		out.append(make(db, species, level, moves))
+	return out
+
+
+## A move entry for suites that add their own test moves to `raw()` (cost 2 unless `extra` says otherwise).
+static func move(id: String, type: String, category: String, power: int, acc: int, target: String,
+		effects: Array, extra: Dictionary = {}) -> Dictionary:
+	return _m(id, type, category, power, acc, target, effects, extra)
+
+
+## Knocks `battlers` out between rounds and settles the engine as an end of round would: faints
+## are processed, Underdog is recalculated, and the resulting events are discarded.
+static func knock_out(e: BattleEngine, battlers: Array) -> void:
+	for b: Battler in battlers:
+		b.creature.hp = 0
+	e.check_faints()
+	e._update_underdog()
+	e._take_events()
+
+
 ## Both sides controlled by the test (no AI). Returns a started engine.
 static func engine(db: Database, party0: Array, party1: Array, field0: int = -1, field1: int = -1,
 		seed_value: int = 1, wild := false, items0: Dictionary = {}) -> BattleEngine:

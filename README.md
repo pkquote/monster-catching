@@ -40,7 +40,7 @@ menu: Resume, New Game, Load Game, Settings, Quit. A new game starts at home in 
 out to meet the professor and pick a starter. Arrow keys / WASD move, Shift runs, Z / Enter talks and
 confirms, C / Tab opens the menu (Party, Bag, Save, Settings, Quit). Party shows each creature's Summary (stats and passives, with a **Use …** option that switches the active one; moves; training), lets you reorder the team and, outside unsafe areas, reach the creature box; storage boxes in buildings do the same. Press **F1** on any screen (debug
 builds only) for the debug tools: **Get test party**, **Heal party**, **Give XP**, **Set Affinity** (also unlocks the Affinity passive), **Set passive** (any passive in either slot), **Fill box**, and test battles (wild Route 1,
-Scout Ana 1v1, Rival 2v2, and a **Custom battle** panel for any format up to 3v3, such as 1v3 or 3v1). Player data lives in Godot's user folder
+Scout Ana 1v1, Rival 2v2, and a **Custom battle** team builder: both sides up to `party_size` creatures, each with its own species, level, moves, held item and passive, a bag editor, and any format up to 3v3 such as 1v3 or 3v1; these are exhibitions, so nothing in them is saved). Player data lives in Godot's user folder
 (`%APPDATA%/Godot/app_userdata/Monster Catching Game/` on Windows):
 
 - `saves/<playthrough>/autosave.json` and `save_<timestamp>.json`, plus `saves/last.json` (the Resume target)

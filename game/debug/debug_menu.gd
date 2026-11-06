@@ -105,6 +105,24 @@ func show_page(page: DebugPage, status := "") -> void:
 	_focus_first()
 
 
+## Rebuilds the open page from its own fields, keeping keyboard focus on the same
+## control (by position) so a change doesn't throw the focus back to the top.
+func refresh_page(status := "") -> void:
+	if not is_open() or _page == null:
+		return
+	var focused: Control = get_viewport().gui_get_focus_owner()
+	var index: int = _find_focusable(_box).find(focused) if focused != null else -1
+	show_page(_page, status)
+	if index < 0:
+		return
+	(func() -> void:  # after _focus_first's own deferred grab
+		if not is_open():
+			return
+		var list: Array = _find_focusable(_box)
+		if index < list.size() and is_instance_valid(list[index]) and list[index].is_inside_tree():
+			list[index].grab_focus()).call_deferred()
+
+
 func set_status(text: String) -> void:
 	if _status != null and is_instance_valid(_status):
 		_status.text = text
@@ -158,11 +176,12 @@ func ask_then_go(format_size: int, intro: String, build: Callable) -> void:
 		go(build.call(n))
 
 
-## Starts a battle over the overworld (debug battles use the normal defeat rules).
+## Starts a battle over the overworld. Debug battles use the normal defeat rules,
+## except exhibitions (the custom battle), which have none.
 func go(setup: BattleSetup) -> void:
 	close()
 	if Overworld.active != null:
-		Overworld.active.battles.run_battle(setup)
+		Overworld.active.battles.run_battle(setup, not setup.exhibition)
 
 
 ## A label and a drop-down in `grid`.
@@ -174,6 +193,19 @@ func option_row(grid: GridContainer, text: String, choices: Array, selected: int
 	o.selected = selected
 	grid.add_child(o)
 	return o
+
+
+## A label and a whole-number spin box in `grid` (or any container).
+func spin_row(grid: Container, text: String, min_value: int, max_value: int, value: int) -> SpinBox:
+	UIKit.label(grid, text)
+	var s: SpinBox = SpinBox.new()
+	s.min_value = min_value
+	s.max_value = max_value
+	s.step = 1
+	s.rounded = true
+	s.value = value
+	grid.add_child(s)
+	return s
 
 
 ## A "Creature" drop-down listing the party.

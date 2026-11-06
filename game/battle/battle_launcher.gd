@@ -70,30 +70,34 @@ static func _with_lead_field(db: Database, save: SaveGame, setup: BattleSetup) -
 	return setup
 
 
-## Debug battle in any N-vs-M format. You field `player_count` (capped by healthy
-## creatures); the foe fields `foe_count` random species at `foe_level`.
-## `wild` foes can be caught and fled from; otherwise they're a tactician tamer
-## ("Sparring Partner") with no bench, items or prize money.
-static func custom_setup(db: Database, save: SaveGame, player_count: int, foe_count: int,
-		foe_level: int, wild: bool, rng: RandomNumberGenerator) -> BattleSetup:
-	var foes: Array = []
-	var species := Array(db.ids("creatures"))
-	species.sort()
-	for i in clampi(foe_count, 1, MAX_SIDE):
-		foes.append(CreatureInstance.create(db, species[rng.randi_range(0, species.size() - 1)], foe_level,
-			PackedStringArray(), rng))
-	var mine := clampi(mini(player_count, healthy_count(save)), 1, MAX_SIDE)
-	var s := BattleSetup.new()
+## Exhibition battle between hand-built teams (Array[CreatureSpec]). Nothing in it
+## touches the save: side 0 fights with a copy of `bag`, and `exhibition` stops the
+## results being applied. `wild` foes (clamped to MAX_SIDE) can be caught and fled
+## from; otherwise they are a tactician "Sparring Partner".
+static func exhibition_setup(db: Database, mine: Array, mine_field: int, foes: Array, foe_field: int,
+		wild: bool, bag: Dictionary, rng: RandomNumberGenerator) -> BattleSetup:
+	assert(not mine.is_empty() and not foes.is_empty(), "exhibition_setup needs a creature on each side")
+	var my_team: Array = []
+	for spec: CreatureSpec in mine.slice(0, db.balance.party_size):
+		my_team.append(spec.to_instance(db, rng))
+	var foe_specs: Array = foes.slice(0, mini(MAX_SIDE, db.balance.party_size) if wild else db.balance.party_size)
+	var foe_team: Array = []
+	for spec: CreatureSpec in foe_specs:
+		foe_team.append(spec.to_instance(db, rng))
+	var my_n: int = clampi(mine_field, 1, mini(MAX_SIDE, my_team.size()))
+	var foe_n: int = clampi(foe_field, 1, mini(MAX_SIDE, foe_team.size()))
+	var s: BattleSetup = BattleSetup.new()
 	s.is_wild = wild
-	s.add_side(save.party, mine, mine, save.inventory)
-	s.add_side(foes, foes.size(), foes.size(), {}, "basic" if wild else "tactician", true)
+	s.exhibition = true
+	s.add_side(my_team, my_n, my_n, bag)
+	s.add_side(foe_team, foe_n, foe_n, {}, "basic" if wild else "tactician", true)
 	s.sides[1].is_wild = wild
 	if not wild:
 		s.foe_name = "Sparring Partner"
-	return _with_lead_field(db, save, s)
+	return s
 
 
-## Average level of the party (1 if empty). The custom battle's default foe level.
+## Average level of the party (1 if empty). The custom battle's default level.
 static func party_level(save: SaveGame) -> int:
 	if save.party.is_empty():
 		return 1

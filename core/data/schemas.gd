@@ -332,7 +332,7 @@ const ENTRY := {
 	},
 	"balance": {
 		"level_cap": {"t": "int", "min": 1, "max": 100},
-		"party_size": {"t": "int", "min": 1, "max": 6},
+		"party_size": {"t": "int", "min": 1, "max": BalanceDef.MAX_PARTY_SIZE},
 		"max_moves": {"t": "int", "min": 1, "max": 8},
 		"stab": {"t": "number", "min": 1.0, "max": 3.0},
 		"max_field_states": {"t": "int", "min": 1, "max": 5},

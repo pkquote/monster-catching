@@ -2,6 +2,9 @@ class_name BalanceDef
 extends RefCounted
 ## Global tuning numbers from data/balance.json.
 
+## Schema ceiling for balance.party_size.
+const MAX_PARTY_SIZE: int = 12
+
 var level_cap: int
 var party_size: int
 var max_moves: int

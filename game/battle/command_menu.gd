@@ -21,10 +21,20 @@ var button_width := 0
 ## several columns. Godot's own grid focus keeps to a column, which strands the others.
 var linear_focus := false
 
+## Most rows shown at once; 0 = no limit. A longer list is split into pages, each ending
+## with "Previous page" and "Next page · n/m" (both wrap). Shorter lists are unchanged.
+var max_rows := 0
+
+const PREV_PAGE := "Previous page"
+const NEXT_PAGE := "Next page"
+
 var _title: Label
 var _grid: GridContainer
 var _allow_cancel := false
 var _active := false
+var _options: Array = []
+var _columns := COLUMNS
+var _page := 0
 
 
 func _ready() -> void:
@@ -43,42 +53,101 @@ func choose(title: String, options: Array, allow_cancel := true, columns := COLU
 	_title.visible = title != ""
 	_grid.columns = columns
 	_allow_cancel = allow_cancel
+	_options = options
+	_columns = columns
+	_page = 0
+	var per: int = _per_page()
+	if per > 0:  # open on the page holding the marked option
+		for i: int in options.size():
+			if options[i].get("focus", false) and not options[i].get("disabled", false):
+				_page = floori(float(i) / per)
+				break
+	_build("")
+	_active = true
+	var result = await picked
+	hovered.emit(null)
+	return result
+
+
+## Number of pages the current list is shown in (1 when it isn't paged).
+func page_count() -> int:
+	var per: int = _per_page()
+	return 1 if per == 0 else ceili(float(_options.size()) / per)
+
+
+## Options per page when the list is paged (two slots go to the page buttons), else 0.
+## Narrow menus need max_rows * columns >= 3 to be useful: one column with max_rows 3 shows
+## a single option per page (and never fewer than one, however small the limit).
+func _per_page() -> int:
+	if max_rows <= 0 or _options.size() <= max_rows * _columns:
+		return 0
+	return maxi(1, max_rows * _columns - 2)
+
+
+## Adds the buttons for the current page; `focus_nav` (PREV_PAGE / NEXT_PAGE) starts on
+## that page button instead of the first enabled option.
+func _build(focus_nav: String) -> void:
+	var per: int = _per_page()
+	var shown: Array = _options if per == 0 else _options.slice(_page * per, (_page + 1) * per)
 	var first: Button = null
 	var marked: Button = null
 	var enabled: Array[Button] = []
-	for o in options:
-		var b := Button.new()
-		b.text = o.label
-		b.disabled = o.get("disabled", false)
-		var w := button_width if button_width > 0 else (196 if columns >= 3 else 300)
-		b.custom_minimum_size = Vector2(w, 22)
-		b.clip_text = true
-		b.alignment = HORIZONTAL_ALIGNMENT_LEFT
-		b.add_theme_font_size_override("font_size", 11)
-		var decorate = o.get("decorate")
+	for o: Dictionary in shown:
+		var value: Variant = o.value
+		var b: Button = _add_button(o.label, o.get("disabled", false), func(): _finish(value), o.get("hint"))
+		var decorate: Variant = o.get("decorate")
 		if decorate is Callable:
 			decorate.call(b)
-		var value = o.value
-		b.pressed.connect(func(): _finish(value))
-		var hint = o.get("hint")
-		b.focus_entered.connect(func(): hovered.emit(hint))
-		_grid.add_child(b)
 		if first == null and not b.disabled:
 			first = b
 		if not b.disabled:
 			enabled.append(b)
 			if marked == null and o.get("focus", false):
 				marked = b
+	if per > 0:
+		var prev: Button = _add_button(PREV_PAGE, false, func(): _turn_later.call_deferred(-1), null)
+		var next: Button = _add_button("%s · %d/%d" % [NEXT_PAGE, _page + 1, page_count()], false,
+			func(): _turn_later.call_deferred(1), null)
+		enabled.append_array([prev, next] as Array[Button])
+		if focus_nav == PREV_PAGE:
+			marked = prev
+		elif focus_nav == NEXT_PAGE:
+			marked = next
+		if first == null:
+			first = next
 	if linear_focus:
 		_chain(enabled)
 	if marked != null:
 		first = marked
-	_active = true
 	if first != null:
 		_focus_later.call_deferred(first)
-	var result = await picked
-	hovered.emit(null)
-	return result
+
+
+func _add_button(label: String, disabled: bool, on_press: Callable, hint: Variant) -> Button:
+	var b: Button = Button.new()
+	b.text = label
+	b.disabled = disabled
+	var w: int = button_width if button_width > 0 else (196 if _columns >= 3 else 300)
+	b.custom_minimum_size = Vector2(w, 22)
+	b.clip_text = true
+	b.alignment = HORIZONTAL_ALIGNMENT_LEFT
+	b.add_theme_font_size_override("font_size", 11)
+	b.pressed.connect(on_press)
+	b.focus_entered.connect(func(): hovered.emit(hint))
+	_grid.add_child(b)
+	return b
+
+
+## Shows the page `step` away (wrapping), keeping focus on the page button pressed.
+## Deferred from that button's own `pressed`, since it frees the button.
+func _turn_later(step: int) -> void:
+	if not _active or _per_page() == 0:
+		return
+	_page = posmod(_page + step, page_count())
+	for c: Node in _grid.get_children():
+		_grid.remove_child(c)
+		c.queue_free()
+	_build(PREV_PAGE if step < 0 else NEXT_PAGE)
 
 
 ## The deferred grab: the menu may have been closed (or cleared) in the meantime.
@@ -147,5 +216,5 @@ func _finish(value: Variant) -> void:
 
 
 func _clear() -> void:
-	for c in _grid.get_children():
+	for c: Node in _grid.get_children():
 		c.queue_free()

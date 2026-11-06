@@ -32,11 +32,13 @@ func build(box: VBoxContainer) -> void:
 		for t in TAMERS:
 			var tamer_id: String = t[0]
 			UIKit.button(box, t[1], func(): _start_tamer(tamer_id)).disabled = not can_fight
-		UIKit.button(box, "Custom battle...", func(): menu.show_page(DebugCustomBattlePage.new())).disabled = not can_fight
+		# Builds its own teams, so it needs no party.
+		UIKit.button(box, "Custom battle...", func(): menu.show_page(DebugCustomBattlePage.new())).disabled = blocked
 		if blocked:
 			UIKit.label(box, "Finish the battle or close the menu to use these.", 11, UIKit.MUTED)
 		elif s.party.is_empty():
-			UIKit.label(box, "Get a test party to unlock battles.", 11, UIKit.MUTED)
+			UIKit.label(box, "Get a test party for these battles; Custom battle builds its own.", 11,
+				UIKit.MUTED, true)
 	UIKit.spacer(box, 4)
 	UIKit.button(box, "Logs...", func(): menu.show_page(DebugLogsPage.new()))
 	UIKit.button(box, "Close", menu.close)

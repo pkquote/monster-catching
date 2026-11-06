@@ -1,6 +1,6 @@
 # Handoff: godot-monster-catching-game
 
-Date: 2026-11-05. Branch: `master`. Last commit: `f6e69f1` ("Added held items"). The two-target-moves work (see "Two-target moves" below) is uncommitted on top of it.
+Date: 2026-11-05. Branch: `master`. Last commit: `2995019` ("Add moves that hit two chosen opponents"), which includes the two-target moves. The uncommitted work is the debug team builder / larger parties / exhibition feature plus its tests and tours (see below).
 
 ## Read this first: standing rules
 - **Never commit, stage or stash.** The user writes every commit. Leave changes in the working tree.
@@ -80,12 +80,30 @@ Godot 4.7.2 (.NET build, but GDScript only) monster-catching RPG.
 - **Tour:** `--mode=held` (Give held item, a battle where the berry fires, the item gone afterwards). The tour puts the berry in the bag directly: there is no F1 give-item page.
 - **Not done / out of scope:** two held slots, steal/knock-off moves, giving items in battle, trading, durability, held items on wild creatures; no held items on tamer parties in shipped data; the AI does not model enter/round-end/faint/knockout held triggers (same as passives); no F1 page to give held items; the shop menu lists all 11 items in two name-only columns, with the price and description shown on the page for the focused item (no categories).
 
-## Two-target moves (implemented, uncommitted)
+## Two-target moves (implemented, committed in 2995019)
 - **Spec:** `documentation/specs/2026-11-05-two-target-moves-design.md` (Implemented); **plan:** `documentation/plans/2026-11-05-two-target-moves.md`.
 - **What shipped:** move target `two_enemies` (the user picks two distinct foes; `BattleAction.second_target`; a missing or duplicate pick is replaced at random); `balance.spread_mults` is now a table keyed by number hit (`{"2": 0.85, "3": 0.75}`) with `BalanceDef.spread_mult_for(count)` and `EffectContext.spread_count`; the AI scores each pair of foes; the battle scene has a two-step target menu (`_choose_target` / `_choose_two_targets`, the second step titled with the first pick); the compendium target label is "Two foes" and the Multi-target damage line shows both values.
 - **Content:** Crossfire (fire, special, 44/4, Emberkit Lv 9), Twin Lash (grass, physical, 42/4, Sprigling Lv 10), Arc Pair (electric, special, 44/5, 10% shock, Voltmoth Lv 9); all accuracy 100. Shipped-content test: `tests/data/test_two_target_moves_data.gd`.
 - **Behaviour change:** an existing `all_enemies` / `all` move that hits exactly two creatures now takes x0.85 instead of x0.75. Three or more is unchanged.
 - **Next brainstorm:** multi-hit moves (one foe, several hits). Not started.
+
+## Debug team builder, larger parties, exhibition battles, engine tests (implemented, uncommitted)
+- **Spec:** `documentation/specs/2026-11-05-debug-team-builder-design.md` (Implemented); **plan:** `documentation/plans/2026-11-05-debug-team-builder.md` (7 tasks).
+- **What it does:**
+  - The F1 "Custom battle" page is now a team builder: both teams built from scratch (or "Fill from my party"), up to `balance.party_size` creatures per side, each side fielding 1–3 in any combination (1v1 … 2v3 … 3v3); per-creature species, level, 4 moves, held item and passive; "All levels"; an editable player bag; wild or tamer foes.
+  - Custom battles are **exhibitions**: nothing is written back (party, bag, money, flags, storage), no autosave, no defeat rules, captures are not kept; the results panel says "Exhibition — nothing was saved."
+  - `balance.party_size` (still 6 in `data/balance.json`) can be raised to the hard ceiling `BalanceDef.MAX_PARTY_SIZE = 12`; every party-facing screen copes (paged menus, Storage party pages). At most `BattleLauncher.MAX_SIDE = 3` on the field; a swap is one action (priority 6).
+- **Key code:**
+  - `core/battle/creature_spec.gd` (`CreatureSpec`): one slot (species, level, moves, held item, passive); `natural`, `from_instance`, `validate`, `to_instance`, `retarget`, `move_label` (learned / learns later / can't learn), `passive_label`.
+  - `BattleSetup.exhibition` (`core/battle/battle_setup.gd`) and `BattleLauncher.exhibition_setup(db, mine, mine_field, foes, foe_field, wild, bag, rng)` (`game/battle/battle_launcher.gd`); `battle_scene._results` and `battle_flow.run_battle` skip results/autosave for exhibitions.
+  - `CommandMenu` paging (`game/battle/command_menu.gd`): long lists split into pages ending in "Previous page" / "Next page · n/m" (both wrap).
+  - Debug pages: `game/debug/pages/debug_custom_battle_page.gd` (`DebugCustomBattlePage`, `make_setup()`), `debug_slot_editor.gd` (`DebugSlotEditor`), `debug_bag_page.gd` (`DebugBagPage`).
+  - `tools/simulate.gd`: `--party` clamped to 1..`balance.party_size` (and at least the larger side); passives now vary with the seed (the battle RNG is passed to `CreatureInstance.create`), so numbers differ from older runs.
+- **Tests:** `tests/battle/test_creature_spec.gd`, `tests/data/test_balance_party.gd`, `tests/game/test_exhibition.gd`, `test_debug_custom_battle.gd`, `test_command_menu_paging.gd`, extended `test_battle_launcher.gd` / `test_screens_smoke.gd`; engine suites `tests/battle/test_formats.gd`, `test_swaps.gd`, `test_targeting_matrix.gd`, `test_multi_format_effects.gd`, `test_simulation_invariants.gd` (seeded real-data AI battles, invariants checked every round, replay-identical logs; ~25 s). The "Testing" section of `documentation/battle-engine.md` lists what each covers.
+- **Tours:** `--mode=builder` (grow a team to `party_size`, foe tamer team fielding 3, slot editor with a can't-learn move, bag page, a 2v3 exhibition to the results panel, save unchanged and nothing autosaved) and `--mode=party [--party-size=N]` (every party screen with a full party of N, 1–12, set in memory only).
+- **Open notes (pinned, not decided):**
+  - `one_ally` targeting: a `one_ally` move can pick the user itself, and a fainted-ally pick falls back to the **user**, while the docs say an invalid target is replaced with a random valid one. Pinned as current behaviour in `tests/battle/test_targeting_matrix.gd` (`PIN` comments); `all` excluding the user is pinned there too.
+  - Underdog + swap: when an Underdog creature with several action slots swaps, its remaining queued actions are dropped and the newcomer gets none. Pinned in `tests/battle/test_swaps.gd` (`test_underdog_swapper_loses_its_remaining_actions_current_behaviour`).
 
 ## Possible next steps (none requested yet)
 - Brainstorm multi-hit moves (one foe, several hits), the follow-on to the two-target moves.

@@ -41,7 +41,8 @@ func test_test_party_unlocks_battles() -> void:
 	var world := await WorldTest.open(self, "", "", WorldTest.KEEP_GAME)
 	DebugMenu.open()
 	var buttons := _labels()
-	assert_bool(buttons["Custom battle..."].disabled).is_true()
+	assert_bool(buttons["Wild battle (Route 1)"].disabled).is_true()
+	assert_bool(buttons["Custom battle..."].disabled).is_false()  # builds its own teams
 	buttons["Get test party"].pressed.emit()
 	await get_tree().process_frame
 	assert_int(GameState.current.party.size()).is_equal(BattleLauncher.TEST_PARTY.size())

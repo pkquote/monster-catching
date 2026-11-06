@@ -90,4 +90,3 @@ func _bag() -> void:
 			page(msg.get(r.error, "It can't be used."))
 		await menu.choose("", [{"label": "OK", "value": null}], true, 1)
 	page("")
-

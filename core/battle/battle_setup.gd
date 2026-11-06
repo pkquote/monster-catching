@@ -14,6 +14,8 @@ var award_xp := true
 ## Side 0's XP and Bond-gain multipliers (the party lead's overworld passive).
 var xp_mult := 1.0
 var bond_gain := 1.0
+## A custom (debug) battle: nothing is written back to the save, no defeat rules.
+var exhibition: bool = false
 
 
 func add_side(party: Array, max_active: int, field_count: int = -1, items: Dictionary = {},

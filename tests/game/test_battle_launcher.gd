@@ -94,29 +94,10 @@ func test_loss_no_longer_heals() -> void:
 	assert_int(s.party[0].hp).is_equal(0)  # the overworld applies the defeat rules (Defeat)
 
 
-func test_custom_setup_builds_any_format() -> void:
+func test_party_level_is_the_average() -> void:
 	var s := _save()
+	assert_int(BattleLauncher.party_level(s)).is_equal(1)
 	BattleLauncher.grant_test_party(real, s)
-	for f in [[1, 3], [3, 1], [2, 3], [3, 3]]:
-		var setup := BattleLauncher.custom_setup(real, s, f[0], f[1], 12, true, rng)
-		assert_int(setup.sides[0].field_count).is_equal(f[0])
-		assert_int(setup.sides[0].max_active).is_equal(f[0])
-		assert_int(setup.sides[1].party.size()).is_equal(f[1])
-		assert_int(setup.sides[1].field_count).is_equal(f[1])
-		assert_bool(setup.is_wild).is_true()
-		for c: CreatureInstance in setup.sides[1].party:
-			assert_int(c.level).is_equal(12)
-
-
-func test_custom_setup_caps_by_healthy_and_tamer_mode() -> void:
-	var s := _save()
-	BattleLauncher.grant_test_party(real, s)
-	s.party[0].hp = 0
-	var setup := BattleLauncher.custom_setup(real, s, 3, 2, 5, false, rng)
-	assert_int(setup.sides[0].field_count).is_equal(2)
-	assert_bool(setup.is_wild).is_false()
-	assert_str(setup.sides[1].ai).is_equal("tactician")
-	assert_str(setup.foe_name).is_equal("Sparring Partner")
 	assert_int(BattleLauncher.party_level(s)).is_equal(8)
 
 
@@ -183,7 +164,6 @@ func test_setups_carry_the_lead_field_multipliers() -> void:
 	var setups := [
 		BattleLauncher.wild_setup(real, s, [FixtureDB.make(real, "tidepup", 2)], 1),
 		BattleLauncher.tamer_setup(real, s, "rival_01", 1),
-		BattleLauncher.custom_setup(real, s, 1, 1, 5, true, rng),
 	]
 	for setup: BattleSetup in setups:
 		assert_float(setup.bond_gain).is_equal_approx(1.25, 0.0001)
@@ -198,3 +178,43 @@ func test_setup_defaults_are_neutral() -> void:
 	var setup := BattleSetup.new()
 	assert_float(setup.xp_mult).is_equal(1.0)
 	assert_float(setup.bond_gain).is_equal(1.0)
+
+func _specs(n: int) -> Array:
+	var out: Array = []
+	for i: int in n:
+		out.append(CreatureSpec.natural(real, "tidepup", 6, rng))
+	return out
+
+
+func test_exhibition_setup_formats() -> void:
+	# [mine team, mine field, foe team, foe field, expected mine field, expected foe field]
+	for f: Array in [[3, 1, 3, 1, 1, 1], [3, 2, 3, 2, 2, 2], [4, 2, 5, 3, 2, 3], [6, 3, 6, 3, 3, 3], [1, 1, 6, 3, 1, 3]]:
+		var setup: BattleSetup = BattleLauncher.exhibition_setup(real, _specs(f[0]), f[1], _specs(f[2]), f[3], false, {}, rng)
+		assert_bool(setup.exhibition).is_true()
+		assert_int(setup.sides[0].field_count).is_equal(f[4])
+		assert_int(setup.sides[0].party.size()).is_equal(f[0])
+		assert_int(setup.sides[1].field_count).is_equal(f[5])
+		assert_int(setup.sides[1].party.size()).is_equal(f[2])
+
+
+func test_exhibition_setup_tamer_and_wild_ai() -> void:
+	var tamer: BattleSetup = BattleLauncher.exhibition_setup(real, _specs(2), 2, _specs(2), 2, false, {}, rng)
+	assert_str(tamer.sides[1].ai).is_equal("tactician")
+	assert_str(tamer.foe_name).is_equal("Sparring Partner")
+	assert_bool(tamer.is_wild).is_false()
+	assert_bool(tamer.sides[1].auto_replace).is_true()
+	var wild: BattleSetup = BattleLauncher.exhibition_setup(real, _specs(2), 2, _specs(5), 5, true, {"lure_cage": 2}, rng)
+	assert_str(wild.sides[1].ai).is_equal("basic")
+	assert_bool(wild.is_wild).is_true()
+	assert_bool(wild.sides[1].is_wild).is_true()
+	assert_int(wild.sides[1].party.size()).is_equal(BattleLauncher.MAX_SIDE)
+	assert_int(wild.sides[1].field_count).is_equal(BattleLauncher.MAX_SIDE)
+	assert_int(wild.sides[0].items.lure_cage).is_equal(2)
+	assert_bool(wild.exhibition).is_true()
+	assert_bool(BattleSetup.new().exhibition).is_false()
+
+
+func test_exhibition_setup_clamps_field_counts() -> void:
+	var setup: BattleSetup = BattleLauncher.exhibition_setup(real, _specs(2), 9, _specs(4), 0, false, {}, rng)
+	assert_int(setup.sides[0].field_count).is_equal(2)
+	assert_int(setup.sides[1].field_count).is_equal(1)

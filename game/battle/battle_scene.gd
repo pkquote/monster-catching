@@ -8,6 +8,8 @@ extends Control
 ## Optional params: "seed" (int), "return_to" (scene path, default the world).
 
 const STAGE_H := 236
+## Rows of options that fit the bottom panel under the menu title.
+const MENU_ROWS := 3
 ## The passive banner: a fixed box (long text is trimmed) kept inside the stage.
 const PASSIVE_BANNER := Vector2(240, 22)
 ## Top-left of each creature view, by side and number of slots on that side.
@@ -293,11 +295,26 @@ func _results() -> void:
 	phase = "results"
 	menu.show_idle()
 	var res := engine.result()
-	if GameState.has_game():
+	if setup.exhibition:
+		summary = BattleSummary.of(_exhibition_outcome(res), [], setup.tamer_id)
+		for c: CreatureInstance in res.captured:
+			summary.captured.append(c.display_name(db))
+	elif GameState.has_game():
 		summary = BattleLauncher.apply_results(db, GameState.current, engine)
 	else:
 		summary = BattleSummary.of(BattleSummary.WON if res.winner == 0 else BattleSummary.LOST, [], setup.tamer_id)
 	_show_results(res)
+
+
+func _exhibition_outcome(res: Dictionary) -> String:
+	match res.reason:
+		"fled":
+			return BattleSummary.FLED
+		"round_limit":
+			return BattleSummary.DRAW
+	if res.winner == 0 and setup.is_wild and not res.captured.is_empty():
+		return BattleSummary.CAPTURED
+	return BattleSummary.WON if res.winner == 0 else BattleSummary.LOST
 
 
 # --- Results panel ------------------------------------------------------------------
@@ -358,13 +375,18 @@ func result_lines(res: Dictionary) -> PackedStringArray:
 		if not bits.is_empty():
 			lines.append("%s: %s" % [display_name(b.bid), ", ".join(bits)])
 	for caught in summary.captured:
-		lines.append("%s joined your %s." % [caught, "party" if summary.to_storage == 0 else "storage"])
+		if setup.exhibition:
+			lines.append("%s was caught, but not kept." % caught)
+		else:
+			lines.append("%s joined your %s." % [caught, "party" if summary.to_storage == 0 else "storage"])
 	if summary.money > 0:
 		lines.append("Received %d money." % summary.money)
-	if summary.outcome == BattleSummary.LOST:
+	if summary.outcome == BattleSummary.LOST and not setup.exhibition:  # an exhibition heals nothing
 		lines.append("You hurried back to safety..." if params.get("defeat_rules", true)
 			else "Your team was patched up.")
-	if lines.is_empty():
+	if setup.exhibition:
+		lines.append("Exhibition — nothing was saved.")
+	elif lines.is_empty():
 		lines.append("Nothing gained this time.")
 	return lines
 
@@ -539,5 +561,6 @@ func _build_ui() -> void:
 	menu = CommandMenu.new()
 	menu.position = Vector2(10, STAGE_H + 22)
 	menu.size = Vector2(620, 98)
+	menu.max_rows = MENU_ROWS  # a long bench (up to 11) or target list pages instead of overflowing
 	add_child(menu)
 	menu.hovered.connect(func(hint): _highlight(hint))

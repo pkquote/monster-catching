@@ -108,10 +108,14 @@ func run() -> void:
 	await d._frames(5)
 	d.press("Custom battle...")
 	await d._frames(5)
+	# The team builder redraws on each change, so look the drop-downs up again each time.
 	var opts = d._find_all(d.root.get_node("DebugMenu"), "OptionButton")
 	opts[0].select(2)  # you field 3
 	opts[0].item_selected.emit(2)
+	await d._frames(2)
+	opts = d._find_all(d.root.get_node("DebugMenu"), "OptionButton")
 	opts[2].select(1)  # tamer
+	opts[2].item_selected.emit(1)
 	await d._frames(3)
 	await d.shot("b11_custom_panel")
 	d.press("Start")

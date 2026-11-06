@@ -102,6 +102,7 @@ Move targets: `self`, `one_ally`, `one_enemy`, `two_enemies`, `all_allies`, `all
   through Rest or items with `restore_energy`.
 - The fallback move (`energy.fallback_move`, Scrap) costs nothing and is always usable, even
   though it is not in any learnset.
+- `BattleSetup.exhibition` (default false, set by `BattleLauncher.exhibition_setup`) marks a debug custom battle: its teams are temporary creatures, and the flag suppresses everything that would reach the save (XP/Bond/HP/bag/money/capture writes, defeat rules, the "patched up" line, autosave, progress screens); the results panel says "Exhibition — nothing was saved."
 - `BattleSetup.award_xp = false` turns off XP (the simulator does this, since only side 0 earns XP).
 - `BattleSetup.xp_mult` and `bond_gain` (default 1.0) scale side 0's XP and positive Bond changes
   (rounded, at least 1; losses are never scaled). `BattleLauncher` sets both from the party lead's
@@ -362,4 +363,37 @@ godot --headless --path . --script res://tools/simulate.gd -- --battles=500 --fo
 ```
 
 It prints win rates per side, draws, average rounds, how often each reaction fires, and each
-species' win rate.
+species' win rate. `--party` is clamped to 1..`balance.party_size` and never below the larger
+fielded side (with `party_size` 6, `--party=12` runs with 6 and says so). Battle `i` uses one RNG
+seeded `seed + i` for the parties (species and rolled passives) and the battle, so a seed replays. Passives vary with the seed now (the battle RNG is passed to `CreatureInstance.create`), so numbers differ from older runs.
+
+## Testing
+
+The engine suites live in `tests/battle/` and run headless with the rest (`bash scripts/check.sh`).
+Most use the hand-tuned `FixtureDB` content (`tests/helpers/fixture_db.gd`), adding their own
+passives, held items and moves to `FixtureDB.raw()`, so real balance changes don't break them.
+
+| Suite | Covers |
+| --- | --- |
+| `test_formats.gd` | 1v1 to 3v3 with benches of 0, 3 and 9: the opening line-up, refilling slots, no creature on the field twice, every battle finishing; 1 vs a 12-creature party |
+| `test_swaps.gd` | A swap is one action at priority 6; stages reset on leaving; refused swaps; 12-creature benches; entry triggers fire once per entry |
+| `test_targeting_matrix.gd` | Every creature target key against 1–3 standing foes and allies, with the spread multiplier each hit takes |
+| `test_multi_format_effects.gd` | In 2v2 and 3v3: auras (passive and held) cover every ally and no foe; a `consumed` item is used up once per holder when two holders fire in one round; a `per_battle` item fires once per battle across swaps; absorb on one target of a spread or `two_enemies` move spares only that target while the other takes the same spread-reduced damage; Underdog's stat bonus, spread reduction and extra actions for 1v2, 1v3 and 2v3, and none at even sizes |
+| `test_simulation_invariants.gd` | Seeded AI battles on the real data (see below) and a stalled battle that ends in a draw at exactly `round_limit` |
+
+`test_simulation_invariants.gd` plays formats 1v1, 2v2, 3v3, 1v3 and 2v3 × seeds 1–20 the way the
+simulator does (tactician vs aggressive, random species with rolled passives at level 5 on odd seeds
+and 40 on even ones, a random held item on about a third of the creatures, benches of 0, 1, 3, 6 and 9).
+After every round it checks:
+
+- every battler's HP is within `[0, max_hp]`;
+- no event's `bid`, `by`, `target` or `targets` names an unknown bid (`-1` is allowed for "nobody");
+- a fainted creature has no action events (`move_used`, `item_used`, `rest`, `pass`, `fled`,
+  `swap_out`, `disobeyed`, `lashed_out`, `action_skipped`, `capture_attempt`) and receives no
+  `damage`, `heal`, `status_applied` or `stat_stage` after its `faint`, until a `send_out` places it
+  again (with HP above 0);
+- the battle ends within `round_limit` with exactly one `battle_end`, matching `result()`.
+
+Each run is played twice and the two event logs must be identical (`JSON.stringify`), and every
+format must have at least one battle won outright, so the simulation isn't all draws. It takes about
+25 seconds.

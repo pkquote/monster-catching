@@ -6,7 +6,8 @@ extends SceneTree
 ##   --battles=N        number of battles (default 200)
 ##   --seed=N           base RNG seed (default 1); battle i uses seed + i
 ##   --format=AvB       creatures fielded per side, e.g. 1v1, 2v2, 3v3, 1v3 (default 2v2)
-##   --party=N          creatures per team (default 3, at least the larger side)
+##   --party=N          creatures per team (default 3), clamped to 1..balance.party_size and never
+##                      below the larger fielded side (with party_size 6, --party=12 runs with 6)
 ##   --level=N          level of every creature (default 10)
 ##   --ai=A,B           AI style per side: basic | aggressive | tactician (default tactician,aggressive)
 
@@ -25,7 +26,10 @@ func _init() -> void:
 	var counts: PackedStringArray = str(_opts.format).split("v")
 	var field := [int(counts[0]), int(counts[1])]
 	var max_active := maxi(field[0], field[1])
-	var party_size := maxi(int(_opts.party), max_active)
+	var party_size: int = maxi(clampi(int(_opts.party), 1, db.balance.party_size), max_active)
+	if party_size != int(_opts.party):
+		print("--party=%d clamped to %d (balance.party_size %d, format %s)" % [int(_opts.party), party_size,
+			db.balance.party_size, _opts.format])
 	var ais: PackedStringArray = str(_opts.ai).split(",")
 	var species := db.ids("creatures")
 
@@ -42,7 +46,8 @@ func _init() -> void:
 		for s in 2:
 			for n in party_size:
 				var sp: String = species[rng.randi_range(0, species.size() - 1)]
-				parties[s].append(CreatureInstance.create(db, sp, int(_opts.level)))
+				# The battle's RNG rolls the passive too, so passives now vary with the seed (older runs differ).
+				parties[s].append(CreatureInstance.create(db, sp, int(_opts.level), PackedStringArray(), rng))
 		var setup := BattleSetup.new()
 		setup.award_xp = false  # XP only goes to side 0 and would bias results
 		setup.add_side(parties[0], max_active, field[0], {}, ais[0], true)

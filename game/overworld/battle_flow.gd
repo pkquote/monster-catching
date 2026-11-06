@@ -84,6 +84,10 @@ func run_battle(setup: BattleSetup, defeat_rules := true) -> bool:
 	var summary: BattleSummary = await scene.finished  # carries setup.tamer_id
 	layer.queue_free()
 	_battle_layer = null
+	if setup.exhibition:  # no defeat rules, progress screens or autosave
+		_world.roller.start_grace()
+		_world.unlock(Overworld.LOCK_BATTLE)
+		return summary.is_win()
 	var won := await after_battle(summary, defeat_rules)
 	_world.unlock(Overworld.LOCK_BATTLE)
 	return won

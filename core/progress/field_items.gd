@@ -1,10 +1,10 @@
 class_name FieldItems
 extends RefCounted
 ## Using items outside battle (the pause menu's Bag). Supports healing items whose
-## effects are `heal` and/or `restore_energy` with a `fraction` of the maximum, and
-## training items whose effect is `reset_training`.
+## effects are `heal` and/or `restore_energy` with a `fraction` of the maximum and/or
+## `cure_status`, and training items whose effect is `reset_training`.
 
-const OPS := ["heal", "restore_energy"]
+const OPS := ["heal", "restore_energy", "cure_status"]
 
 
 static func can_use(db: Database, item_id: String) -> bool:
@@ -15,7 +15,7 @@ static func can_use(db: Database, item_id: String) -> bool:
 		return it.effects.all(func(e): return e.op == "reset_training")
 	if it.category != "heal":
 		return false
-	return it.effects.all(func(e): return e.op in OPS and e.has("fraction"))
+	return it.effects.all(func(e): return e.op in OPS and (e.op == "cure_status" or e.has("fraction")))
 
 
 ## Whether `item_id` can be used from the bag right now, and why not. Returns { ok, reason }.
@@ -55,7 +55,14 @@ static func _would_gain(db: Database, it: ItemDef, m: CreatureInstance) -> bool:
 			return true
 		if e.op == "restore_energy" and m.energy < m.max_energy(db):
 			return true
+		if e.op == "cure_status" and _cures(e, m):
+			return true
 	return false
+
+
+## Whether a `cure_status` effect would clear `m`'s current status.
+static func _cures(e: Dictionary, m: CreatureInstance) -> bool:
+	return m.status != "" and (not e.has("status") or e.status == m.status)
 
 
 static func _usability(ok: bool, reason: String) -> Dictionary:
@@ -66,7 +73,7 @@ static func _usability(ok: bool, reason: String) -> Dictionary:
 ## errors: "not_usable", "none_left", "fainted", "no_effect" (nothing to restore),
 ## "nothing_to_refund" (Reset Seed on a creature with no training). A failed use spends nothing.
 static func use(db: Database, save: SaveGame, item_id: String, c: CreatureInstance) -> Dictionary:
-	var out := {"ok": false, "error": "", "healed": 0, "energy": 0, "refunded": 0}
+	var out := {"ok": false, "error": "", "healed": 0, "energy": 0, "refunded": 0, "cured": false}
 	if not can_use(db, item_id):
 		out.error = "not_usable"
 		return out
@@ -92,13 +99,17 @@ static func use(db: Database, save: SaveGame, item_id: String, c: CreatureInstan
 			"restore_energy":
 				var max_e := c.max_energy(db)
 				out.energy = mini(maxi(1, roundi(max_e * float(e.fraction))), max_e - c.energy)
-	if out.healed <= 0 and out.energy <= 0:
+			"cure_status":
+				out.cured = out.cured or _cures(e, c)
+	if out.healed <= 0 and out.energy <= 0 and not out.cured:
 		out.healed = 0
 		out.energy = 0
 		out.error = "no_effect"
 		return out
 	c.hp += out.healed
 	c.energy += out.energy
+	if out.cured:
+		c.status = ""
 	_spend(save, item_id)
 	out.ok = true
 	return out

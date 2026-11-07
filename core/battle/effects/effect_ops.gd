@@ -20,6 +20,7 @@ static func get_op(op: String) -> EffectOp:
 			"bonus_if_field": preload("op_bonus_if_field.gd").new(),
 			"capture": preload("op_capture.gd").new(),
 			"restore_energy": preload("op_restore_energy.gd").new(),
+			"cure_status": preload("op_cure_status.gd").new(),
 			"stat_mod": preload("op_passive.gd").new(),
 			"incoming_type_mod": preload("op_passive.gd").new(),
 			"skip_chance": preload("op_passive.gd").new(),

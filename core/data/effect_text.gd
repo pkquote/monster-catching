@@ -23,7 +23,7 @@ const TARGET_LABELS := {
 	"attacker": "Attacker",
 }
 const TRIGGER_LABELS := {"enter": "entering", "hit": "being hit", "round_end": "round end",
-	"knockout": "a knockout", "faint": "fainting"}
+	"knockout": "a knockout", "faint": "fainting", "status": "getting a status"}
 const STAT_LABELS := {"hp": "HP", "patk": "P.Atk", "pdef": "P.Def", "satk": "S.Atk", "sdef": "S.Def",
 	"spd": "Spd", "acc": "Acc", "luck": "Luck", "resolve": "Resolve", "stamina": "Stamina"}
 
@@ -137,6 +137,8 @@ static func effect(db: Database, e: Dictionary) -> String:
 			s = "Bond gains x%s" % num(e.mult)
 		"restore_energy":
 			s = "Restores %s max energy" % pct(e.fraction)
+		"cure_status":
+			s = "Cures %s" % (db.status(e.status).name if e.has("status") else "any status")
 		"capture":
 			s = "Capture x%s" % num(e.mult)
 			var bonus: Dictionary = e.get("field_bonus", {})

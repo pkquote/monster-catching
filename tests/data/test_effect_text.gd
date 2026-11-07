@@ -51,6 +51,11 @@ func test_known_sentences() -> void:
 		.is_equal("Fire moves x1.5 [HP below 34%]")
 
 
+func test_cure_status_text() -> void:
+	assert_str(EffectText.effect(_db, {"op": "cure_status"})).is_equal("Cures any status")
+	assert_str(EffectText.effect(_db, {"op": "cure_status", "status": "burn"})).is_equal("Cures Burn")
+
+
 func _check(effect: Dictionary, expected: String) -> void:
 	assert_str(EffectText.effect(_db, effect)).is_equal(expected)
 

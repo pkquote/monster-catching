@@ -258,6 +258,18 @@
         {"op": "stat_stage", "stat": "luck", "stages": 2, "target": "self"},
         {"op": "stat_stage", "stat": "luck", "stages": -2}
       ]
+    },
+    {
+      "id": "tp_purify",
+      "name": "TP Purify",
+      "description": "Tests the cure_status op as a move effect: the user clears its own status.",
+      "type": "light",
+      "category": "status",
+      "power": 0,
+      "cost": 4,
+      "accuracy": 100,
+      "target": "self",
+      "effects": [{"op": "cure_status"}]
     }
   ]
 }

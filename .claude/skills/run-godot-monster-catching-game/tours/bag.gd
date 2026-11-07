@@ -70,6 +70,9 @@ func run() -> void:
 	d.expect(s.title_text() == "" and s.body_text() == "Pick an item.", "Back shows Pick an item. (%s)" % s.body_text())
 
 	# 3. Salve -> the "use on who?" list replaces the pane; Back brings the pane back.
+	# A Clear Tonic and a burn are added first so step 4 can cure it.
+	gs.current.inventory["clear_tonic"] = 1
+	pup.status = "burn"
 	await d.pick_menu("Salve")
 	await d._frames(5)
 	await d.shot("bag06_use_on_who")
@@ -78,6 +81,21 @@ func run() -> void:
 	await d.pick_menu("Back")
 	await d._frames(5)
 	d.expect(s.is_visible_in_tree() and s.title_text() == "Salve", "Back from the targets shows the pane again")
+
+	# 4. Clear Tonic cures the burn: it is usable now, then gone, and the status is cleared.
+	await d.pick_menu("Clear Tonic")
+	await d._frames(5)
+	await d.shot("bag08_clear_tonic_targets")
+	d.expect("Use the Clear Tonic on who?" in pm.page_text(), "Clear Tonic asks who (%s)" % pm.page_text().replace("
+", " | "))
+	await d.pick_menu(pup.display_name(db))
+	await d._frames(5)
+	await d.shot("bag09_cured")
+	d.expect(pup.status == "" and not gs.current.inventory.has("clear_tonic") and "was cured" in pm.page_text(),
+		"Clear Tonic cured the burn and was spent (%s | %s)" % [pup.status, pm.page_text().replace("
+", " | ")])
+	await d.pick_menu("OK")
+	await d._frames(5)
 	await d.pick_menu("Back")
 	await d._frames(5)
 	await d.shot("bag07_menu_after")

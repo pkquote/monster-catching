@@ -257,3 +257,94 @@ func _assert_usability_matches_use(d: Database, species: String, ids: Array) -> 
 			assert_bool(u.ok).override_failure_message(
 					"%s on party of %d: usability.ok=%s but use-success=%s" % [id, party.size(), u.ok, any_ok]
 			).is_equal(any_ok)
+
+
+# --- Cure items (fixture data) ---
+
+func _cure_db() -> Database:
+	var r := FixtureDB.raw()
+	r.add_entry("items", {"id": "remedy", "name": "Remedy", "category": "heal", "price": 1,
+		"target": "one_ally", "effects": [{"op": "cure_status"}]})
+	r.add_entry("items", {"id": "burn_ward", "name": "Burn Ward", "category": "heal", "price": 1,
+		"target": "one_ally", "effects": [{"op": "cure_status", "status": "burn"}]})
+	r.add_entry("items", {"id": "full_remedy", "name": "Full Remedy", "category": "heal", "price": 1,
+		"target": "one_ally", "effects": [{"op": "heal", "fraction": 1.0}, {"op": "cure_status"}]})
+	return Database.from_raw(r)
+
+
+func _cure_setup(cdb: Database) -> CreatureInstance:
+	save.inventory = {"remedy": 2, "burn_ward": 1, "full_remedy": 1}
+	save.party.clear()
+	var m := CreatureInstance.create(cdb, "blob", 10)
+	save.party.append(m)
+	return m
+
+
+func test_cure_item_clears_status_and_is_spent() -> void:
+	var cdb := _cure_db()
+	var m := _cure_setup(cdb)
+	m.status = "burn"
+	var r := FieldItems.use(cdb, save, "remedy", m)
+	assert_bool(r.ok).is_true()
+	assert_bool(r.cured).is_true()
+	assert_str(m.status).is_equal("")
+	assert_int(save.inventory.remedy).is_equal(1)
+
+
+func test_cure_item_with_no_status_is_no_effect() -> void:
+	var cdb := _cure_db()
+	var m := _cure_setup(cdb)
+	assert_str(FieldItems.use(cdb, save, "remedy", m).error).is_equal("no_effect")
+	assert_int(save.inventory.remedy).is_equal(2)
+
+
+func test_filtered_cure_on_the_wrong_status_is_no_effect() -> void:
+	var cdb := _cure_db()
+	var m := _cure_setup(cdb)
+	m.status = "shock"
+	assert_str(FieldItems.use(cdb, save, "burn_ward", m).error).is_equal("no_effect")
+	assert_str(m.status).is_equal("shock")
+	assert_int(save.inventory.burn_ward).is_equal(1)
+
+
+func test_combined_item_cures_and_heals() -> void:
+	var cdb := _cure_db()
+	var m := _cure_setup(cdb)
+	m.status = "burn"
+	m.hp = 1
+	var r := FieldItems.use(cdb, save, "full_remedy", m)
+	assert_bool(r.ok).is_true()
+	assert_bool(r.cured).is_true()
+	assert_int(r.healed).is_greater(0)
+	assert_int(m.hp).is_equal(m.max_hp(cdb))
+	# Burned at full HP: still worth using.
+	save.inventory.full_remedy = 1
+	m.status = "burn"
+	r = FieldItems.use(cdb, save, "full_remedy", m)
+	assert_bool(r.ok).is_true()
+	assert_int(r.healed).is_equal(0)
+	# Healthy at full HP: nothing to do.
+	save.inventory.full_remedy = 1
+	assert_str(FieldItems.use(cdb, save, "full_remedy", m).error).is_equal("no_effect")
+
+
+func test_cure_item_on_a_fainted_creature() -> void:
+	var cdb := _cure_db()
+	var m := _cure_setup(cdb)
+	m.status = "burn"
+	m.hp = 0
+	assert_str(FieldItems.use(cdb, save, "remedy", m).error).is_equal("fainted")
+	assert_int(save.inventory.remedy).is_equal(2)
+
+
+func test_can_use_and_usability_for_cure_items() -> void:
+	var cdb := _cure_db()
+	var m := _cure_setup(cdb)
+	assert_bool(FieldItems.can_use(cdb, "remedy")).is_true()
+	assert_bool(FieldItems.can_use(cdb, "burn_ward")).is_true()
+	var u := FieldItems.usability(cdb, save, "remedy")
+	assert_bool(u.ok).is_false()
+	assert_str(u.reason).is_equal("No one needs it right now.")
+	m.status = "shock"
+	assert_bool(FieldItems.usability(cdb, save, "remedy").ok).is_true()
+	assert_bool(FieldItems.usability(cdb, save, "burn_ward").ok).is_false()

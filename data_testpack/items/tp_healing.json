@@ -40,13 +40,14 @@
     {
       "id": "tp_full_restore",
       "name": "TP Full Restore",
-      "description": "No cure op exists, so this heals all HP and restores all energy as the stand-in for a full cure.",
+      "description": "Tests a full cure: heals all HP, restores all energy and cures any status.",
       "category": "heal",
       "price": 2000,
       "target": "one_ally",
       "effects": [
         {"op": "heal", "fraction": 1.0},
-        {"op": "restore_energy", "fraction": 1.0}
+        {"op": "restore_energy", "fraction": 1.0},
+        {"op": "cure_status"}
       ]
     },
     {
@@ -57,6 +58,24 @@
       "price": 300,
       "target": "one_ally",
       "effects": [{"op": "stat_stage", "stat": "spd", "stages": 3}]
+    },
+    {
+      "id": "tp_antidote",
+      "name": "TP Antidote",
+      "description": "Tests a filtered cure_status: cures Burn and nothing else.",
+      "category": "heal",
+      "price": 50,
+      "target": "one_ally",
+      "effects": [{"op": "cure_status", "status": "burn"}]
+    },
+    {
+      "id": "tp_cure_all",
+      "name": "TP Cure All",
+      "description": "Tests an unfiltered cure_status: cures whatever status the creature has.",
+      "category": "heal",
+      "price": 100,
+      "target": "one_ally",
+      "effects": [{"op": "cure_status"}]
     }
   ]
 }

@@ -198,6 +198,15 @@
         {"op": "bond_gain", "mult": 0.0},
         {"op": "xp_mult", "mult": 0.0}
       ]
+    },
+    {
+      "id": "tp_purifier",
+      "name": "TP Purifier",
+      "description": "Tests cure_status on a round_end trigger (clears its own status each round) and the status trigger (raises its own Physical Attack one stage when given a status).",
+      "triggers": [
+        {"on": "round_end", "effects": [{"op": "cure_status"}]},
+        {"on": "status", "effects": [{"op": "stat_stage", "stat": "patk", "stages": 1}]}
+      ]
     }
   ]
 }

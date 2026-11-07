@@ -14,7 +14,7 @@
 | [Passives](#passives) | 19 |
 | [Held items](#held-items) | 5 |
 | [Moves](#moves) | 47 |
-| [Items](#items) | 6 |
+| [Items](#items) | 7 |
 | [Creatures](#creatures) | 8 |
 | [Tamers](#tamers) | 4 |
 | [Encounters](#encounters) | 2 |
@@ -567,6 +567,7 @@ Bag items, used from the bag in battle or on the field. Held items are listed un
 
 | Item | Id | Category | Price | Target | Effects | Description |
 |---|---|---|---|---|---|---|
+| **Clear Tonic** | `clear_tonic` | Heal | 200 | One ally | Cures any status | Cures a creature's status condition. |
 | **Lure Cage** | `lure_cage` | Capture | 100 | One enemy | Capture x1 | A plain woven cage. Works anywhere. |
 | **Reset Seed** | `reset_seed` | Training | 600 | One ally | Returns all spent training points (field use only) | Returns all of a creature's training points so they can be spent again. |
 | **Salve** | `salve` | Heal | 150 | One ally | Heals 33% max HP | Restores a third of a creature's HP. |

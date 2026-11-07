@@ -213,6 +213,7 @@ on `b`: its side's field states (minus any it shelters from), its status, and
 | `round_end` | End of each round while on the field, before field states count down (fastest first) | itself |
 | `knockout` | It knocked out a foe | itself |
 | `faint` | It fainted | the creature that knocked it out |
+| `status` | A status was just applied to it (after `status_applied`; a blocked, resisted or failed status doesn't fire it) | itself |
 
 Rules:
 
@@ -223,10 +224,12 @@ Rules:
   allies hold it.
 - Effects run by a trigger never set off further passive triggers (a depth guard in
   `PassiveRules`), and a creature a trigger's effects knock out fires no `faint` or `knockout`
-  triggers.
+  triggers. That includes `status`: a status given by another trigger's effects (a contact-burn
+  passive, say) does not set off the target's `status` trigger.
 - `chance` (1–100) rolls the battle RNG only when it is below 100.
-- A trigger whose effects would all do nothing (only `heal` on creatures at full HP and
-  `restore_energy` on creatures at full energy) is skipped: no banner, no events. Any other op
+- A trigger whose effects would all do nothing (only `heal` on creatures at full HP,
+  `restore_energy` on creatures at full energy and `cure_status` on creatures with no matching
+  status) is skipped: no banner, no events, and a consumed held item is not used up. Any other op
   counts as doing something.
 
 `passive_triggered { bid, passive }` is emitted whenever a passive visibly acts: before a
@@ -289,7 +292,9 @@ Damage estimates already include stat, type-power, resistance, Scrap and reactio
 - **Own passives (tactician):** `field_boost` stacks count toward a setup's reaction value, and `rest_bonus` scales Rest's value.
 - **Retaliation (tactician):** a hit that doesn't knock the target out is charged the expected cost of the target's `hit` triggers on the attacker (status, stat drop or damage, weighted by chance; `contact` triggers need a physical move), less whatever the attacker's own passive blocks.
 
-Not modelled: faint, knockout, enter and round-end triggers.
+- **Cures:** a move with a `cure_status` effect is worth the status value of each afflicted creature on the user's own side it would cure (zero otherwise, and never for a foe).
+
+Not modelled: faint, knockout, enter, round-end and status triggers.
 
 ## Code layout
 
@@ -331,7 +336,7 @@ in `BattleText` (and `BattlePlayback` if it changes what's on screen).
 | `disobeyed` | `bid`, `ordered`, `did` (`""` = loafed around) |
 | `lashed_out` | `bid`, `target` |
 | `heal` | `bid`, `amount`, `hp`, `max_hp` |
-| `status_applied`, `status_failed`, `status_ended` | `bid`, `status` (`has` on failure) |
+| `status_applied`, `status_failed`, `status_ended` | `bid`, `status` (`has` on failure; `status_ended` also has `cured: true` when a `cure_status` effect cleared it, absent when it ran out) |
 | `action_skipped` | `bid`, `status` |
 | `stat_stage` | `bid`, `stat`, `change`, `stage` |
 | `field_applied` | `side`, `state`, `stacks`, `turns`, `by` |

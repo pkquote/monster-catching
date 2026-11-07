@@ -110,6 +110,20 @@ func test_effect_op_fields_are_checked() -> void:
 	assert_str(_errors_for(raw)).contains("unknown field_states id 'lava'")
 
 
+func test_cure_status_rejects_unknown_status() -> void:
+	var raw := _base()
+	raw.entries.moves[0].entry = _move({"effects": [{"op": "cure_status", "status": "nope"}]})
+	assert_str(_errors_for(raw)).contains("unknown statuses id 'nope'")
+
+
+func test_cure_status_accepts_no_status() -> void:
+	var raw := _base()
+	raw.entries.moves[0].entry = _move({"effects": [{"op": "cure_status"}]})
+	assert_str(_errors_for(raw)).is_empty()
+	raw.entries.moves[0].entry = _move({"effects": [{"op": "cure_status", "status": "burn"}]})
+	assert_str(_errors_for(raw)).is_empty()
+
+
 func test_field_boost_needs_stacks_or_turns() -> void:
 	var bare := _base()
 	bare.entries.passives[0].entry = {"id": "steady", "name": "Steady",

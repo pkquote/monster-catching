@@ -49,6 +49,8 @@ static func describe(ev: Dictionary, db: Database, names: Callable, tamer_name: 
 		"status_failed":
 			return "%s is already %s." % [_n(names, ev, "bid"), db.status(ev.has).name.to_lower()]
 		"status_ended":
+			if ev.get("cured", false):
+				return "%s was cured of %s." % [_n(names, ev, "bid"), db.status(ev.status).name.to_lower()]
 			return "%s is no longer %s." % [_n(names, ev, "bid"), db.status(ev.status).name.to_lower()]
 		"action_skipped":
 			return "%s is %s and can't act!" % [_n(names, ev, "bid"), db.status(ev.status).name.to_lower()]

@@ -223,6 +223,28 @@
         "use": "per_battle",
         "triggers": [{"on": "faint", "effects": [{"op": "damage_fraction", "fraction": 0.5}]}]
       }
+    },
+    {
+      "id": "tp_clear_berry",
+      "name": "TP Clear Berry",
+      "description": "Tests the status trigger with a consumed cure_status: cures the status it was just given, then is used up.",
+      "category": "held",
+      "price": 250,
+      "held": {
+        "use": "consumed",
+        "triggers": [{"on": "status", "effects": [{"op": "cure_status"}]}]
+      }
+    },
+    {
+      "id": "tp_h_pb_status",
+      "name": "TP Held Per Battle Status",
+      "description": "Tests a per_battle status trigger: the first time the holder is given a status, its Speed rises one stage.",
+      "category": "held",
+      "price": 400,
+      "held": {
+        "use": "per_battle",
+        "triggers": [{"on": "status", "effects": [{"op": "stat_stage", "stat": "spd", "stages": 1}]}]
+      }
     }
   ]
 }

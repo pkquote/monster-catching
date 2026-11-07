@@ -430,6 +430,21 @@ func inflict_status(target: Battler, status_id: String, user: Battler) -> void:
 	emit({"type": BattleEvents.STATUS_APPLIED, "bid": target.bid, "status": status_id, "turns": target.status_turns})
 	if user != null and user.side != target.side:
 		rewards.award(user, "status_inflicted")
+	passive_rules.fire(target, "status", user)
+
+
+## Clears `target`'s status (only `status_id` when it is not ""). Does nothing, silently, when
+## the target has fallen or has no matching status. Returns whether it cured.
+func cure_status(target: Battler, status_id: String, from_item := false) -> bool:
+	var current := target.status()
+	if not target.alive() or current == "" or (status_id != "" and status_id != current):
+		return false
+	target.creature.status = ""
+	target.status_turns = 0
+	emit({"type": BattleEvents.STATUS_ENDED, "bid": target.bid, "status": current, "cured": true})
+	if from_item:
+		rewards.bond(target, "healed_item")
+	return true
 
 
 func shift_stage(target: Battler, stat: String, amount: int, user: Battler) -> void:

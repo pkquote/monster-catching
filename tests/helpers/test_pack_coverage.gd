@@ -65,7 +65,7 @@ func test_passive_triggers_whens_and_held_use_kinds() -> void:
 			"held": {"use": "per_battle", "triggers": [{"on": "round_end", "effects": [{"op": "heal", "fraction": 0.1}]}]}}],
 	])
 	assert_array(Array(rep.when_keys)).is_empty()
-	assert_array(Array(rep.trigger_on)).contains_exactly_in_any_order(["round_end", "knockout"])
+	assert_array(Array(rep.trigger_on)).contains_exactly_in_any_order(["round_end", "knockout", "status"])
 	assert_array(Array(rep.use_kinds)).contains_exactly(["per_battle"])
 	assert_bool(rep.effect_ops.has("encounter_rate")).is_false()
 	assert_bool(rep.effect_ops.has("xp_mult")).is_true()

@@ -28,6 +28,7 @@ const OP_TESTS: Dictionary = {
 	"restore_energy": ["test_restore_energy_restores_a_fraction_of_max_energy"],
 	"stat_stage": ["test_stat_stage_applied_and_clamped_at_the_engine_limit"],
 	"apply_status": ["test_apply_status_with_chance_100_always_lands"],
+	"cure_status": ["test_cure_status_clears_a_status_and_ignores_a_mismatch"],
 	"apply_field_state": ["test_apply_field_state_stacks_and_clamps_to_max_stacks"],
 	"remove_field_state": ["test_remove_field_state_clears_one_or_all_states"],
 	"bonus_if_field": ["test_bonus_if_field_with_consume_multiplies_then_cashes_in",
@@ -138,7 +139,7 @@ func test_every_move_legal_op_has_a_mechanic_test() -> void:
 		if EffectOps.get_op(op).get_script() == passive_script:
 			continue
 		run_ops.append(op)
-	assert_int(run_ops.size()).is_equal(9)
+	assert_int(run_ops.size()).is_equal(10)
 	assert_array(run_ops).contains_exactly_in_any_order(OP_TESTS.keys())
 	for op: String in OP_TESTS:
 		var names: Array = OP_TESTS[op]
@@ -290,6 +291,34 @@ func test_energy_cost_is_paid_and_an_unaffordable_move_is_rejected() -> void:
 
 
 # --- stat stages and statuses ------------------------------------------------------------
+
+func test_cure_status_clears_a_status_and_ignores_a_mismatch() -> void:
+	var e: BattleEngine = _engine([_make(PLAIN, 30, ["tp_purify"])], [_make(PLAIN, 30, ["tp_power_min"])])
+	var me: Battler = _first(e, 0)
+	me.creature.status = "shock"
+	me.status_turns = 3
+	assert_bool(e.cure_status(me, "burn")).is_false()
+	assert_str(me.status()).is_equal("shock")
+	me.creature.status = "burn"
+	var evs: Array = _round(e, [BattleAction.use_move(me.bid, "tp_purify", me.bid)])
+	var ended: Array = _of(evs, BattleEvents.STATUS_ENDED, me.bid)
+	assert_int(ended.size()).is_equal(1)
+	assert_bool(bool(ended[0].cured)).is_true()
+	assert_str(me.status()).is_equal("")
+	# Nothing to cure: no event.
+	evs = _round(e, [BattleAction.use_move(me.bid, "tp_purify", me.bid)])
+	assert_int(_of(evs, BattleEvents.STATUS_ENDED).size()).is_equal(0)
+
+
+func test_status_trigger_berry_cures_the_status_it_was_given() -> void:
+	var e: BattleEngine = _engine([_make(PLAIN, 30, ["tp_power_min"], "", "tp_clear_berry")],
+		[_make(PLAIN, 30, ["tp_inflict_burn"])])
+	var me: Battler = _first(e, 0)
+	var foe: Battler = _first(e, 1)
+	var evs: Array = _round(e, [BattleAction.use_move(foe.bid, "tp_inflict_burn", me.bid)])
+	assert_int(_of(evs, BattleEvents.STATUS_APPLIED, me.bid).size()).is_equal(1)
+	assert_str(me.status()).is_equal("")
+	assert_str(me.creature.held_item).is_equal("")
 
 func test_stat_stage_applied_and_clamped_at_the_engine_limit() -> void:
 	var e: BattleEngine = _engine([_make(PLAIN, 30, ["tp_stage_patk_swing"])], [_make(PLAIN, 30, ["tp_power_min"])])
@@ -710,7 +739,7 @@ func test_faint_trigger_fires_once_on_the_killer() -> void:
 
 
 func test_every_trigger_kind_has_a_test() -> void:
-	var tested: Array = ["enter", "hit", "round_end", "knockout", "faint"]
+	var tested: Array = ["enter", "hit", "round_end", "knockout", "faint", "status"]
 	assert_array(Array(DataSchemas.TRIGGER_ON)).contains_exactly_in_any_order(tested)
 	assert_array(Array(DataSchemas.HELD.use.values)).contains_exactly_in_any_order(["permanent", "consumed", "per_battle"])
 

@@ -60,7 +60,7 @@ func test_sell_price_and_unsellable() -> void:
 func test_town_shop_buy_list_fits_the_viewport() -> void:
 	var suite := WorldTest.begin_suite("shopfit", false)
 	var world := await WorldTest.open(self, "test_a", "start")
-	var stock := PackedStringArray(["lure_cage", "tide_net", "snare_vine", "salve", "tonic", "reset_seed",
+	var stock := PackedStringArray(["lure_cage", "tide_net", "snare_vine", "salve", "tonic", "clear_tonic", "reset_seed",
 		"tide_charm", "oran_berry", "rough_bark", "scout_lens", "guard_banner"])
 	world.open_shop(stock)
 	await get_tree().process_frame

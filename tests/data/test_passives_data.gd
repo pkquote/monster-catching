@@ -54,7 +54,7 @@ func test_validator_rejects_bad_passive_data() -> void:
 		"[passives:bad] effects[0].op: unknown effect op \"explode\"")
 	assert_str(_errors_with_passive({"id": "bad", "name": "Bad",
 		"triggers": [{"on": "sneeze", "effects": [{"op": "heal", "fraction": 0.1}]}]})).contains(
-		"[passives:bad] triggers[0].on: expected one of [\"enter\", \"hit\", \"round_end\", \"knockout\", \"faint\"] (got \"sneeze\")")
+		"[passives:bad] triggers[0].on: expected one of [\"enter\", \"hit\", \"round_end\", \"knockout\", \"faint\", \"status\"] (got \"sneeze\")")
 	assert_str(_errors_with_passive({"id": "bad", "name": "Bad",
 		"effects": [{"op": "stat_mod", "stat": "patk", "mult": 1.1, "when": {"mood": true}}]})).contains(
 		"[passives:bad] effects[0].when.mood: unknown field")

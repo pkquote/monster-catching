@@ -88,7 +88,7 @@ func test_report_is_not_vacuous() -> void:
 	# The families are judged against non-empty requirement lists.
 	assert_int(DataSchemas.EFFECT_OPS.size()).is_greater(10)
 	assert_int(DataSchemas.MOVE_TARGETS.size()).is_equal(9)
-	assert_int(DataSchemas.TRIGGER_ON.size()).is_equal(5)
+	assert_int(DataSchemas.TRIGGER_ON.size()).is_equal(6)
 	assert_int(_db.ids("types").size()).is_equal(14)
 	assert_int(_db.ids("statuses").size()).is_greater(0)
 	assert_int(_db.ids("field_states").size()).is_greater(0)

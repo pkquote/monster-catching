@@ -61,7 +61,7 @@ title = "nurse"
 [node name="ShopCounter" type="Node2D" parent="Entities" unique_id=2035989050 instance=ExtResource("11_8jrbe")]
 position = Vector2(240, 80)
 script = ExtResource("12_cnavs")
-stock = PackedStringArray("lure_cage", "tide_net", "snare_vine", "salve", "tonic", "reset_seed", "tide_charm", "oran_berry", "rough_bark", "scout_lens", "guard_banner")
+stock = PackedStringArray("lure_cage", "tide_net", "snare_vine", "salve", "tonic", "clear_tonic", "reset_seed", "tide_charm", "oran_berry", "rough_bark", "scout_lens", "guard_banner")
 
 [node name="StorageBox" type="Node2D" parent="Entities" unique_id=1131091542 instance=ExtResource("13_2qywn")]
 position = Vector2(272, 80)

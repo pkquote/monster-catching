@@ -2,7 +2,7 @@ class_name PassiveRules
 extends BattlePart
 ## Creature passives in battle: the always-on effects a battler gets from its own active
 ## passive and from allied auras (scope "allies"), and its triggers (enter, hit, round_end,
-## knockout, faint). Only creatures on the field and standing contribute, receive or fire
+## knockout, faint, status). Only creatures on the field and standing contribute, receive or fire
 ## anything (a faint trigger fires as its creature goes down).
 ##
 ## Effects run by a trigger never set off further triggers: while one runs (_depth > 0),
@@ -11,7 +11,7 @@ extends BattlePart
 
 ## Who a trigger's effects land on when an effect has no "target" of its own.
 const DEFAULT_TARGET := {"enter": "self", "hit": "attacker", "round_end": "self",
-	"knockout": "self", "faint": "attacker"}
+	"knockout": "self", "faint": "attacker", "status": "self"}
 
 var _depth := 0
 ## bids knocked out by a trigger's effects (their faint fires no triggers).
@@ -154,16 +154,21 @@ func _use_up(b: Battler) -> bool:
 	return false
 
 
-## True when every effect would change nothing: only heals on creatures at full HP and
-## energy restores on creatures at full energy. Such a trigger is skipped (no banner).
+## True when every effect would change nothing: only heals on creatures at full HP, energy
+## restores on creatures at full energy and cures of a status nobody has. Such a trigger is
+## skipped (no banner).
 func _does_nothing(ctx: EffectContext, effects: Array) -> bool:
 	var e := engine
 	for eff: Dictionary in effects:
-		if eff.op != "heal" and eff.op != "restore_energy":
+		if eff.op != "heal" and eff.op != "restore_energy" and eff.op != "cure_status":
 			return false
 		var targets: Array[Battler] = e._effect_targets(ctx, eff.target) if eff.has("target") else ctx.targets
 		for t in targets:
 			if not t.alive():
+				continue
+			if eff.op == "cure_status":
+				if t.status() != "" and (not eff.has("status") or eff.status == t.status()):
+					return false
 				continue
 			if eff.op == "heal" and t.hp() < t.creature.max_hp(e.db):
 				return false

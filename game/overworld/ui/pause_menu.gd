@@ -106,7 +106,12 @@ func _bag() -> void:
 			"none_left": "You don't have any left."}
 		var cname: String = target.display_name(db)
 		if r.ok:
-			page(("%s's %s came back." % [cname, ResetSeedPrompt.points(r.refunded)]) if is_seed else "%s recovered." % cname)
+			if is_seed:
+				page("%s's %s came back." % [cname, ResetSeedPrompt.points(r.refunded)])
+			elif r.cured and r.healed == 0 and r.energy == 0:
+				page("%s was cured." % cname)
+			else:
+				page("%s recovered." % cname)
 		else:
 			page(msg.get(r.error, "It can't be used."))
 		await menu.choose("", [{"label": "OK", "value": null}], true, 1)

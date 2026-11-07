@@ -195,14 +195,15 @@
       "learnset": [
         {"level": 1, "move": "tp_hit_iron_special_prio_minus1"},
         {"level": 20, "move": "tp_apply_soaked"},
-        {"level": 41, "move": "tp_inflict_burn"}
+        {"level": 41, "move": "tp_inflict_burn"},
+        {"level": 45, "move": "tp_purify"}
       ],
       "passives": ["tp_aura_stat", "tp_field_boost_max"],
       "affinity_passives": {
         "striker": "tp_round_end_when_hp",
         "warden": "tp_faint_field",
         "catalyst": "tp_field_xp_encounter_max",
-        "trickster": "tp_aura_stat"
+        "trickster": "tp_purifier"
       }
     },
     {

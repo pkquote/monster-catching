@@ -114,6 +114,10 @@ static func score(engine: BattleEngine, b: Battler, m: MoveDef, target_bid: int,
 			var max_hp := float(b.creature.max_hp(db))
 			var missing := max_hp - b.hp()
 			value += minf(missing, max_hp * float(e.fraction)) * (1.0 if b.hp() < max_hp * 0.5 else 0.2)
+		elif e.op == "cure_status":
+			for t in targets:
+				if t.side == b.side and t.status() != "" and (not e.has("status") or e.status == t.status()):
+					value += status_value(engine, t, t.status(), ref)
 	if style == "tactician":
 		value += _setup_value(engine, b, m, targets, ref)
 	if not m.always_hits:

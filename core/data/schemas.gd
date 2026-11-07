@@ -26,7 +26,7 @@ const TRIGGER_TARGETS := TARGETS + ["attacker"]
 ## Overworld-only ops (a passive's "field" list); everything else is for battle.
 const FIELD_OPS := ["encounter_rate", "xp_mult", "bond_gain"]
 ## When a passive trigger fires.
-const TRIGGER_ON := ["enter", "hit", "round_end", "knockout", "faint"]
+const TRIGGER_ON := ["enter", "hit", "round_end", "knockout", "faint", "status"]
 const SIDES := ["user", "target", "own", "enemy", "both"]
 ## Stats that stages and stat_mod effects can change in battle.
 const STATS := ["patk", "pdef", "satk", "sdef", "spd", "acc", "resolve", "luck"]
@@ -163,6 +163,9 @@ const EFFECT_OPS := {
 	},
 	"restore_energy": {
 		"fraction": {"t": "number", "min": 0.0, "max": 1.0},
+	},
+	"cure_status": {
+		"status": {"t": "ref", "cat": "statuses", "opt": true},
 	},
 	"capture": {
 		"mult": {"t": "number", "min": 0.0, "max": 10.0},

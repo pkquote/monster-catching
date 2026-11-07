@@ -18,6 +18,15 @@
       "price": 150,
       "target": "one_ally",
       "effects": [{"op": "restore_energy", "fraction": 0.5}]
+    },
+    {
+      "id": "clear_tonic",
+      "name": "Clear Tonic",
+      "description": "Cures a creature's status condition.",
+      "category": "heal",
+      "price": 200,
+      "target": "one_ally",
+      "effects": [{"op": "cure_status"}]
     }
   ]
 }

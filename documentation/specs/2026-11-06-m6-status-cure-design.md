@@ -66,4 +66,4 @@ creature with nothing to cure it scores zero. Documented under the AI section of
 
 ## Out of scope
 Statuses that persist differently out of battle, a multi-status cure list, an AI model for the `status`
-trigger, and further cure content (M8).
+trigger, and further cure content (M9).

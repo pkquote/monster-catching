@@ -29,7 +29,11 @@ func count(id: String) -> int:
 	return _story().count(id) if GameState.has_game() else 0
 
 
+## Scripts own their counters; the lifetime counters (`Counters.BUILT_IN`) are moved by the game only.
 func add_count(id: String, n := 1) -> void:
+	if Counters.BUILT_IN.has(id):
+		Log.error(Log.STORY, "add_count: reserved lifetime counter", {"counter": id})
+		return
 	_story().add_count(id, n)
 	Log.debug(Log.STORY, "Counter changed", {"counter": id, "by": n, "now": _story().count(id)})
 
@@ -73,6 +77,8 @@ func money() -> int:
 
 func give_money(n: int) -> void:
 	_save().money += n
+	if n > 0:
+		Counters.add(_save(), "money_earned", n)
 	Log.debug(Log.STORY, "Money given", {"amount": n, "now": _save().money})
 
 
@@ -95,6 +101,7 @@ func give_creature(species: String, level: int, starter := false) -> CreatureIns
 	if starter:
 		Bond.make_starter(db, c)
 	var to_party := BattleLauncher.add_to_party(db, _save(), c)
+	Counters.add(_save(), "creatures_caught")
 	Log.info(Log.STORY, "Creature given", {"species": species, "level": level, "starter": starter,
 		"to": "party" if to_party else "storage"})
 	return c

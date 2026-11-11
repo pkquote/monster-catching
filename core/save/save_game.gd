@@ -2,7 +2,7 @@ class_name SaveGame
 extends RefCounted
 ## Everything a save file holds. Pure data; SaveStore handles files.
 
-const SCHEMA := 6
+const SCHEMA := 7
 const KIND_MANUAL := "manual"
 const KIND_AUTO := "auto"
 ## Where a new game starts (and where a save with no usable position resumes).
@@ -25,6 +25,8 @@ var boxes_unlocked: int = BoxStorage.START_BOXES
 ## item id -> count
 var inventory: Dictionary = {}
 var money: int = 0
+## Species id -> { "seen": bool, "caught": bool } (see Codex).
+var codex: Dictionary = {}
 ## Flags, counters, one-time pieces and the last heal spot.
 var story := StoryState.new()
 ## Exact overworld position: { map, x, y (pixels), facing ("up"|"down"|"left"|"right") }.
@@ -61,6 +63,7 @@ func to_dict() -> Dictionary:
 		"boxes_unlocked": boxes_unlocked,
 		"inventory": inventory.duplicate(),
 		"money": money,
+		"codex": codex.duplicate(true),
 		"story": story.to_dict(),
 		"position": position.duplicate(),
 	}
@@ -95,6 +98,13 @@ static func from_dict(d: Dictionary) -> SaveGame:
 	for k in d.get("inventory", {}):
 		s.inventory[k] = int(d.inventory[k])
 	s.money = int(d.get("money", 0))
+	var raw_codex = d.get("codex", {})
+	if raw_codex is Dictionary:
+		for species in raw_codex:
+			var e = raw_codex[species]
+			if e is Dictionary:
+				var is_caught := bool(e.get("caught", false))
+				s.codex[str(species)] = {"seen": bool(e.get("seen", false)) or is_caught, "caught": is_caught}
 	s.story = StoryState.from_dict(d.get("story", {}) if d.get("story") is Dictionary else {})
 	var pos = d.get("position", {})
 	if pos is Dictionary and pos.get("map") is String and pos.get("map") != "":

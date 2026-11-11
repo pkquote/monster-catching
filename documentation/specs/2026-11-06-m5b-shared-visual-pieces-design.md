@@ -5,7 +5,7 @@ Roadmap: `documentation/specs/2026-11-05-roadmap-m5-m8.md` (5b). Depends on noth
 
 ## Goal
 Reusable UI pieces for showing a creature: a sprite slot, a stat radar, HP/Stamina bars, and a summary card that
-assembles them. `ItemIconSlot` already exists from M5a. Placeholder art only; M7 swaps real art into the slots.
+assembles them. `ItemIconSlot` already exists from M5a. Placeholder art only; M8 swaps real art into the slots.
 Screen size is 640x360.
 
 ## Decisions
@@ -53,4 +53,4 @@ trained-stat amounts; shows one `CreatureCard` and (for reference) an `ItemIconS
 - The gallery page also has Nickname and Held item controls, and shows the item category icons.
 
 ## Out of scope
-Replacing Summary, Party or Box (5c/5d), real art (M7), radar animation, changing the battle's creature view.
+Replacing Summary, Party or Box (5c/5d), real art (M8), radar animation, changing the battle's creature view.

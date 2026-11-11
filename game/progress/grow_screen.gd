@@ -53,12 +53,21 @@ func _ask(parent: Node, c: CreatureInstance, into: String) -> bool:
 		return false
 	await _play_flash()
 	var result := Progression.apply_growth(db, c, into)
+	record_growth(GameState.current if GameState.has_game() else null, into)
 	_show_species(into)
 	_body.text = "%s grew into %s!" % [old_name, new_name]
 	await menu.choose("", [{"label": "OK", "value": null}], true, 1)
 	for move in result.offered:
 		await LearnMoveScreen.run(parent, c, move, false, _db)
 	return true
+
+
+## The new species counts as caught and the growth is counted. Nothing happens without a save.
+static func record_growth(save: SaveGame, into: String) -> void:
+	if save == null:
+		return
+	Codex.mark_caught(save, into)
+	Counters.add(save, "creatures_evolved")
 
 
 func _show_species(species: String) -> void:

@@ -135,6 +135,7 @@ static func party_level(save: SaveGame) -> int:
 static func apply_results(db: Database, save: SaveGame, engine: BattleEngine) -> BattleSummary:
 	var levels_before := {}
 	var passives_before := {}
+	var bag_before := save.inventory.duplicate()
 	for b in engine.sides[0].battlers:
 		levels_before[b.source] = b.source.level
 		passives_before[b.source] = b.source.affinity_passive
@@ -151,7 +152,9 @@ static func apply_results(db: Database, save: SaveGame, engine: BattleEngine) ->
 	for item in engine.sides[0].items:
 		if int(engine.sides[0].items[item]) > 0:
 			save.inventory[item] = int(engine.sides[0].items[item])
+	_record_tracking(save, engine, bag_before)
 	for c: CreatureInstance in res.captured:
+		Counters.add(save, "creatures_caught")
 		summary.captured.append(c.display_name(db))
 		if not add_to_party(db, save, c):
 			summary.to_storage += 1
@@ -167,10 +170,30 @@ static func apply_results(db: Database, save: SaveGame, engine: BattleEngine) ->
 	if summary.outcome == BattleSummary.WON and engine.setup.tamer_id != "":
 		summary.money = db.tamer(engine.setup.tamer_id).reward_money
 		save.money += summary.money
+		Counters.add(save, "tamers_defeated")
+		if summary.money > 0:
+			Counters.add(save, "money_earned", summary.money)
+	if summary.outcome != BattleSummary.FLED:
+		Counters.add(save, "battles_fought")
+	if summary.outcome == BattleSummary.WON or summary.outcome == BattleSummary.CAPTURED:
+		Counters.add(save, "battles_won")
 	Log.info(Log.BATTLE, "Results applied", {"outcome": summary.outcome, "money": summary.money,
 		"captured": summary.captured, "to_storage": summary.to_storage,
 		"levelled": summary.progress.map(func(e: ProgressEntry): return e.creature.species)})
 	return summary
+
+
+## Codex and counter updates that need the finished engine: every foe that was fielded is
+## seen, and the items the battle used up are counted (the bag before against after).
+static func _record_tracking(save: SaveGame, engine: BattleEngine, bag_before: Dictionary) -> void:
+	for b: Battler in engine.sides[1].battlers:
+		if b.participated:
+			Codex.mark_seen(save, b.creature.species)
+	var used := 0
+	for item: String in bag_before:
+		used += maxi(int(bag_before[item]) - int(save.inventory.get(item, 0)), 0)
+	if used > 0:
+		Counters.add(save, "items_used", used)
 
 
 ## Places a new creature could still go: free party room plus empty box slots.
@@ -179,7 +202,9 @@ static func room_left(db: Database, save: SaveGame) -> int:
 
 
 ## Adds to the party, or to storage when the party is full. Returns true for party.
+## Every creature that joins counts as caught in the Codex, whatever way it arrived.
 static func add_to_party(db: Database, save: SaveGame, c: CreatureInstance) -> bool:
+	Codex.mark_caught(save, c.species)
 	if save.party.size() < db.balance.party_size:
 		save.party.append(c)
 		return true

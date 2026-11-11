@@ -1,7 +1,7 @@
 class_name ItemIconSlot
 extends Control
 ## Placeholder item icon: a rounded square in a per-category colour with the category's
-## initial in the centre. Real art replaces the drawing in M7.
+## initial in the centre. Real art replaces the drawing in M8.
 
 const CATEGORY_COLORS := {
 	"capture": Color("e2675c"),

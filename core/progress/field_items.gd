@@ -86,6 +86,7 @@ static func use(db: Database, save: SaveGame, item_id: String, c: CreatureInstan
 			return out
 		out.refunded = Training.reset(db, c)
 		_spend(save, item_id)
+		Counters.add(save, "items_used")
 		out.ok = true
 		return out
 	if c.hp <= 0:
@@ -111,6 +112,7 @@ static func use(db: Database, save: SaveGame, item_id: String, c: CreatureInstan
 	if out.cured:
 		c.status = ""
 	_spend(save, item_id)
+	Counters.add(save, "items_used")
 	out.ok = true
 	return out
 

@@ -26,7 +26,7 @@ Every current rule stays (a fighter must remain in the party, the party size cap
 - A new rebindable action `mark` (default V / gamepad Y; X is Cancel and West is Run) marks creatures for a group move.
 - Capture is refused up front when the party and every unlocked box are full (no creature is ever lost).
 - Out of scope: how boxes are earned (the F1 menu gets "Unlock a box" for testing), box names and wallpapers,
-  sorting, party-to-party group moves, art (M7).
+  sorting, party-to-party group moves, art (M8).
 
 ## Data (`core/`)
 - `SaveGame.storage` becomes a fixed-length `Array` of `boxes_unlocked * BoxStorage.BOX_SIZE` entries, each a

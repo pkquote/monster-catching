@@ -23,6 +23,8 @@ var locked := false:
 var _tile := Vector2i(-9999, -9999)
 ## Direction actions currently held, oldest first. Facing follows the newest.
 var _held: Array[String] = []
+## Distance walked towards the next counted step (not saved).
+var _walked := 0.0
 
 
 func _ready() -> void:
@@ -64,6 +66,7 @@ func step(dir: Vector2, run: bool, delta: float) -> void:
 	var cfg: Dictionary = DataRegistry.db.balance.overworld_cfg
 	var speed := float(cfg.run_speed if run else cfg.walk_speed) * GameMap.TILE
 	var motion := dir.normalized() * speed * delta
+	var start := position
 	var hit := move_and_collide(motion)
 	if hit != null:
 		if not _slip_round_corner(motion, hit):
@@ -71,7 +74,17 @@ func step(dir: Vector2, run: bool, delta: float) -> void:
 	if _held.is_empty():
 		# Gamepad sticks and tests move without press events: face the dominant axis.
 		_set_facing(Vector2i(signi(roundi(dir.x)), 0) if absf(dir.x) >= absf(dir.y) else Vector2i(0, signi(roundi(dir.y))))
+	_count_steps(position.distance_to(start))
 	_check_tile()
+
+
+## Adds the distance just walked and counts one step per whole tile (not saved).
+func _count_steps(distance: float) -> void:
+	_walked += distance
+	while _walked >= GameMap.TILE:
+		_walked -= GameMap.TILE
+		if GameState.has_game():
+			Counters.add(GameState.current, "steps")
 
 
 ## Walking straight into a corner that's only a few pixels off a gap (a doorway,
@@ -150,6 +163,7 @@ func walk_to(target: Vector2i) -> void:
 func place(pos: Vector2, facing_: Vector2i) -> void:
 	position = pos
 	velocity = Vector2.ZERO
+	_walked = 0.0
 	_set_facing(facing_)
 	_tile = feet_tile()
 

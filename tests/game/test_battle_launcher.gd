@@ -218,3 +218,99 @@ func test_exhibition_setup_clamps_field_counts() -> void:
 	var setup: BattleSetup = BattleLauncher.exhibition_setup(real, _specs(2), 9, _specs(4), 0, false, {}, rng)
 	assert_int(setup.sides[0].field_count).is_equal(2)
 	assert_int(setup.sides[1].field_count).is_equal(1)
+
+
+# --- Codex and counters (M7a) ---
+
+## Plays the player's first creature attacking the first standing foe until the battle ends.
+func _fight(e: BattleEngine, move := "hit") -> void:
+	var guard := 60
+	while not e.is_over() and guard > 0:
+		guard -= 1
+		var me := e.sides[0].active()
+		var foes := e.sides[1].active()
+		if me.is_empty() or foes.is_empty():
+			e.resolve_round([])
+			continue
+		e.resolve_round([BattleAction.use_move(me[0].bid, move, foes[0].bid)])
+
+
+func _wild_engine(s: SaveGame, foe_species: String, foe_level: int, bag := {}) -> BattleEngine:
+	s.party = [FixtureDB.make(db, "blob", 30, ["hit"])]
+	s.inventory = bag
+	var e := BattleEngine.new(db, RandomNumberGenerator.new(),
+		BattleLauncher.wild_setup(db, s, [FixtureDB.make(db, foe_species, foe_level)], 1))
+	e.start()
+	return e
+
+
+func test_wild_win_marks_foe_seen_and_counts() -> void:
+	var s := _save()
+	var e := _wild_engine(s, "fish", 1)
+	_fight(e)
+	BattleLauncher.apply_results(db, s, e)
+	assert_str(Codex.status(s, "fish")).is_equal("seen")
+	assert_int(Counters.value(s, "battles_fought")).is_equal(1)
+	assert_int(Counters.value(s, "battles_won")).is_equal(1)
+	assert_int(Counters.value(s, "tamers_defeated")).is_equal(0)
+	assert_int(Counters.value(s, "money_earned")).is_equal(0)
+
+
+func test_capture_marks_caught_and_counts() -> void:
+	var s := _save()
+	var e := _wild_engine(s, "fish", 3, {"master_cage": 1})
+	e.resolve_round([BattleAction.use_item(e.sides[0].active()[0].bid, "master_cage", e.sides[1].active()[0].bid)])
+	BattleLauncher.apply_results(db, s, e)
+	assert_str(Codex.status(s, "fish")).is_equal("caught")
+	assert_int(Counters.value(s, "creatures_caught")).is_equal(1)
+	assert_int(Counters.value(s, "battles_won")).is_equal(1)
+	assert_int(Counters.value(s, "items_used")).is_equal(1)
+
+
+func test_tamer_win_counts_tamer_and_money() -> void:
+	var s := _save()
+	s.party = [FixtureDB.make(db, "blob", 30, ["hit"])]
+	var e := BattleEngine.new(db, RandomNumberGenerator.new(), BattleLauncher.tamer_setup(db, s, "t1", 1))
+	e.start()
+	_fight(e)
+	BattleLauncher.apply_results(db, s, e)
+	assert_int(Counters.value(s, "tamers_defeated")).is_equal(1)
+	assert_int(Counters.value(s, "money_earned")).is_equal(1)
+	assert_int(Counters.value(s, "battles_won")).is_equal(1)
+	assert_str(Codex.status(s, "blob")).is_equal("seen")
+	assert_str(Codex.status(s, "fish")).is_equal("seen")
+
+
+func test_loss_counts_fought_and_never_sees_a_bench_foe() -> void:
+	var raw := FixtureDB.raw()
+	raw.add_entry("tamers", {"id": "t_bench", "name": "Bench", "max_active": 1, "ai": "aggressive",
+		"reward_money": 1, "party": [{"species": "tank", "level": 40}, {"species": "fish", "level": 5}]})
+	var tdb := Database.from_raw(raw)
+	var s := _save()
+	s.party = [FixtureDB.make(tdb, "blob", 2, ["hit"])]
+	var e := BattleEngine.new(tdb, RandomNumberGenerator.new(), BattleLauncher.tamer_setup(tdb, s, "t_bench", 1))
+	e.start()
+	_fight(e)
+	var summary := BattleLauncher.apply_results(tdb, s, e)
+	assert_str(summary.outcome).is_equal("lost")
+	assert_str(Codex.status(s, "tank")).is_equal("seen")
+	assert_str(Codex.status(s, "fish")).is_equal("unseen")
+	assert_int(Counters.value(s, "battles_fought")).is_equal(1)
+	assert_int(Counters.value(s, "battles_won")).is_equal(0)
+	assert_int(Counters.value(s, "tamers_defeated")).is_equal(0)
+
+
+func test_flee_marks_the_fielded_foe_but_is_not_fought_or_won() -> void:
+	var s := _save()
+	var e := _wild_engine(s, "fish", 3, {"potion": 3})
+	var me := e.sides[0].active()[0]
+	e.resolve_round([BattleAction.use_item(me.bid, "potion", me.bid)])
+	e.resolve_round([BattleAction.use_item(me.bid, "potion", me.bid)])
+	e.resolve_round([BattleAction.flee(me.bid)])
+	var summary := BattleLauncher.apply_results(db, s, e)
+	assert_str(summary.outcome).is_equal("fled")
+	assert_str(Codex.status(s, "fish")).is_equal("seen")
+	assert_int(Counters.value(s, "battles_fought")).is_equal(0)
+	assert_int(Counters.value(s, "battles_won")).is_equal(0)
+	assert_int(Counters.value(s, "items_used")).is_equal(2)
+

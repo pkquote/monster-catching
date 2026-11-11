@@ -2,7 +2,7 @@ class_name CreatureSpriteSlot
 extends Control
 ## Placeholder creature sprite: a circle in the creature's type colours (a second ring for a dual
 ## type) with the species initial in the centre. The battle's creature view draws through the same
-## helper. Real art replaces `draw_placeholder` in M7.
+## helper. Real art replaces `draw_placeholder` in M8.
 
 const NO_TYPE := Color("9aa0ae")
 

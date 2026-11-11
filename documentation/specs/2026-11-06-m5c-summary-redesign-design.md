@@ -79,4 +79,4 @@ Sub-lists (each ends with `Back`, which returns to the top level with focus on t
 - `Held item...` is shown only when the creature holds an item or the bag has one.
 
 ## Out of scope
-Box and Party redesign (5d), real art (M7), changing training/growth/passive/held rules, editing the card's contents.
+Box and Party redesign (5d), real art (M8), changing training/growth/passive/held rules, editing the card's contents.

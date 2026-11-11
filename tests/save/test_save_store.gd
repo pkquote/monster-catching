@@ -43,6 +43,43 @@ func test_round_trip_keeps_everything() -> void:
 	assert_int(back.saved_unix).is_equal(1_700_000_100)
 
 
+func test_codex_round_trips() -> void:
+	var s := _game()
+	Codex.mark_seen(s, "blob")
+	Codex.mark_caught(s, "fish")
+	var back: SaveGame = store.read(store.write(s, SaveGame.KIND_MANUAL, 1000)).save
+	assert_str(Codex.status(back, "blob")).is_equal("seen")
+	assert_str(Codex.status(back, "fish")).is_equal("caught")
+	assert_int(Codex.seen_count(back)).is_equal(2)
+
+
+func test_schema_6_save_migrates_with_empty_codex() -> void:
+	var s := _game()
+	var path := store.write(s, SaveGame.KIND_MANUAL, 1000)
+	var d: Dictionary = JSON.parse_string(FileAccess.get_file_as_string(path))
+	d["schema"] = 6
+	d.erase("codex")
+	_write(path, JSON.stringify(d))
+	var r := store.read(path)
+	assert_bool(r.ok).is_true()
+	assert_bool(r.save.codex.is_empty()).is_true()
+
+
+func test_malformed_codex_entries_are_dropped() -> void:
+	var s := _game()
+	var path := store.write(s, SaveGame.KIND_MANUAL, 1000)
+	var d: Dictionary = JSON.parse_string(FileAccess.get_file_as_string(path))
+	d["codex"] = {"blob": {"caught": true}, "fish": "nonsense", "mole": {"seen": true}}
+	_write(path, JSON.stringify(d))
+	var back: SaveGame = store.read(path).save
+	assert_str(Codex.status(back, "blob")).is_equal("caught")
+	assert_str(Codex.status(back, "mole")).is_equal("seen")
+	assert_str(Codex.status(back, "fish")).is_equal("unseen")
+	d["codex"] = "nonsense"
+	_write(path, JSON.stringify(d))
+	assert_bool(store.read(path).save.codex.is_empty()).is_true()
+
+
 func test_manual_saves_never_overwrite_each_other() -> void:
 	var s := _game()
 	var a := store.write(s, SaveGame.KIND_MANUAL, 1000)
@@ -306,8 +343,8 @@ func _v5_dict(stored: int) -> Dictionary:
 	return d
 
 
-func test_current_schema_is_6() -> void:
-	assert_int(SaveGame.SCHEMA).is_equal(6)
+func test_current_schema_is_7() -> void:
+	assert_int(SaveGame.SCHEMA).is_equal(7)
 
 
 func test_schema_5_save_migrates_to_6() -> void:

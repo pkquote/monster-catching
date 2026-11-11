@@ -327,3 +327,39 @@ func test_unlock_screen_for_entry_without_level_gain() -> void:
 	var r := GameState.store.read(GameState.current_path)
 	assert_str(r.save.party[0].active_passive).is_equal("affinity")
 	assert_str(r.save.party[0].affinity_passive).is_equal("finisher")
+
+
+func test_growing_marks_the_new_species_caught_and_counts() -> void:
+	var entry := _grow_pup()
+	var done: Array = []
+	_run_after(BattleSummary.of("won", [entry]), done)
+	for i in 50:
+		await get_tree().process_frame
+	assert_str(Codex.status(GameState.current, "torrentusk")).is_equal("unseen")
+	await _answer(GrowScreen, "Grow now")
+	await _answer(GrowScreen, "OK")
+	await _answer(LearnMoveScreen, "Keep it for later")
+	await _wait(done)
+	assert_str(Codex.status(GameState.current, "torrentusk")).is_equal("caught")
+	assert_int(Counters.value(GameState.current, "creatures_evolved")).is_equal(1)
+
+
+func test_declining_growth_changes_nothing() -> void:
+	var entry := _grow_pup()
+	var done: Array = []
+	_run_after(BattleSummary.of("won", [entry]), done)
+	for i in 50:
+		await get_tree().process_frame
+	await _answer(GrowScreen, "Not yet")
+	await _wait(done)
+	assert_str(Codex.status(GameState.current, "torrentusk")).is_equal("unseen")
+	assert_int(Counters.value(GameState.current, "creatures_evolved")).is_equal(0)
+
+
+func test_record_growth_tolerates_no_loaded_game() -> void:
+	GrowScreen.record_growth(null, "torrentusk")
+	var rng := RandomNumberGenerator.new()
+	var s := SaveGame.new_game("Ana", 1000, rng)
+	GrowScreen.record_growth(s, "torrentusk")
+	assert_str(Codex.status(s, "torrentusk")).is_equal("caught")
+	assert_int(Counters.value(s, "creatures_evolved")).is_equal(1)

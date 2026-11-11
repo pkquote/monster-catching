@@ -117,3 +117,73 @@ func test_no_slip_along_a_solid_wall() -> void:
 	await get_tree().physics_frame
 	_walk(Vector2.DOWN, 0.6)
 	assert_float(player.position.x).is_equal_approx(GameMap.centre_of(Vector2i(2, 4)).x, 0.01)
+
+
+# --- Step counting (M7a) ---
+
+func _with_game() -> void:
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 3
+	GameState.current = SaveGame.new_game("Ana", 1000, rng)
+
+
+## Walks `dir` one physics step at a time until `distance` pixels have been covered (or a
+## second passes), returning the distance actually covered.
+func _walk_distance(dir: Vector2, distance: float) -> float:
+	var total := 0.0
+	for i in 60:
+		var before := player.position
+		player.step(dir, false, DT)
+		total += (player.position - before).length()
+		if total >= distance:
+			break
+	return total
+
+
+func test_one_step_counted_per_tile_walked() -> void:
+	_with_game()
+	var covered := _walk_distance(Vector2.RIGHT, 3.2 * GameMap.TILE)
+	assert_float(covered).is_greater_equal(3.0 * GameMap.TILE)
+	assert_int(Counters.value(GameState.current, "steps")).is_equal(3)
+	GameState.current = null
+
+
+func test_a_partial_tile_counts_nothing_until_it_completes() -> void:
+	_with_game()
+	_walk_distance(Vector2.RIGHT, 0.4 * GameMap.TILE)
+	assert_int(Counters.value(GameState.current, "steps")).is_equal(0)
+	_walk_distance(Vector2.RIGHT, 0.7 * GameMap.TILE)
+	assert_int(Counters.value(GameState.current, "steps")).is_equal(1)
+	GameState.current = null
+
+
+func test_blocked_movement_counts_only_the_distance_moved() -> void:
+	_with_game()
+	var home := player.position
+	var free := _walk_distance(Vector2.RIGHT, 0.01)  # one unobstructed step
+	player.place(home, Vector2i.DOWN)
+	GameState.current.story.counters.erase("steps")
+	var total := 0.0
+	for i in 180:
+		var before := player.position
+		player.step(Vector2(-1, -1).normalized(), false, DT)
+		total += (player.position - before).length()
+	assert_float(total).is_less(free * 180.0 * 0.5)  # it really was blocked
+	assert_int(Counters.value(GameState.current, "steps")).is_equal(floori(total / GameMap.TILE))
+	GameState.current = null
+
+
+func test_placing_the_player_drops_a_partial_tile() -> void:
+	_with_game()
+	_walk_distance(Vector2.RIGHT, 0.7 * GameMap.TILE)
+	player.place(player.position, Vector2i.DOWN)
+	_walk_distance(Vector2.RIGHT, 0.4 * GameMap.TILE)
+	assert_int(Counters.value(GameState.current, "steps")).is_equal(0)
+	GameState.current = null
+
+
+func test_stepping_without_a_loaded_game_is_safe() -> void:
+	GameState.current = null
+	var start := player.position
+	_walk(Vector2.RIGHT, 0.5)
+	assert_float(player.position.x).is_greater(start.x)

@@ -348,3 +348,23 @@ func test_can_use_and_usability_for_cure_items() -> void:
 	m.status = "shock"
 	assert_bool(FieldItems.usability(cdb, save, "remedy").ok).is_true()
 	assert_bool(FieldItems.usability(cdb, save, "burn_ward").ok).is_false()
+
+
+# --- Counting item use (M7a) ---
+
+func test_successful_use_counts_an_item() -> void:
+	c.hp = 1
+	FieldItems.use(db, save, "salve", c)
+	assert_int(Counters.value(save, "items_used")).is_equal(1)
+
+
+func test_failed_use_counts_nothing() -> void:
+	assert_str(FieldItems.use(db, save, "salve", c).error).is_equal("no_effect")
+	assert_int(Counters.value(save, "items_used")).is_equal(0)
+
+
+func test_reset_seed_counts() -> void:
+	save.inventory.reset_seed = 1
+	c.training = {"patk": 2}
+	assert_bool(FieldItems.use(db, save, "reset_seed", c).ok).is_true()
+	assert_int(Counters.value(save, "items_used")).is_equal(1)

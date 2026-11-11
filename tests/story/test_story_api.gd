@@ -38,6 +38,11 @@ func test_flags_counters_done() -> void:
 	assert_bool(Story.is_done("x/Y")).is_true()
 
 
+func test_scripts_cannot_move_a_lifetime_counter() -> void:
+	Story.add_count("battles_won", 5)
+	assert_int(Story.count("battles_won")).is_equal(0)
+
+
 func test_give_creature_party_then_storage() -> void:
 	var c := Story.give_creature("emberkit", 5, true)
 	assert_int(c.level).is_equal(5)
@@ -48,3 +53,20 @@ func test_give_creature_party_then_storage() -> void:
 	Story.give_creature("pebblet", 3)
 	assert_int(Story.party_size()).is_equal(DataRegistry.db.balance.party_size)
 	assert_int(BoxStorage.count(GameState.current)).is_equal(1)
+
+
+func test_give_creature_marks_codex_and_counts() -> void:
+	Story.give_creature("emberkit", 5, true)
+	assert_str(Codex.status(GameState.current, "emberkit")).is_equal("caught")
+	assert_int(Counters.value(GameState.current, "creatures_caught")).is_equal(1)
+
+
+func test_give_money_counts_earned_but_taking_does_not() -> void:
+	Story.give_money(50)
+	assert_int(Counters.value(GameState.current, "money_earned")).is_equal(50)
+	Story.take_money(20)
+	assert_int(Counters.value(GameState.current, "money_earned")).is_equal(50)
+	Story.give_money(0)
+	Story.give_money(-5)
+	assert_int(Counters.value(GameState.current, "money_earned")).is_equal(50)
+

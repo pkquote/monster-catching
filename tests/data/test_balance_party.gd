@@ -48,6 +48,15 @@ func test_team_add_respects_changed_size() -> void:
 	assert_int(BoxStorage.count(s)).is_equal(1)
 
 
+func test_adding_a_creature_marks_its_species_caught_party_or_box() -> void:
+	var db: Database = _db_with_party_size(1)
+	var s: SaveGame = _save_with(db, 0)
+	BattleLauncher.add_to_party(db, s, FixtureDB.make(db, "fish", 3))
+	assert_bool(Codex.caught(s, "fish")).is_true()
+	BattleLauncher.add_to_party(db, s, FixtureDB.make(db, "blob", 3))  # party full: goes to a box
+	assert_bool(Codex.caught(s, "blob")).is_true()
+
+
 func test_oversized_party_in_save_is_kept() -> void:
 	var db: Database = _db_with_party_size(3)
 	var s: SaveGame = _save_with(db, 5)

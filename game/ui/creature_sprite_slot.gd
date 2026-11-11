@@ -5,11 +5,15 @@ extends Control
 ## helper. Real art replaces `draw_placeholder` in M8.
 
 const NO_TYPE := Color("9aa0ae")
+## The unseen species' dark disc (the Codex).
+const SILHOUETTE := Color("2a2f3c")
 
 var species: String = ""
 var types: PackedStringArray = PackedStringArray()
 var initial: String = "?"
 var sprite_size: int = 48
+## True for a species the player hasn't seen: a dark disc with a "?" (see configure_unknown).
+var silhouette := false
 
 
 static func initial_for(p_name: String) -> String:
@@ -44,6 +48,7 @@ static func draw_placeholder(canvas: CanvasItem, center: Vector2, radius: float,
 
 func configure(db: Database, species_id: String, p_size: int = 48) -> void:
 	species = species_id
+	silhouette = false
 	var def := db.creature(species_id)
 	types = def.types if def != null else PackedStringArray()
 	initial = initial_for(def.name if def != null else "")
@@ -52,6 +57,25 @@ func configure(db: Database, species_id: String, p_size: int = 48) -> void:
 	queue_redraw()
 
 
+## An unseen species: a dark disc and a "?", whatever the species is.
+func configure_unknown(p_size: int = 48) -> void:
+	species = ""
+	types = PackedStringArray()
+	initial = "?"
+	silhouette = true
+	sprite_size = p_size
+	custom_minimum_size = Vector2(p_size, p_size)
+	queue_redraw()
+
+
 func _draw() -> void:
 	var r := sprite_size / 2.0
+	if silhouette:
+		draw_circle(Vector2(r, r), r, SILHOUETTE)
+		var font := ThemeDB.fallback_font
+		var font_size := maxi(8, roundi(r * 22.0 / 23.0))
+		var text_size := font.get_string_size("?", HORIZONTAL_ALIGNMENT_LEFT, -1, font_size)
+		draw_string(font, Vector2(r - text_size.x / 2.0, r + font_size * 8.0 / 22.0), "?",
+			HORIZONTAL_ALIGNMENT_LEFT, -1, font_size, UIKit.MUTED)
+		return
 	draw_placeholder(self, Vector2(r, r), r, types, initial)

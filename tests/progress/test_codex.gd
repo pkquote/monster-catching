@@ -59,3 +59,44 @@ func test_backfill_keeps_existing_marks() -> void:
 	Codex.backfill(save)
 	assert_str(Codex.status(save, "mole")).is_equal("seen")
 	assert_str(Codex.status(save, "blob")).is_equal("caught")
+
+
+func _numbered_db() -> Database:
+	var raw := FixtureDB.raw()
+	for rec in raw.get_entries("creatures"):
+		if rec.entry.id == "fish":
+			rec.entry["dex"] = 2
+		elif rec.entry.id == "flame":
+			rec.entry["dex"] = 1
+	return Database.from_raw(raw)
+
+
+func test_order_puts_numbered_species_first_then_by_id() -> void:
+	var order := Codex.order(_numbered_db())
+	assert_str(order[0]).is_equal("flame")
+	assert_str(order[1]).is_equal("fish")
+	var rest := Array(order).slice(2)
+	var sorted := rest.duplicate()
+	sorted.sort()
+	assert_array(rest).is_equal(sorted)
+	assert_int(order.size()).is_equal(_numbered_db().count("creatures"))
+
+
+func test_order_leaves_out_test_pack_creatures() -> void:
+	var raw := FixtureDB.raw()
+	var proto: Dictionary = raw.get_entries("creatures")[0].entry.duplicate(true)
+	proto["id"] = "tp_extra"
+	raw.add_entry("creatures", proto)
+	var d := Database.from_raw(raw)
+	assert_bool(d.has("creatures", "tp_extra")).is_true()
+	assert_bool(Codex.order(d).has("tp_extra")).is_false()
+
+
+func test_number_text_pads_to_three_digits() -> void:
+	var d := _numbered_db()
+	assert_str(Codex.number_text(d, "flame")).is_equal("#001")
+	assert_str(Codex.number_text(d, "fish")).is_equal("#002")
+
+
+func test_number_text_without_dex_is_dashes() -> void:
+	assert_str(Codex.number_text(_numbered_db(), "blob")).is_equal("#---")

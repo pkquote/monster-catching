@@ -300,6 +300,8 @@ func _creatures() -> void:
 		if not tiers.is_empty():
 			_w("- **Growth:** %s" % ", ".join(tiers))
 		_w("- **Lv %d stats:** %s" % [db.balance.level_cap, _stats_at_cap(c)])
+		var found := Locations.for_species(db, id).map(func(r: Dictionary) -> String: return Locations.line(r))
+		_w("- **Found:** %s" % ("; ".join(found) if not found.is_empty() else "Not found in the wild"))
 		if grows_from.has(id):
 			_w("- **Grows from:** %s" % ", ".join(grows_from[id]))
 		if not c.growth.is_empty():

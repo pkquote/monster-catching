@@ -4,6 +4,8 @@ extends RefCounted
 var id: String
 var name: String
 var description: String
+## Codex number (1-based); 0 when the creature has none (test pack, fixtures).
+var dex: int
 var types: PackedStringArray
 ## { hp, atk, def, spd } base values
 var base_stats: Dictionary
@@ -26,6 +28,7 @@ static func from_dict(d: Dictionary) -> CreatureDef:
 	c.id = d.id
 	c.name = d.name
 	c.description = d.get("description", "")
+	c.dex = int(d.get("dex", 0))
 	c.types = PackedStringArray(d.types)
 	c.base_stats = {}
 	for k in d.base_stats:

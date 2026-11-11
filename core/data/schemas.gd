@@ -50,6 +50,7 @@ const CATEGORIES := {
 	"items": "folder",
 	"tamers": "folder",
 	"encounters": "folder",
+	"locations": "file",
 	"types": "file",
 	"statuses": "file",
 	"field_states": "file",
@@ -211,6 +212,7 @@ const ENTRY := {
 	"creatures": {
 		"id": {"t": "id"},
 		"name": {"t": "string"},
+		"dex": {"t": "int", "opt": true, "min": 1},
 		"description": {"t": "string", "opt": true},
 		"types": {"t": "array", "min": 1, "max": 2, "of": {"t": "ref", "cat": "types"}},
 		"base_stats": {"t": "dict", "fields": _BASE_STATS},
@@ -333,6 +335,11 @@ const ENTRY := {
 		"id": {"t": "id"},
 		"name": {"t": "string"},
 		"description": {"t": "string", "opt": true},
+	},
+	"locations": {
+		"id": {"t": "id"},
+		"name": {"t": "string"},
+		"areas": {"t": "array", "min": 1, "of": {"t": "ref", "cat": "encounters"}},
 	},
 	"minigames": {
 		"id": {"t": "id"},

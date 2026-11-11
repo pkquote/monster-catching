@@ -16,23 +16,33 @@ func _ready() -> void:
 		printerr("Data failed to load; run tools/validate_data.gd first.")
 		get_tree().quit(1)
 		return
-	var maps := {}
-	for f in DirAccess.get_files_at(GameMap.MAPS_DIR):
-		if f.ends_with(".tscn") and not f.begins_with("_"):
-			maps[f.get_basename()] = describe(load(GameMap.MAPS_DIR.path_join(f)).instantiate())
+	var maps := describe_all()
 	var r := MapRules.check(maps, loaded.db, dialogue_titles())
 	for w in r.warnings:
 		print("warning: ", w)
 	for e in r.errors:
 		printerr(e)
+	if Locations.build(maps).entries != Locations.file_entries(loaded.db):
+		printerr("data/locations.json is out of date: run tools/build_locations.tscn")
+		get_tree().quit(1)
+		return
 	if r.errors.is_empty():
 		print("Maps OK (%d maps)" % maps.size())
 	get_tree().quit(1 if not r.errors.is_empty() else 0)
 
 
+## Every map scene in res://game/maps/ (not the `_` templates), described.
+static func describe_all() -> Dictionary:
+	var maps := {}
+	for f in DirAccess.get_files_at(GameMap.MAPS_DIR):
+		if f.ends_with(".tscn") and not f.begins_with("_"):
+			maps[f.get_basename()] = describe(load(GameMap.MAPS_DIR.path_join(f)).instantiate())
+	return maps
+
+
 ## A map scene as MapRules wants it. Frees the instance.
 static func describe(map: GameMap) -> Dictionary:
-	var out := {"spawns": [], "default_encounter": map.default_encounter, "pieces": []}
+	var out := {"name": map.display_name, "spawns": [], "default_encounter": map.default_encounter, "pieces": []}
 	for p in map.pieces():
 		if p is Spawn:
 			out.spawns.append((p as Spawn).id)

@@ -32,7 +32,7 @@ func _move(overrides: Dictionary = {}) -> Dictionary:
 
 
 func _creature(overrides: Dictionary = {}) -> Dictionary:
-	var c := {"id": "pup", "name": "Pup", "types": ["water"],
+	var c := {"id": "pup", "name": "Pup", "description": "A test pup.", "types": ["water"],
 		"base_stats": FixtureDB.FLAT.duplicate(),
 		"catch_rate": 0.5, "xp_yield": 50,
 		"learnset": [{"level": 1, "move": "splash"}], "passives": ["steady"]}
@@ -42,6 +42,10 @@ func _creature(overrides: Dictionary = {}) -> Dictionary:
 
 func _errors_for(raw: RawData) -> String:
 	return "\n".join(DataValidator.validate(raw))
+
+
+func _warnings_for(raw: RawData) -> String:
+	return "\n".join(DataValidator.warnings(raw))
 
 
 func test_minimal_valid_set_passes() -> void:
@@ -404,3 +408,40 @@ func test_two_enemies_valid_on_moves_only() -> void:
 	trig.entries.passives[0].entry = {"id": "steady", "name": "Steady", "triggers": [{"on": "hit",
 		"effects": [{"op": "damage", "power": 10, "target": "two_enemies"}]}]}
 	assert_str(_errors_for(trig)).contains("two_enemies")
+
+
+func test_shipped_creature_without_a_description_warns_but_test_content_does_not() -> void:
+	var raw := _base()
+	var bare := _creature()
+	bare.erase("description")
+	raw.entries.creatures[0].entry = bare
+	assert_str(_warnings_for(raw)).contains("[creatures:pup]: warning: no description")
+	raw.entries.creatures[0].entry = _creature()
+	assert_str(_warnings_for(raw)).not_contains("no description")
+	var test_pup := bare.duplicate()
+	test_pup["id"] = "tp_pup"
+	raw.add_entry("creatures", test_pup)
+	assert_str(_warnings_for(raw)).not_contains("tp_pup")
+
+
+func test_dex_is_optional() -> void:
+	assert_array(Array(DataValidator.validate(_base()))).is_empty()
+
+
+func test_dex_must_be_unique() -> void:
+	var raw := _base()
+	raw.entries.creatures[0].entry = _creature({"dex": 1})
+	raw.add_entry("creatures", _creature({"id": "kit", "name": "Kit", "dex": 1}))
+	assert_str(_errors_for(raw)).contains("duplicate dex 1")
+
+
+func test_dex_below_one_is_rejected() -> void:
+	var raw := _base()
+	raw.entries.creatures[0].entry = _creature({"dex": 0})
+	assert_str(_errors_for(raw)).contains("dex")
+
+
+func test_location_with_unknown_encounter_is_an_error() -> void:
+	var raw := _base()
+	raw.add_entry("locations", {"id": "m1", "name": "Map One", "areas": ["nope"]})
+	assert_str(_errors_for(raw)).contains("unknown encounters id 'nope'")

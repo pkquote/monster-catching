@@ -238,3 +238,20 @@ func test_moves_list_every_move_once() -> void:
 	var moves: String = _section("Moves")
 	for id: String in _db.ids("moves"):
 		assert_int(moves.count("| `%s` |" % id)).override_failure_message("move %s" % id).is_equal(1)
+
+
+func test_creatures_say_where_they_are_found() -> void:
+	var creatures := _section("Creatures")
+	var wild := ""
+	var tame := ""
+	for id in Codex.order(_db):
+		var rows := Locations.for_species(_db, id)
+		if rows.is_empty() and tame == "":
+			tame = id
+		elif not rows.is_empty() and wild == "":
+			wild = id
+	assert_str(wild).is_not_empty()
+	assert_str(tame).is_not_empty()
+	var lines := Locations.for_species(_db, wild).map(func(r: Dictionary) -> String: return Locations.line(r))
+	assert_str(creatures).contains("- **Found:** " + "; ".join(lines))
+	assert_str(creatures).contains("- **Found:** Not found in the wild")

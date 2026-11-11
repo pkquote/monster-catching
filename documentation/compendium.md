@@ -599,6 +599,7 @@ Base stats. *Total* sums the six battle stats (HP to Spd); Luck, Resolve and Sta
 - **Base stats:** HP 45 · P.Atk 45 · P.Def 40 · S.Atk 60 · S.Def 45 · Spd 60 · Luck 55 · Resolve 40 · Stamina 50
 - **Catch rate:** 45% base · **XP yield:** 55
 - **Lv 99 stats:** HP 198 · P.Atk 94 · P.Def 84 · S.Atk 123 · S.Def 94 · Spd 123 · Luck 113 · Resolve 84 · Stamina 119 · Total 716
+- **Found:** Route 1 – Route 1 tall grass, Lv 3–5
 
 | Lv | Move | Type | Cat. | Power | Cost | Acc |
 |---|---|---|---|---|---|---|
@@ -617,6 +618,7 @@ Base stats. *Total* sums the six battle stats (HP to Spd); Luck, Resolve and Sta
 - **Base stats:** HP 50 · P.Atk 50 · P.Def 50 · S.Atk 45 · S.Def 55 · Spd 45 · Luck 50 · Resolve 55 · Stamina 50
 - **Catch rate:** 40% base · **XP yield:** 55
 - **Lv 99 stats:** HP 208 · P.Atk 104 · P.Def 104 · S.Atk 94 · S.Def 113 · Spd 94 · Luck 104 · Resolve 113 · Stamina 119 · Total 717
+- **Found:** Route 1 – Route 1 tall grass, Lv 5–7; Route 1 – Route 1 deep grass, Lv 5–8
 
 | Lv | Move | Type | Cat. | Power | Cost | Acc |
 |---|---|---|---|---|---|---|
@@ -633,6 +635,7 @@ Base stats. *Total* sums the six battle stats (HP to Spd); Luck, Resolve and Sta
 - **Base stats:** HP 70 · P.Atk 45 · P.Def 55 · S.Atk 80 · S.Def 70 · Spd 80 · Luck 55 · Resolve 55 · Stamina 60
 - **Catch rate:** 10% base · **XP yield:** 160
 - **Lv 99 stats:** HP 247 · P.Atk 94 · P.Def 113 · S.Atk 163 · S.Def 143 · Spd 163 · Luck 113 · Resolve 113 · Stamina 138 · Total 923
+- **Found:** Not found in the wild
 - **Grows from:** Tidepup (Lv 16, Catalyst Affinity)
 
 | Lv | Move | Type | Cat. | Power | Cost | Acc |
@@ -651,6 +654,7 @@ Base stats. *Total* sums the six battle stats (HP to Spd); Luck, Resolve and Sta
 - **Base stats:** HP 60 · P.Atk 55 · P.Def 75 · S.Atk 30 · S.Def 45 · Spd 25 · Luck 40 · Resolve 70 · Stamina 60
 - **Catch rate:** 50% base · **XP yield:** 50
 - **Lv 99 stats:** HP 227 · P.Atk 113 · P.Def 153 · S.Atk 64 · S.Def 94 · Spd 54 · Luck 84 · Resolve 143 · Stamina 138 · Total 705
+- **Found:** Route 1 – Route 1 tall grass, Lv 3–6; Route 1 – Route 1 deep grass, Lv 5–8
 
 | Lv | Move | Type | Cat. | Power | Cost | Acc |
 |---|---|---|---|---|---|---|
@@ -668,6 +672,7 @@ Base stats. *Total* sums the six battle stats (HP to Spd); Luck, Resolve and Sta
 - **Base stats:** HP 55 · P.Atk 45 · P.Def 55 · S.Atk 40 · S.Def 60 · Spd 35 · Luck 45 · Resolve 60 · Stamina 55
 - **Catch rate:** 50% base · **XP yield:** 50
 - **Lv 99 stats:** HP 217 · P.Atk 94 · P.Def 113 · S.Atk 84 · S.Def 123 · Spd 74 · Luck 94 · Resolve 123 · Stamina 128 · Total 705
+- **Found:** Route 1 – Route 1 tall grass, Lv 2–5
 
 | Lv | Move | Type | Cat. | Power | Cost | Acc |
 |---|---|---|---|---|---|---|
@@ -685,6 +690,7 @@ Base stats. *Total* sums the six battle stats (HP to Spd); Luck, Resolve and Sta
 - **Base stats:** HP 50 · P.Atk 45 · P.Def 45 · S.Atk 50 · S.Def 45 · Spd 50 · Luck 50 · Resolve 45 · Stamina 55
 - **Catch rate:** 40% base · **XP yield:** 60
 - **Lv 99 stats:** HP 208 · P.Atk 94 · P.Def 94 · S.Atk 104 · S.Def 94 · Spd 104 · Luck 104 · Resolve 94 · Stamina 128 · Total 698
+- **Found:** Not found in the wild
 - **Grows into:** Lv 16 → **Torrentusk** (Striker Affinity); Lv 16 → **Mistcoil** (Catalyst Affinity); Lv 16 → **Torrentusk** (default)
 
 | Lv | Move | Type | Cat. | Power | Cost | Acc |
@@ -705,6 +711,7 @@ Base stats. *Total* sums the six battle stats (HP to Spd); Luck, Resolve and Sta
 - **Base stats:** HP 75 · P.Atk 85 · P.Def 70 · S.Atk 45 · S.Def 55 · Spd 55 · Luck 45 · Resolve 65 · Stamina 70
 - **Catch rate:** 10% base · **XP yield:** 160
 - **Lv 99 stats:** HP 257 · P.Atk 173 · P.Def 143 · S.Atk 94 · S.Def 113 · Spd 113 · Luck 94 · Resolve 133 · Stamina 158 · Total 893
+- **Found:** Not found in the wild
 - **Grows from:** Tidepup (Lv 16, Striker Affinity), Tidepup (Lv 16, default)
 
 | Lv | Move | Type | Cat. | Power | Cost | Acc |
@@ -722,6 +729,7 @@ Base stats. *Total* sums the six battle stats (HP to Spd); Luck, Resolve and Sta
 - **Base stats:** HP 40 · P.Atk 40 · P.Def 35 · S.Atk 60 · S.Def 40 · Spd 75 · Luck 60 · Resolve 40 · Stamina 45
 - **Catch rate:** 40% base · **XP yield:** 55
 - **Lv 99 stats:** HP 188 · P.Atk 84 · P.Def 74 · S.Atk 123 · S.Def 84 · Spd 153 · Luck 123 · Resolve 84 · Stamina 109 · Total 706
+- **Found:** Route 1 – Route 1 tall grass, Lv 3–6; Route 1 – Route 1 deep grass, Lv 5–8
 
 | Lv | Move | Type | Cat. | Power | Cost | Acc |
 |---|---|---|---|---|---|---|

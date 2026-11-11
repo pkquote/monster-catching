@@ -4,6 +4,7 @@
 	{
 	  "id": "emberkit",
 	  "name": "Emberkit",
+	  "dex": 4,
 	  "description": "Leaves smouldering pawprints wherever it runs.",
 	  "types": ["fire"],
 	  "base_stats": {
@@ -37,6 +38,7 @@
 	{
 	  "id": "sprigling",
 	  "name": "Sprigling",
+	  "dex": 5,
 	  "description": "A sprout that plants seeds in every footprint.",
 	  "types": ["grass"],
 	  "base_stats": {
@@ -69,6 +71,7 @@
 	{
 	  "id": "voltmoth",
 	  "name": "Voltmoth",
+	  "dex": 6,
 	  "description": "Its wingbeats leave the air prickling with static.",
 	  "types": ["electric"],
 	  "base_stats": {
@@ -101,6 +104,7 @@
 	{
 	  "id": "frostling",
 	  "name": "Frostling",
+	  "dex": 7,
 	  "description": "A shy spirit that frosts the ground when startled.",
 	  "types": ["ice"],
 	  "base_stats": {
@@ -132,6 +136,7 @@
 	{
 	  "id": "pebblet",
 	  "name": "Pebblet",
+	  "dex": 8,
 	  "description": "Mistaken for a rock until it headbutts your shin.",
 	  "types": ["earth"],
 	  "base_stats": {

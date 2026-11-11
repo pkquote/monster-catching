@@ -1,6 +1,6 @@
 class_name PauseMenu
 extends SideMenu
-## The Menu key on the overworld: Party, Bag, Save, Settings, Quit to title, Close.
+## The Menu key on the overworld: Party, Bag, Codex, Save, Settings, Quit to title, Close.
 
 var _bag_summary: BagSummary
 
@@ -11,6 +11,7 @@ func run(world: Overworld) -> void:
 	while true:
 		var choice = await menu.choose("", [
 			{"label": "Party", "value": "party"}, {"label": "Bag", "value": "bag"},
+			{"label": "Codex", "value": "codex"},
 			{"label": "Save", "value": "save"}, {"label": "Settings", "value": "settings"},
 			{"label": "Quit to title", "value": "quit"}, {"label": "Close", "value": "close"},
 		], true, 1)
@@ -19,6 +20,8 @@ func run(world: Overworld) -> void:
 				await _party(world)
 			"bag":
 				await _bag()
+			"codex":
+				await CodexScreen.run(world)
 			"save":
 				page("Saved." if GameState.save_manual() != "" else "Couldn't save!")
 			"settings":

@@ -4,6 +4,7 @@
 	{
 	  "id": "tidepup",
 	  "name": "Tidepup",
+	  "dex": 1,
 	  "description": "A pup that splashes puddles into its foes' paths.",
 	  "types": ["water"],
 	  "base_stats": {
@@ -43,6 +44,7 @@
 	{
 	  "id": "torrentusk",
 	  "name": "Torrentusk",
+	  "dex": 2,
 	  "description": "Grew up charging through floods, tusks first.",
 	  "types": ["water", "earth"],
 	  "base_stats": {
@@ -74,6 +76,7 @@
 	{
 	  "id": "mistcoil",
 	  "name": "Mistcoil",
+	  "dex": 3,
 	  "description": "A serpent of fog that turns battlefields into marshes.",
 	  "types": ["water", "ice"],
 	  "base_stats": {

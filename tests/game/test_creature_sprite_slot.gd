@@ -34,3 +34,17 @@ func test_draws_for_a_real_species_without_error() -> void:
 	slot.configure(DataRegistry.db, "torrentusk", 56)
 	await get_tree().process_frame
 	assert_object(slot).is_not_null()
+
+
+func test_unknown_slot_is_a_silhouette_with_the_minimum_size() -> void:
+	var slot: CreatureSpriteSlot = auto_free(CreatureSpriteSlot.new())
+	slot.configure_unknown(64)
+	assert_bool(slot.silhouette).is_true()
+	assert_vector(slot.custom_minimum_size).is_equal(Vector2(64, 64))
+
+
+func test_configuring_a_species_clears_the_silhouette() -> void:
+	var slot: CreatureSpriteSlot = auto_free(CreatureSpriteSlot.new())
+	slot.configure_unknown(64)
+	slot.configure(DataRegistry.db, "tidepup", 48)
+	assert_bool(slot.silhouette).is_false()

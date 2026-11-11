@@ -28,7 +28,9 @@ func after_test() -> void:
 func test_menu_opens_saves_and_closes() -> void:
 	world.open_pause_menu()
 	await get_tree().process_frame
-	assert_bool(world.pause_menu.is_open()).is_true()
+	assert_object(WorldTest.find_screen(world, CodexScreen)).is_null()
+	assert_bool(world.pause_menu.menu.is_choosing()).is_true()
+	assert_bool(world.pause_menu.menu.labels().has("Codex")).is_true()
 	assert_bool(world.is_locked()).is_true()
 	var before := GameState.store.list().size()
 	world.pause_menu.menu.pick_label("Save")
@@ -365,3 +367,16 @@ func test_reopening_the_bag_starts_fresh_with_one_connection() -> void:
 		await _pick("Back")
 		await get_tree().process_frame
 		assert_int(_hovered_connections()).is_equal(0)
+
+
+func test_codex_row_opens_the_codex_and_back_returns() -> void:
+	world.open_pause_menu()
+	await get_tree().process_frame
+	await _pick("Codex")
+	await get_tree().process_frame
+	var s := WorldTest.find_screen(world, CodexScreen) as CodexScreen
+	assert_object(s).is_not_null()
+	assert_bool(s.menu.pick_label("Back")).is_true()
+	await get_tree().process_frame
+	await get_tree().process_frame
+	assert_bool(world.pause_menu.is_open()).is_true()

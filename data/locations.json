@@ -1,0 +1,6 @@
+{
+  "schema": 1,
+  "entries": [
+	{"areas":["route_01_grass","route_01_deep_grass"],"id":"route_01","name":"Route 1"}
+  ]
+}

@@ -25,6 +25,10 @@ static func validate(raw: RawData) -> PackedStringArray:
 ## outweigh the balance budget. A tier counts +1 above steady, -1 below.
 static func warnings(raw: RawData) -> PackedStringArray:
 	var out := PackedStringArray()
+	for rec in raw.get_entries("creatures"):
+		var cid = rec.entry.get("id", "?")
+		if not (cid is String and Database.is_test_content(cid)) and str(rec.entry.get("description", "")).is_empty():
+			out.append("%s [creatures:%s]: warning: no description (the Codex page shows a fallback)" % [rec.file, cid])
 	if not raw.singles.has("balance"):
 		return out
 	var bal: Dictionary = raw.singles["balance"].data
@@ -222,10 +226,17 @@ func _check_cross_rules() -> void:
 		var sm = brec.data.get("spread_mults", {})
 		if sm is Dictionary and _is_number(sm.get("2")) and _is_number(sm.get("3")) and float(sm["3"]) > float(sm["2"]):
 			_err("spread_mults", "the \"3\" value must not be greater than the \"2\" value")
+	var dex_owner := {}
 	for rec in _raw.get_entries("creatures"):
 		var c: Dictionary = rec.entry
 		_file = rec.file
 		_label = "[creatures:%s]" % c.get("id", "?")
+		if c.get("dex") is float or c.get("dex") is int:
+			var dex := int(c.dex)
+			if dex_owner.has(dex):
+				_err("dex", "duplicate dex %d (also on %s)" % [dex, dex_owner[dex]])
+			else:
+				dex_owner[dex] = c.get("id", "?")
 		var learnset = c.get("learnset", [])
 		if learnset is Array and not learnset.any(func(l): return l is Dictionary and l.get("level") == 1.0):
 			_err("learnset", "needs at least one level-1 move")

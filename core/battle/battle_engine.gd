@@ -395,6 +395,11 @@ func deal_damage(target: Battler, amount: int, attacker: Battler, type: String, 
 	return false
 
 
+## Creatures (by bid) an item's heal or cure helped during the current item use. The item's
+## runner awards each one `healed_item` Bond once, however many of its effects landed.
+var item_bond_pending := {}
+
+
 func heal(target: Battler, amount: int, user: Battler, from_item := false) -> void:
 	var max_hp := target.creature.max_hp(db)
 	var healed := mini(amount, max_hp - target.hp())
@@ -403,7 +408,7 @@ func heal(target: Battler, amount: int, user: Battler, from_item := false) -> vo
 	if user != null and healed > 0:
 		rewards.award(user, "heal")
 	if from_item and healed > 0:
-		rewards.bond(target, "healed_item")
+		item_bond_pending[target.bid] = true
 
 
 func restore_energy(target: Battler, amount: int) -> void:
@@ -443,7 +448,7 @@ func cure_status(target: Battler, status_id: String, from_item := false) -> bool
 	target.status_turns = 0
 	emit({"type": BattleEvents.STATUS_ENDED, "bid": target.bid, "status": current, "cured": true})
 	if from_item:
-		rewards.bond(target, "healed_item")
+		item_bond_pending[target.bid] = true
 	return true
 
 

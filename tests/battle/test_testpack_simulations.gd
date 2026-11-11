@@ -1,7 +1,7 @@
 extends GdUnitTestSuite
 ## Seeded AI-vs-AI battles over data/ plus the debug test pack (data_testpack/), the way
 ## tools/simulate.gd --pack=1 runs them. Formats 1v1, 2v2, 3v3, 1v3, 2v3 and 3v6 (3 fielded,
-## 6-creature teams) x seeds 1..10; level 5 on odd seeds and 60 on even ones; AI styles rotate
+## 6-creature teams) x seeds 1..30; level 5 on odd seeds and 60 on even ones; AI styles rotate
 ## through basic, tactician and aggressive. Every other creature is a pack species taken in turn
 ## and the rest are random pack species (never base ones, so growing data/ doesn't shift the run);
 ## pack moves, passives and held items are dealt out in turn as well, so the run covers the whole
@@ -20,15 +20,16 @@ extends GdUnitTestSuite
 ## gets to is listed in EXEMPT_MOVES / EXEMPT_TRIGGERS (printed every run); an unlisted miss
 ## fails, and each list has a cap so it cannot grow silently.
 ##
-## Runtime: 60 battles x 2 plays. Seeds stop at 10 (not 20 as in test_simulation_invariants)
-## to keep the suite well under 30 s.
+## Runtime: 180 battles x 2 plays, about 25 s. 30 seeds because the plan deals the pack out in
+## turn, so every pack addition shifts what the AI reaches; fewer seeds needed a growing
+## exemption list below.
 
 const PACK_ROOT: String = "res://data_testpack"
 ## [fielded side 0, fielded side 1, team size (0 = fielded + a seed-dependent bench of 0..2)].
 const FORMATS: Array = [[1, 1, 0], [2, 2, 0], [3, 3, 0], [1, 3, 0], [2, 3, 0], [3, 3, 6]]
-const SEED_COUNT: int = 10
+const SEED_COUNT: int = 30
 const AIS: Array = ["basic", "tactician", "aggressive"]
-## Observed: 0 of 60 battles draw (all 60 end by defeat). 5% (at most 2 of 60) leaves room for a
+## Observed: 0 of 180 battles draw (all end by defeat). 5% (at most 9 of 180) leaves room for a
 ## stall from a degenerate pack combo without letting the simulation drift into draws.
 const MAX_DRAW_PERCENT: int = 5
 ## Pack moves the AI never picks in this run, with the reason. Every unused pack move must be
@@ -38,9 +39,6 @@ const EXEMPT_MOVES: Dictionary = {
 	# and the few fielded basic-AI holders in the plan never rolled these.
 	"tp_restore_energy_full_self": "the AI gives restore_energy no score, so only basic would pick it",
 	"tp_stage_luck_swing": "costs 23 energy for +/-2 luck, scored below any attack",
-	# M6 added cure entries, which re-deals the plan: the AI-picked set shifted and these two missed.
-	"tp_clear_glitched": "not picked in the seeded run after the M6 cure entries re-dealt the plan",
-	"tp_heal_ally_small": "not picked in the seeded run after the M6 cure entries re-dealt the plan",
 }
 ## About 5% of the pack's moves (92 today).
 const MAX_EXEMPT_MOVES: int = 5
@@ -48,13 +46,9 @@ const MAX_EXEMPT_MOVES: int = 5
 const EXEMPT_TRIGGERS: Dictionary = {
 	"tp_hit_contact_rare": "1% chance per contact hit",
 	"tp_h_pb_knockout": "needs its holder to land a knockout while its side is outnumbered",
-	# M6 added cure entries, which re-deals the plan: these never reached their trigger in the seeded run.
-	"tp_hit_when_field": "not reached in the seeded run after the M6 cure entries re-dealt the plan",
-	"tp_knockout_when_underdog": "not reached in the seeded run after the M6 cure entries re-dealt the plan",
-	"tp_h_pb_round_end": "not reached in the seeded run after the M6 cure entries re-dealt the plan",
-	"tp_clear_berry": "its holder must be given a status; its mechanic is covered in test_testpack_mechanics.gd",
+	"tp_h_pb_status": "its holder must be given a status; the status trigger is covered in test_cure_status.gd",
 }
-const MAX_EXEMPT_TRIGGERS: int = 6
+const MAX_EXEMPT_TRIGGERS: int = 4
 ## Events whose `bid` is the creature acting.
 const ACTION_EVENTS: Array = [BattleEvents.MOVE_USED, BattleEvents.ITEM_USED, BattleEvents.REST,
 	BattleEvents.PASS, BattleEvents.FLED, BattleEvents.SWAP_OUT, BattleEvents.DISOBEYED,

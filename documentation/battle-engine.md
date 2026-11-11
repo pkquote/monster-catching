@@ -292,7 +292,7 @@ Damage estimates already include stat, type-power, resistance, Scrap and reactio
 - **Own passives (tactician):** `field_boost` stacks count toward a setup's reaction value, and `rest_bonus` scales Rest's value.
 - **Retaliation (tactician):** a hit that doesn't knock the target out is charged the expected cost of the target's `hit` triggers on the attacker (status, stat drop or damage, weighted by chance; `contact` triggers need a physical move), less whatever the attacker's own passive blocks.
 
-- **Cures:** a move with a `cure_status` effect is worth the status value of each afflicted creature on the user's own side it would cure (zero otherwise, and never for a foe).
+- **Cures:** a move with a `cure_status` effect (on the move's targets, or the effect's own `target`) is worth the status value of each matching afflicted creature on the user's own side, counting only the rounds the status has left. Curing a foe's status costs the same amount; nothing to cure scores zero.
 
 Not modelled: faint, knockout, enter, round-end and status triggers.
 

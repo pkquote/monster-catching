@@ -31,6 +31,8 @@ func before() -> void:
 		it.merge({"name": str(it.id).capitalize(), "description": "Test held item.", "category": "held",
 			"price": 10})
 		r.add_entry("items", it)
+	r.add_entry("items", {"id": "full_remedy", "name": "Full Remedy", "category": "heal", "price": 1,
+		"target": "one_ally", "effects": [{"op": "heal", "fraction": 0.5}, {"op": "cure_status"}]})
 	var errors := DataValidator.validate(r)
 	assert(errors.is_empty(), "Test data invalid:\n" + "\n".join(errors))
 	db = Database.from_raw(r)
@@ -119,6 +121,17 @@ func test_item_cure_awards_bond_only_when_it_cured() -> void:
 	assert_array(bond).has_size(1)
 	assert_str(bond[0].reason).is_equal("healed_item")
 	assert_str(me.status()).is_equal("")
+
+
+func test_heal_plus_cure_item_awards_bond_once() -> void:
+	var e := _duel({"full_remedy": 1})
+	var me := e.battler(_bid(e, 0))
+	_afflict(e, me, "burn")
+	me.creature.hp = 1
+	var events := e.resolve_round([BattleAction.use_item(me.bid, "full_remedy", me.bid)])
+	assert_array(FixtureDB.events_of(events, "heal")).has_size(1)
+	assert_array(FixtureDB.events_of(events, "status_ended")).has_size(1)
+	assert_array(FixtureDB.events_of(events, "bond")).has_size(1)
 
 
 # --- The status trigger and cure triggers ---

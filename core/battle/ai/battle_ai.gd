@@ -115,9 +115,7 @@ static func score(engine: BattleEngine, b: Battler, m: MoveDef, target_bid: int,
 			var missing := max_hp - b.hp()
 			value += minf(missing, max_hp * float(e.fraction)) * (1.0 if b.hp() < max_hp * 0.5 else 0.2)
 		elif e.op == "cure_status":
-			for t in targets:
-				if t.side == b.side and t.status() != "" and (not e.has("status") or e.status == t.status()):
-					value += status_value(engine, t, t.status(), ref)
+			value += _cure_value(engine, b, e, targets, ref)
 	if style == "tactician":
 		value += _setup_value(engine, b, m, targets, ref)
 	if not m.always_hits:
@@ -268,10 +266,32 @@ static func reaction_value(engine: BattleEngine, b: Battler, r: ReactionDef, sid
 	return value
 
 
-## Expected value of inflicting `status_id` on `t`, from what the status actually does.
-static func status_value(engine: BattleEngine, t: Battler, status_id: String, ref: float) -> float:
+## What a `cure_status` effect on `move_targets` (or the effect's own `target`) is worth: each
+## matching afflicted creature on the user's side gains what the status would still have cost it
+## (its remaining rounds), and curing a foe costs the same.
+static func _cure_value(engine: BattleEngine, b: Battler, e: Dictionary, move_targets: Array[Battler],
+		ref: float) -> float:
+	var victims := move_targets
+	if e.has("target"):
+		var ctx := EffectContext.new()
+		ctx.engine = engine
+		ctx.user = b
+		victims = engine._effect_targets(ctx, e.target)
+	var value := 0.0
+	for t in victims:
+		if not t.alive() or t.status() == "" or (e.has("status") and e.status != t.status()):
+			continue
+		var worth := status_value(engine, t, t.status(), ref, t.status_turns)
+		value += worth if t.side == b.side else -worth
+	return value
+
+
+## Expected value of inflicting `status_id` on `t`, from what the status actually does. Counts
+## `rounds_left` rounds when given (an existing status), else the status's full duration.
+static func status_value(engine: BattleEngine, t: Battler, status_id: String, ref: float,
+		rounds_left := -1) -> float:
 	var sdef := engine.db.status(status_id)
-	var rounds := float(mini(sdef.turns, STATUS_HORIZON))
+	var rounds := float(mini(sdef.turns if rounds_left < 0 else rounds_left, STATUS_HORIZON))
 	var value := 0.0
 	for e in sdef.effects:
 		match e.op:

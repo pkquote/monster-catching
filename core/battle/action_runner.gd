@@ -185,7 +185,11 @@ func _item(b: Battler, a: BattleAction) -> void:
 	ctx.targets = e.resolve_targets(b, it.target, a.target, -1)
 	e.emit({"type": BattleEvents.ITEM_USED, "bid": b.bid, "item": it.id,
 		"targets": ctx.targets.map(func(t): return t.bid), "left": side.items[a.item]})
+	e.item_bond_pending.clear()
 	e.run_effects(ctx, it.effects)
+	for bid: int in e.item_bond_pending:
+		e.rewards.bond(e.battler(bid), "healed_item")
+	e.item_bond_pending.clear()
 
 
 func _swap(b: Battler, bench_bid: int) -> void:

@@ -15,6 +15,16 @@ func test_test_maps_are_not_listed() -> void:
 		assert_bool(e.id.begins_with("test_")).is_false()
 
 
+func test_a_stale_file_is_reported_with_the_generator_to_run() -> void:
+	var maps := CheckMaps.describe_all()
+	assert_str(CheckMaps.locations_problem(maps, DataRegistry.db)).is_empty()
+	maps["route_01"].default_encounter = "route_01_deep_grass"
+	maps["route_01"].pieces = []
+	var problem := CheckMaps.locations_problem(maps, DataRegistry.db)
+	assert_str(problem).contains("data/locations.json is out of date")
+	assert_str(problem).contains("tools/build_locations.tscn")
+
+
 func test_a_changed_scene_makes_the_file_stale() -> void:
 	var maps := CheckMaps.describe_all()
 	maps["route_01"].default_encounter = "route_01_deep_grass"

@@ -6,7 +6,11 @@ extends ProgressScreen
 ## Width of a row: the preview takes the left of the screen (set_side).
 const COLUMN_WIDTH := 306
 
+## Frames to wait before the list is put back at the top (the layout settles in the first one or two).
+const TOP_FRAMES := 3
+
 var _preview: CodexPreview
+var _top_frames := 0
 
 
 ## Runs until the player closes the list.
@@ -81,14 +85,19 @@ func _loop(parent: Node) -> void:
 			visible = true
 
 
-## A long list opens scrolled down by a row: the first focus lands before the layout has settled. Put it back.
+## A long list opens scrolled down by a row: the first focus lands before the layout has settled. Put it back
+## after a few frames. Counted in `_process`, not awaited, so closing the screen meanwhile cannot leave a
+## coroutine resuming on a freed node.
 func _scroll_to_top() -> void:
-	for i in 3:
-		if not is_inside_tree():  # closed already
-			return
-		await get_tree().process_frame
-	if is_instance_valid(self) and is_inside_tree():
+	_top_frames = TOP_FRAMES
+	set_process(true)
+
+
+func _process(_delta: float) -> void:
+	_top_frames -= 1
+	if _top_frames <= 0:
 		_scroll.scroll_vertical = 0
+		set_process(false)
 
 
 func _on_hover(hint: Variant) -> void:

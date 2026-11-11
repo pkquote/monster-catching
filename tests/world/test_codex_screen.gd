@@ -132,9 +132,18 @@ func test_back_closes_the_screen() -> void:
 	assert_bool(is_instance_valid(s) and s.is_inside_tree()).is_false()
 
 
+func test_closing_the_list_straight_away_is_safe() -> void:
+	var s := await _open()
+	s.close()  # inside the frames the scroll reset is still waiting
+	for i in 6:
+		await get_tree().process_frame
+	assert_bool(is_instance_valid(s) and s.is_inside_tree()).is_false()
+
+
 func test_the_list_opens_at_the_top() -> void:
 	var s := await _open()
-	await get_tree().process_frame
+	for i in 8:  # well past the frames the screen waits before it resets the scroll
+		await get_tree().process_frame
 	assert_int((s.menu_area() as ScrollContainer).scroll_vertical).is_equal(0)
 	var first := s.menu.get_child(1).get_child(0) as Button  # the grid's first row
 	assert_bool(s.menu_area().get_global_rect().encloses(first.get_global_rect().grow(-1.0))).is_true()

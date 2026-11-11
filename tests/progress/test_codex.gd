@@ -82,6 +82,16 @@ func test_order_puts_numbered_species_first_then_by_id() -> void:
 	assert_int(order.size()).is_equal(_numbered_db().count("creatures"))
 
 
+func test_order_breaks_a_dex_tie_by_id() -> void:
+	var raw := FixtureDB.raw()
+	for rec in raw.get_entries("creatures"):
+		if rec.entry.id == "fish" or rec.entry.id == "flame":
+			rec.entry["dex"] = 5  # a duplicate the validator rejects, but the order must still be stable
+	var order := Codex.order(Database.from_raw(raw))
+	assert_str(order[0]).is_equal("fish")
+	assert_str(order[1]).is_equal("flame")
+
+
 func test_order_leaves_out_test_pack_creatures() -> void:
 	var raw := FixtureDB.raw()
 	var proto: Dictionary = raw.get_entries("creatures")[0].entry.duplicate(true)

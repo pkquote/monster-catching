@@ -39,4 +39,5 @@ table name, level range merged over the table's rows); `Locations.line` formats 
 2. An encounter table that lists it, on a map's default table or an `EncounterArea` piece.
 3. Run `tools/build_locations.tscn` if a map's encounters changed, then `bash scripts/check.sh`.
 
-A species nobody can meet in the wild (a starter, an evolution) still lists; its page shows where it evolves from.
+A species nobody can meet in the wild (a starter, an evolution) still lists; its page says "Evolves from X" once X is
+caught, else "No wild habitat known".

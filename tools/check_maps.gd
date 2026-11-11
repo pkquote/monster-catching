@@ -22,13 +22,21 @@ func _ready() -> void:
 		print("warning: ", w)
 	for e in r.errors:
 		printerr(e)
-	if Locations.build(maps).entries != Locations.file_entries(loaded.db):
-		printerr("data/locations.json is out of date: run tools/build_locations.tscn")
+	var stale := locations_problem(maps, loaded.db)
+	if stale != "":
+		printerr(stale)
 		get_tree().quit(1)
 		return
 	if r.errors.is_empty():
 		print("Maps OK (%d maps)" % maps.size())
 	get_tree().quit(1 if not r.errors.is_empty() else 0)
+
+
+## "" when data/locations.json is what the map scenes give, else the error naming the generator.
+static func locations_problem(maps: Dictionary, db: Database) -> String:
+	if Locations.build(maps).entries == Locations.file_entries(db):
+		return ""
+	return "data/locations.json is out of date: run `godot --headless --path . res://tools/build_locations.tscn`"
 
 
 ## Every map scene in res://game/maps/ (not the `_` templates), described.

@@ -58,10 +58,10 @@ static func order(db: Database) -> PackedStringArray:
 	ids.sort_custom(func(a: String, b: String) -> bool:
 		var da := db.creature(a).dex
 		var dbb := db.creature(b).dex
-		if da > 0 and dbb > 0:
+		if da > 0 and dbb > 0 and da != dbb:
 			return da < dbb
-		if da > 0 or dbb > 0:
-			return da > 0
+		if (da > 0) != (dbb > 0):
+			return da > 0  # numbered before unnumbered
 		return a < b)
 	return PackedStringArray(ids)
 

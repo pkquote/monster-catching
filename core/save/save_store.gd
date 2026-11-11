@@ -15,7 +15,7 @@ const LAST_FILE := "last.json"
 ## schema -> Callable(Dictionary) -> Dictionary that upgrades a save by one version.
 ## Add an entry here whenever SaveGame.SCHEMA goes up.
 static func migrations() -> Dictionary:
-	return {1: _v1_to_v2, 2: _v2_to_v3, 3: _v3_to_v4, 4: _v4_to_v5, 5: _v5_to_v6, 6: _v6_to_v7}
+	return {1: _v1_to_v2, 2: _v2_to_v3, 3: _v3_to_v4, 4: _v4_to_v5, 5: _v5_to_v6, 6: _v6_to_v7, 7: _v7_to_v8}
 
 var root: String
 
@@ -91,6 +91,15 @@ static func _v6_to_v7(d: Dictionary) -> Dictionary:
 	var out := d.duplicate(true)
 	out["codex"] = {}
 	out["schema"] = 7
+	return out
+
+
+## Schema 7 -> 8 (achievements): saves gain an empty unlock record; the service's load pass
+## unlocks whatever the save has already earned.
+static func _v7_to_v8(d: Dictionary) -> Dictionary:
+	var out := d.duplicate(true)
+	out["achievements"] = {}
+	out["schema"] = 8
 	return out
 
 

@@ -18,6 +18,7 @@
 | [Creatures](#creatures) | 8 |
 | [Tamers](#tamers) | 4 |
 | [Encounters](#encounters) | 2 |
+| [Achievements](#achievements) | 11 |
 
 ## Rules and Balance
 
@@ -804,3 +805,21 @@ Wild encounter tables. Chance is per creature in the pack.
 | Voltmoth | 20% | 3–6 |
 | Pebblet | 15% | 3–6 |
 | Frostling | 5% | 5–7 |
+
+## Achievements
+
+Unlocked by play and shown in the Achievements screen. A hidden one reads "???" there until it is earned.
+
+| Achievement | Id | Needs |
+|---|---|---|
+| **First Steps** | `first_steps` | 500 steps |
+| **First Victory** | `first_victory` | 1 battles won |
+| **Tamer Trouncer** | `tamer_trouncer` | 1 tamers defeated |
+| **First Catch** | `first_catch` | 1 creatures caught |
+| **Field Notes** | `field_notes` | 4 species seen |
+| **Collector** | `collector` | 8 species caught |
+| **First Evolution** | `first_evolution` | 1 creature(s) evolved |
+| **Rising Star** | `rising_star` | a creature at level 20 |
+| **Close Friends** | `close_friends` | a creature at Bond 80 |
+| **Big Spender** | `big_spender` | 1000 money earned |
+| **Quick on the Draw** (hidden) | `quick_on_the_draw` | story flag `quick_draw_won` |

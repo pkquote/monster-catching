@@ -14,6 +14,7 @@ static func add(save: SaveGame, id: String, n := 1) -> bool:
 		push_error("Counters: unknown counter id '%s'" % id)
 		return false
 	save.story.add_count(id, n)
+	AchievementWatch.push(AchievementWatch.counter_key(id))
 	return true
 
 

@@ -20,6 +20,7 @@ static func _builders() -> Dictionary:
 		"tamers": TamerDef,
 		"encounters": EncounterDef,
 		"locations": LocationDef,
+		"achievements": AchievementDef,
 		"types": TypeDef,
 		"statuses": StatusDef,
 		"field_states": FieldStateDef,
@@ -70,6 +71,7 @@ func item(id: String) -> ItemDef: return get_def("items", id)
 func tamer(id: String) -> TamerDef: return get_def("tamers", id)
 func encounter(id: String) -> EncounterDef: return get_def("encounters", id)
 func location(id: String) -> LocationDef: return get_def("locations", id)
+func achievement(id: String) -> AchievementDef: return get_def("achievements", id)
 func type_def(id: String) -> TypeDef: return get_def("types", id)
 func status(id: String) -> StatusDef: return get_def("statuses", id)
 func field_state(id: String) -> FieldStateDef: return get_def("field_states", id)

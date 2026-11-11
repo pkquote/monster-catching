@@ -19,10 +19,13 @@ func flag(id: String) -> bool:
 
 
 func set_flag(id: String, on := true) -> void:
+	if on == flag(id):
+		return
 	if on:
 		flags[id] = true
 	else:
 		flags.erase(id)
+	AchievementWatch.push(AchievementWatch.flag_key(id))
 
 
 func count(id: String) -> int:

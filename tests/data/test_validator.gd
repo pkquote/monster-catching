@@ -445,3 +445,70 @@ func test_location_with_unknown_encounter_is_an_error() -> void:
 	var raw := _base()
 	raw.add_entry("locations", {"id": "m1", "name": "Map One", "areas": ["nope"]})
 	assert_str(_errors_for(raw)).contains("unknown encounters id 'nope'")
+
+
+func _ach(overrides: Dictionary = {}) -> Dictionary:
+	var a := {"id": "walker", "name": "Walker", "description": "Walk.",
+		"criterion": {"kind": "counter", "stat": "steps", "target": 10}}
+	a.merge(overrides, true)
+	return a
+
+
+func test_valid_achievement_of_each_kind_passes() -> void:
+	var raw := _base()
+	raw.add_entry("achievements", _ach())
+	raw.add_entry("achievements", _ach({"id": "a2", "criterion": {"kind": "codex", "mode": "seen", "target": 1}}))
+	raw.add_entry("achievements", _ach({"id": "a3", "criterion": {"kind": "codex", "mode": "species", "species": "pup"}}))
+	raw.add_entry("achievements", _ach({"id": "a4", "criterion": {"kind": "flag", "flag": "met_prof"}}))
+	raw.add_entry("achievements", _ach({"id": "a5", "hidden": true,
+		"criterion": {"kind": "creature", "what": "level", "target": 5}}))
+	assert_str(_errors_for(raw)).is_empty()
+
+
+func test_achievement_unknown_kind() -> void:
+	var raw := _base()
+	raw.add_entry("achievements", _ach({"criterion": {"kind": "nope"}}))
+	assert_str(_errors_for(raw)).contains("unknown criterion kind")
+
+
+func test_achievement_counter_stat_must_be_built_in() -> void:
+	var raw := _base()
+	raw.add_entry("achievements", _ach({"criterion": {"kind": "counter", "stat": "bogus", "target": 1}}))
+	assert_str(_errors_for(raw)).contains("criterion.stat")
+
+
+func test_achievement_target_must_be_positive() -> void:
+	var raw := _base()
+	raw.add_entry("achievements", _ach({"criterion": {"kind": "counter", "stat": "steps", "target": 0}}))
+	assert_str(_errors_for(raw)).contains("criterion.target: must be >= 1")
+
+
+func test_achievement_codex_target_cannot_exceed_the_species() -> void:
+	var raw := _base()  # one species
+	raw.add_entry("achievements", _ach({"criterion": {"kind": "codex", "mode": "caught", "target": 2}}))
+	assert_str(_errors_for(raw)).contains("more than the 1 species")
+
+
+func test_achievement_species_mode_needs_a_species() -> void:
+	var raw := _base()
+	raw.add_entry("achievements", _ach({"criterion": {"kind": "codex", "mode": "species"}}))
+	assert_str(_errors_for(raw)).contains("mode species needs a species")
+
+
+func test_achievement_species_must_exist() -> void:
+	var raw := _base()
+	raw.add_entry("achievements", _ach({"criterion": {"kind": "codex", "mode": "species", "species": "ghost"}}))
+	assert_str(_errors_for(raw)).contains("unknown creatures id 'ghost'")
+
+
+func test_achievement_duplicate_id() -> void:
+	var raw := _base()
+	raw.add_entry("achievements", _ach())
+	raw.add_entry("achievements", _ach(), "data/achievements/other.json")
+	assert_str(_errors_for(raw)).contains("duplicate id")
+
+
+func test_achievement_hidden_must_be_bool() -> void:
+	var raw := _base()
+	raw.add_entry("achievements", _ach({"hidden": "yes"}))
+	assert_str(_errors_for(raw)).contains("hidden: expected bool")

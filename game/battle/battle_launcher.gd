@@ -140,6 +140,7 @@ static func apply_results(db: Database, save: SaveGame, engine: BattleEngine) ->
 		levels_before[b.source] = b.source.level
 		passives_before[b.source] = b.source.affinity_passive
 	engine.commit(0)
+	AchievementWatch.push(AchievementWatch.CREATURE)  # levels and Bond reach the save only now, not on the battle copies
 	var res := engine.result()
 	var summary := BattleSummary.new()
 	summary.tamer_id = engine.setup.tamer_id
@@ -205,6 +206,7 @@ static func room_left(db: Database, save: SaveGame) -> int:
 ## Every creature that joins counts as caught in the Codex, whatever way it arrived.
 static func add_to_party(db: Database, save: SaveGame, c: CreatureInstance) -> bool:
 	Codex.mark_caught(save, c.species)
+	AchievementWatch.push(AchievementWatch.CREATURE)
 	if save.party.size() < db.balance.party_size:
 		save.party.append(c)
 		return true

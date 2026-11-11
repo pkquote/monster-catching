@@ -343,8 +343,8 @@ func _v5_dict(stored: int) -> Dictionary:
 	return d
 
 
-func test_current_schema_is_7() -> void:
-	assert_int(SaveGame.SCHEMA).is_equal(7)
+func test_current_schema_is_8() -> void:
+	assert_int(SaveGame.SCHEMA).is_equal(8)
 
 
 func test_schema_5_save_migrates_to_6() -> void:

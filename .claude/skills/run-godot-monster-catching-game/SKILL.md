@@ -147,6 +147,14 @@ real Down keys: the left pane follows (caught, seen, unseen silhouette), the uns
 timeout 200 "$GODOT" --path . --fixed-fps 60 --script res://.claude/skills/run-godot-monster-catching-game/driver.gd -- --mode=codex --out="$TMPDIR/codex_shots" 2>&1 | grep "\[driver\]"
 ```
 
+**Achievements tour** (`--mode=achievements`): new game -> a creature given (First Catch unlocks through the real hooks and the
+service) -> Menu -> Achievements -> header "Unlocked 1 / N", the first row's progress, Down to First Catch (unlocked, with its
+date), Down to the hidden entry (masked, nothing leaks), each inside the 640x360 screen -> Back out. About 10 s.
+
+```bash
+timeout 200 "$GODOT" --path . --fixed-fps 60 --script res://.claude/skills/run-godot-monster-catching-game/driver.gd -- --mode=achievements --out="$TMPDIR/ach_shots" 2>&1 | grep "\[driver\]"
+```
+
 Screenshot a single scene:
 
 ```bash
@@ -166,6 +174,7 @@ timeout 60 "$GODOT" --path . --script res://.claude/skills/run-godot-monster-cat
 | `--mode=box` | the box tour (`bx01_…` to `bx07_…`): browse, pick up and place, a marked group moved to another box, a refusal, Unlock a box, the Party screen with its card |
 | `--mode=bag` | the bag tour above (`bag01_…` to `bag07_…` screenshots) |
 | `--mode=codex` | the Codex tour above (`cdx01_…` to `cdx06_…` screenshots) |
+| `--mode=achievements` | the Achievements tour above (`ach01_…` to `ach03_…` screenshots) |
 | `--mode=ui` | the F1 UI gallery: the creature card at Lv 5, 50, 99 and a dual-type creature with a long nickname (`u01_…` to `u04_…`) |
 | `--mode=scene` | open `--scene` (default: main scene), wait `--frames` (default 60), screenshot |
 | `--out=<dir>` | screenshot folder; `user://` paths allowed (default `user://run_shots`) |

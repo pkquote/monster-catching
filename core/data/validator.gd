@@ -165,6 +165,8 @@ func _check_value(value: Variant, rule: Dictionary, path: String) -> void:
 				_check_value(value[k], rule.value, "%s.%s" % [path, k])
 		"effects":
 			_check_effects(value, path, rule.get("when", false), rule.get("trigger", false))
+		"criterion":
+			_check_criterion(value, path)
 		_:
 			_err(path, "schema error: unknown rule type '%s'" % rule.t)
 
@@ -194,6 +196,22 @@ func _check_effects(value: Variant, path: String, allow_when: bool = false, is_t
 			var names: Array = DataSchemas.EFFECT_NEEDS_ONE_OF[op]
 			if not names.any(func(n: String) -> bool: return eff.has(n)):
 				_err(sub, "%s needs at least one of: %s" % [op, ", ".join(names)])
+
+
+func _check_criterion(value: Variant, path: String) -> void:
+	if not value is Dictionary:
+		_err(path, "expected criterion object")
+		return
+	var kind = value.get("kind")
+	if not kind is String or not DataSchemas.CRITERIA.has(kind):
+		_err(path + ".kind", "unknown criterion kind %s" % JSON.stringify(kind))
+		return
+	var fields: Dictionary = DataSchemas.CRITERIA[kind].duplicate()
+	fields["kind"] = {"t": "string"}
+	_check_fields(value, fields, path)
+	var problem := Criteria.for_kind(kind).problem(value)
+	if problem != "":
+		_err(path, problem)
 
 
 func _check_range(n: float, rule: Dictionary, path: String) -> void:
@@ -260,6 +278,17 @@ func _check_cross_rules() -> void:
 					if defaults_per_level.has(lvl):
 						_err("growth", "more than one default branch at level %s" % lvl)
 					defaults_per_level[lvl] = true
+
+	var species_count := 0
+	for id in _ids["creatures"]:
+		if not Database.is_test_content(id):
+			species_count += 1
+	for rec in _raw.get_entries("achievements"):
+		var crit = rec.entry.get("criterion")
+		if crit is Dictionary and crit.get("kind") == "codex" and crit.get("mode") in ["seen", "caught"] 				and (crit.get("target") is float or crit.get("target") is int) and int(crit.target) > species_count:
+			_file = rec.file
+			_label = "[achievements:%s]" % rec.entry.get("id", "?")
+			_err("criterion.target", "%d is more than the %d species" % [int(crit.target), species_count])
 
 	for rec in _raw.get_entries("passives"):
 		var p: Dictionary = rec.entry

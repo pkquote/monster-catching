@@ -16,6 +16,7 @@ static func award_xp(db: Database, c: CreatureInstance, amount: int, bid: int = 
 		var old_max := c.max_hp(db)
 		var old_energy := c.max_energy(db)
 		c.level += 1
+		AchievementWatch.push(AchievementWatch.CREATURE)
 		# Keep damage taken / energy spent the same; the gain is added on top.
 		if c.hp > 0:
 			c.hp += c.max_hp(db) - old_max

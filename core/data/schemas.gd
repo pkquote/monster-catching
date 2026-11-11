@@ -51,6 +51,7 @@ const CATEGORIES := {
 	"tamers": "folder",
 	"encounters": "folder",
 	"locations": "file",
+	"achievements": "folder",
 	"types": "file",
 	"statuses": "file",
 	"field_states": "file",
@@ -208,6 +209,27 @@ const HELD := {
 	"field": {"t": "effects", "opt": true},
 }
 
+## Per-kind fields of an achievement's `criterion` ("kind" itself is implied). Each kind is a
+## `Criterion` subclass registered in `Criteria.KINDS`.
+const CRITERIA := {
+	"counter": {
+		"stat": {"t": "enum", "values": Counters.BUILT_IN},
+		"target": {"t": "int", "min": 1},
+	},
+	"codex": {
+		"mode": {"t": "enum", "values": ["seen", "caught", "species"]},
+		"target": {"t": "int", "opt": true, "min": 1},
+		"species": {"t": "ref", "cat": "creatures", "opt": true},
+	},
+	"flag": {
+		"flag": {"t": "id"},
+	},
+	"creature": {
+		"what": {"t": "enum", "values": ["level", "bond", "evolved"]},
+		"target": {"t": "int", "min": 1},
+	},
+}
+
 const ENTRY := {
 	"creatures": {
 		"id": {"t": "id"},
@@ -340,6 +362,13 @@ const ENTRY := {
 		"id": {"t": "id"},
 		"name": {"t": "string"},
 		"areas": {"t": "array", "min": 1, "of": {"t": "ref", "cat": "encounters"}},
+	},
+	"achievements": {
+		"id": {"t": "id"},
+		"name": {"t": "string"},
+		"description": {"t": "string"},
+		"hidden": {"t": "bool", "opt": true},
+		"criterion": {"t": "criterion"},
 	},
 	"minigames": {
 		"id": {"t": "id"},

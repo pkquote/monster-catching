@@ -4,7 +4,7 @@ extends GdUnitTestSuite
 ## the other sections rely on (spec 2026-11-05-m5a-housekeeping-design §5).
 
 const SECTIONS: Array[String] = ["Rules and Balance", "Types", "Affinities", "Statuses", "Field States",
-	"Reactions", "Passives", "Held items", "Moves", "Items", "Creatures", "Tamers", "Encounters"]
+	"Reactions", "Passives", "Held items", "Moves", "Items", "Creatures", "Tamers", "Encounters", "Achievements"]
 ## The contents row for Rules and Balance has no count: it is a settings page, not a list.
 const NO_COUNT := "—"
 
@@ -123,6 +123,20 @@ func test_every_in_document_link_resolves() -> void:
 	for m: RegExMatch in links:
 		assert_bool(anchors.has(m.get_string(1))) \
 			.override_failure_message("link to missing anchor #%s" % m.get_string(1)).is_true()
+
+
+func test_achievements_section_lists_every_achievement_once_and_marks_the_hidden_one() -> void:
+	var section: String = _section("Achievements")
+	assert_str(section).is_not_empty()
+	for id: String in _db.ids("achievements"):
+		assert_int(section.count("`%s`" % id)).override_failure_message("achievement %s" % id).is_equal(1)
+	var hidden_row := ""
+	for line: String in section.split("
+"):
+		if line.contains("`quick_on_the_draw`"):
+			hidden_row = line
+	assert_str(hidden_row).contains("(hidden)")
+	assert_str(section).contains("500 steps")
 
 
 func test_items_table_has_no_held_items() -> void:

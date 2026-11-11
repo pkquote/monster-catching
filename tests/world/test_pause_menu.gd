@@ -380,3 +380,20 @@ func test_codex_row_opens_the_codex_and_back_returns() -> void:
 	await get_tree().process_frame
 	await get_tree().process_frame
 	assert_bool(world.pause_menu.is_open()).is_true()
+
+
+func test_achievements_row_opens_the_screen_and_returns_to_the_menu() -> void:
+	world.open_pause_menu()
+	await get_tree().process_frame
+	assert_bool(world.pause_menu.menu.labels().has("Achievements")).is_true()
+	world.pause_menu.menu.pick_label("Achievements")
+	await get_tree().process_frame
+	var s := WorldTest.find_screen(world, AchievementsScreen) as AchievementsScreen
+	assert_object(s).is_not_null()
+	s.menu.pick_label("Back")
+	await get_tree().process_frame
+	await get_tree().process_frame
+	assert_object(WorldTest.find_screen(world, AchievementsScreen)).is_null()
+	assert_bool(world.pause_menu.menu.is_choosing()).is_true()
+	world.pause_menu.menu.pick_label("Close")
+	await get_tree().process_frame

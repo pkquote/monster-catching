@@ -1,7 +1,7 @@
 # M7 Collection and achievements — Design
 
 Date: 2026-11-11
-Status: Approved. 7a and 7b implemented; 7c (achievements) not started.
+Status: Implemented (7a Tracking, 7b Codex screens, 7c Achievements).
 Parent: [Roadmap M5–M9](2026-11-05-roadmap-m5-m8.md) (M7 inserted here; art and audio become M8, content M9).
 Builds on the [M5b shared visual pieces](2026-11-06-m5b-shared-visual-pieces-design.md) and the
 [M5d Box and Party design](2026-11-06-m5d-box-and-party-design.md).

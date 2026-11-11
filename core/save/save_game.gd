@@ -2,7 +2,7 @@ class_name SaveGame
 extends RefCounted
 ## Everything a save file holds. Pure data; SaveStore handles files.
 
-const SCHEMA := 7
+const SCHEMA := 8
 const KIND_MANUAL := "manual"
 const KIND_AUTO := "auto"
 ## Where a new game starts (and where a save with no usable position resumes).
@@ -27,6 +27,8 @@ var inventory: Dictionary = {}
 var money: int = 0
 ## Species id -> { "seen": bool, "caught": bool } (see Codex).
 var codex: Dictionary = {}
+## achievement id -> unlock time (Unix seconds)
+var achievements: Dictionary = {}
 ## Flags, counters, one-time pieces and the last heal spot.
 var story := StoryState.new()
 ## Exact overworld position: { map, x, y (pixels), facing ("up"|"down"|"left"|"right") }.
@@ -64,6 +66,7 @@ func to_dict() -> Dictionary:
 		"inventory": inventory.duplicate(),
 		"money": money,
 		"codex": codex.duplicate(true),
+		"achievements": achievements.duplicate(),
 		"story": story.to_dict(),
 		"position": position.duplicate(),
 	}
@@ -105,6 +108,11 @@ static func from_dict(d: Dictionary) -> SaveGame:
 			if e is Dictionary:
 				var is_caught := bool(e.get("caught", false))
 				s.codex[str(species)] = {"seen": bool(e.get("seen", false)) or is_caught, "caught": is_caught}
+	var raw_achievements = d.get("achievements", {})
+	if raw_achievements is Dictionary:
+		for id in raw_achievements:
+			if raw_achievements[id] is int or raw_achievements[id] is float:
+				s.achievements[str(id)] = int(raw_achievements[id])
 	s.story = StoryState.from_dict(d.get("story", {}) if d.get("story") is Dictionary else {})
 	var pos = d.get("position", {})
 	if pos is Dictionary and pos.get("map") is String and pos.get("map") != "":

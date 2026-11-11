@@ -68,6 +68,7 @@ static func record_growth(save: SaveGame, into: String) -> void:
 		return
 	Codex.mark_caught(save, into)
 	Counters.add(save, "creatures_evolved")
+	AchievementWatch.push(AchievementWatch.CREATURE)
 
 
 func _show_species(species: String) -> void:

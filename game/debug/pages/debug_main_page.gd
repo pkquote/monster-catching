@@ -24,6 +24,7 @@ func build(box: VBoxContainer) -> void:
 		UIKit.button(box, "Give XP...", func(): menu.show_page(DebugGiveXpPage.new())).disabled = not can_tune
 		UIKit.button(box, "Set Affinity...", func(): menu.show_page(DebugAffinityPage.new())).disabled = not can_tune
 		UIKit.button(box, "Set passive...", func(): menu.show_page(DebugPassivePage.new())).disabled = not can_tune
+		UIKit.button(box, "Collection...", func(): menu.show_page(DebugCollectionPage.new())).disabled = blocked
 		UIKit.button(box, "Fill box", _fill_box).disabled = blocked
 		UIKit.button(box, "Unlock a box", _unlock_box).disabled = blocked or s.boxes_unlocked >= BoxStorage.MAX_BOXES
 		UIKit.spacer(box, 4)

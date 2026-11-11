@@ -33,5 +33,10 @@ that is not in `Counters.BUILT_IN`; `Counters.value(save, id)` reads one.
 - Exhibition battles never call `apply_results`, so they track nothing.
 - The hooks that need a loaded game (`GrowScreen`, `Player`) do nothing without one.
 
+## Achievement watch pushes (M7c)
+`Counters.add`, `Codex.mark_seen`/`mark_caught` and `StoryState.set_flag` each push a key into `AchievementWatch` when
+they change something (`counter:<id>`, `codex`, `flag:<id>`), so the achievements that read them are re-checked. See
+`achievements.md`.
+
 ## Adding a counter
 Add its id to `Counters.BUILT_IN`, call `Counters.add` where the thing happens, and add a test for the hook.

@@ -69,6 +69,20 @@ func test_results_write_back_items_catches_and_money() -> void:
 	assert_int(s.inventory.potion).is_equal(2)
 
 
+func test_results_push_the_creature_key_after_the_battle_copies_are_written_back() -> void:
+	var s := _save()
+	s.party = [FixtureDB.make(db, "blob", 10, ["hit"])]
+	var setup := BattleLauncher.wild_setup(db, s, [FixtureDB.make(db, "fish", 3)], 1)
+	var e := BattleEngine.new(db, RandomNumberGenerator.new(), setup)
+	e.start()
+	e.sides[0].battlers[0].creature.level = 20  # levelled up inside the battle, on its copy
+	AchievementWatch.clear()
+	BattleLauncher.apply_results(db, s, e)
+	assert_int(s.party[0].level).is_equal(20)
+	assert_array(Array(AchievementWatch.drain())).contains("creature")
+	AchievementWatch.clear()
+
+
 func test_full_party_sends_catches_to_storage() -> void:
 	var s := _save()
 	for i in db.balance.party_size:

@@ -6,7 +6,7 @@ extends RefCounted
 ## Section headings in reading order (spec 2026-11-05-m5a-housekeeping-design §5.2). Rules come
 ## first because everything after refers to them.
 const SECTIONS: Array[String] = ["Rules and Balance", "Types", "Affinities", "Statuses", "Field States",
-	"Reactions", "Passives", "Held items", "Moves", "Items", "Creatures", "Tamers", "Encounters"]
+	"Reactions", "Passives", "Held items", "Moves", "Items", "Creatures", "Tamers", "Encounters", "Achievements"]
 const RULES := "Rules and Balance"
 
 var db: Database
@@ -47,6 +47,7 @@ func _build() -> void:
 	_creatures()
 	_tamers()
 	_encounters()
+	_achievements()
 
 
 ## A contents-table count: entries in the section, or an em dash for Rules and Balance.
@@ -428,6 +429,40 @@ func _encounters() -> void:
 			_w("| %s | %s%% | %d–%d |" % [db.creature(row.species).name,
 				EffectText.num(snappedf(100.0 * row.weight / e.total_weight, 0.1)), row.min_level, row.max_level])
 		_w("")
+
+
+func _achievements() -> void:
+	_section("Achievements", "Unlocked by play and shown in the Achievements screen. A hidden one reads \"???\" there until it is earned.")
+	_w("| Achievement | Id | Needs |")
+	_w("|---|---|---|")
+	for id in db.ids("achievements"):
+		var a := db.achievement(id)
+		_w("| **%s**%s | `%s` | %s |" % [a.name, " (hidden)" if a.hidden else "", a.id, _criterion_text(a.criterion)])
+	_w("")
+
+
+## The criterion in words, from its fields only.
+func _criterion_text(c: Dictionary) -> String:
+	match str(c.get("kind")):
+		"counter":
+			return "%d %s" % [int(c.target), str(c.stat).replace("_", " ")]
+		"codex":
+			match str(c.mode):
+				"species":
+					return "%s caught" % db.creature(str(c.species)).name
+				"caught":
+					return "%d species caught" % int(c.target)
+			return "%d species seen" % int(c.target)
+		"flag":
+			return "story flag `%s`" % c.flag
+		"creature":
+			match str(c.what):
+				"level":
+					return "a creature at level %d" % int(c.target)
+				"bond":
+					return "a creature at Bond %d" % int(c.target)
+			return "%d creature(s) evolved" % int(c.target)
+	return ""
 
 
 func _rules() -> void:

@@ -1,0 +1,27 @@
+{
+  "schema": 1,
+  "entries": [
+    {"id": "first_steps", "name": "First Steps", "description": "Walk 500 steps.",
+      "criterion": {"kind": "counter", "stat": "steps", "target": 500}},
+    {"id": "first_victory", "name": "First Victory", "description": "Win a battle.",
+      "criterion": {"kind": "counter", "stat": "battles_won", "target": 1}},
+    {"id": "tamer_trouncer", "name": "Tamer Trouncer", "description": "Defeat a tamer.",
+      "criterion": {"kind": "counter", "stat": "tamers_defeated", "target": 1}},
+    {"id": "first_catch", "name": "First Catch", "description": "Have a creature join you.",
+      "criterion": {"kind": "counter", "stat": "creatures_caught", "target": 1}},
+    {"id": "field_notes", "name": "Field Notes", "description": "See 4 different species.",
+      "criterion": {"kind": "codex", "mode": "seen", "target": 4}},
+    {"id": "collector", "name": "Collector", "description": "Catch every species.",
+      "criterion": {"kind": "codex", "mode": "caught", "target": 8}},
+    {"id": "first_evolution", "name": "First Evolution", "description": "Evolve a creature.",
+      "criterion": {"kind": "creature", "what": "evolved", "target": 1}},
+    {"id": "rising_star", "name": "Rising Star", "description": "Raise a creature to level 20.",
+      "criterion": {"kind": "creature", "what": "level", "target": 20}},
+    {"id": "close_friends", "name": "Close Friends", "description": "Reach a Bond of 80 with a creature.",
+      "criterion": {"kind": "creature", "what": "bond", "target": 80}},
+    {"id": "big_spender", "name": "Big Spender", "description": "Earn 1,000 in total.",
+      "criterion": {"kind": "counter", "stat": "money_earned", "target": 1000}},
+    {"id": "quick_on_the_draw", "name": "Quick on the Draw", "description": "Win the quick-draw challenge.",
+      "hidden": true, "criterion": {"kind": "flag", "flag": "quick_draw_won"}}
+  ]
+}

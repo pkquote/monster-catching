@@ -12,6 +12,8 @@ static func change(db: Database, c: CreatureInstance, happening: String, gain_mu
 		delta = maxi(1, roundi(delta * gain_mult))
 	var before := c.bond
 	c.bond = clampi(c.bond + delta, cfg.min, cfg.max)
+	if c.bond != before:
+		AchievementWatch.push(AchievementWatch.CREATURE)
 	return c.bond - before
 
 

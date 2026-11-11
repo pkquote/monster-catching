@@ -10,6 +10,7 @@ static func mark_seen(save: SaveGame, species: String) -> bool:
 	if entry.get("seen", false):
 		return false
 	save.codex[species] = {"seen": true, "caught": bool(entry.get("caught", false))}
+	AchievementWatch.push(AchievementWatch.CODEX)
 	return true
 
 
@@ -19,6 +20,7 @@ static func mark_caught(save: SaveGame, species: String) -> bool:
 	if entry.get("caught", false):
 		return false
 	save.codex[species] = {"seen": true, "caught": true}
+	AchievementWatch.push(AchievementWatch.CODEX)
 	return true
 
 

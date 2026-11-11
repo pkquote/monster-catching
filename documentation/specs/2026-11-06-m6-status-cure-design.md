@@ -1,6 +1,6 @@
 # Status-cure op (M6)
 
-Status: Draft, awaiting review.
+Status: Implemented (plan: [documentation/plans/2026-11-06-m6-status-cure.md](../plans/2026-11-06-m6-status-cure.md)).
 
 ## Goal
 Add a `cure_status` effect op so a real "full cure" item can exist (the test pack's `tp_full_restore`

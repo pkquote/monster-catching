@@ -1,7 +1,7 @@
 # M7 Collection and achievements — Design
 
 Date: 2026-11-11
-Status: Draft (awaiting review)
+Status: Approved. 7a and 7b implemented; 7c (achievements) not started.
 Parent: [Roadmap M5–M9](2026-11-05-roadmap-m5-m8.md) (M7 inserted here; art and audio become M8, content M9).
 Builds on the [M5b shared visual pieces](2026-11-06-m5b-shared-visual-pieces-design.md) and the
 [M5d Box and Party design](2026-11-06-m5d-box-and-party-design.md).
@@ -60,7 +60,7 @@ Each gets its own brainstorm, spec, plan and execution.
   absent), and **Where to find it**: one line per place, for example "Route 1 – Route 1 tall grass,
   Lv 2–5". A species with no wild source shows "Evolves from X" or "Given to you" where known, else "No wild
   habitat known". Seen but not caught adds a "Not caught yet" note. No stats or `CreatureCard` here.
-- **Location data:** `tools/build_maps.gd` writes `data/locations.json` (new category `locations`, a
+- **Location data:** `tools/build_locations.tscn` (reading the map scenes) writes `data/locations.json` (new category `locations`, a
   "file" category) mapping each map to its encounter tables: its `default_encounter` and each
   `encounter_area` piece. The area label is the encounter table's own `name`. The validator checks every
   encounter id exists; the map check fails when the scenes and the file disagree. A shipped species without a

@@ -1,7 +1,14 @@
 # M7b Codex screens — Design
 
 Date: 2026-11-11
-Status: Draft (awaiting review)
+Status: Implemented, with amendments (plan: [documentation/plans/2026-11-11-m7b-codex-screens.md](../plans/2026-11-11-m7b-codex-screens.md)).
+
+**Amendments made in the plan and implementation** (the text below is the original design):
+- `dex` is optional in the schema and the validator rejects duplicates; "every shipped creature has one" is a data test (`test_codex_data.gd`), because validator fixtures have none.
+- `data/locations.json` stores `{id, name, areas: [encounter ids]}` per map only; the area label is the encounter table's own `name`, read at runtime. It is generated from the map scenes by `tools/build_locations.tscn`, not `build_maps.gd`.
+- Both screens extend `ProgressScreen`, not the side menu; the list scrolls instead of paging, and hides while a page is open.
+- The page shows at most 4 location lines (then "N more places") and a description of at most 180 characters, instead of a scroll container.
+- Debug test content (`tp_`) is not in the Codex; the header counts only listed species.
 Parent: [M7 Collection and achievements](2026-11-11-m7-collection-achievements-design.md), sub-project 7b.
 Builds on [7a Tracking](2026-11-11-m7a-tracking-design.md) (the Codex data) and the
 [M5b shared visual pieces](2026-11-06-m5b-shared-visual-pieces-design.md) (`CreatureSpriteSlot`).

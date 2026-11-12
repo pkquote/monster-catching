@@ -93,6 +93,18 @@ Move targets: `self`, `one_ally`, `one_enemy`, `two_enemies`, `all_allies`, `all
 | Catch chance | `catch_rate × item mult × (1 − HP% × hp_weight) × status bonus × field bonuses on the target's side`, clamped 0–1 |
 | XP per defeated foe | `yield × level / divisor` (× `tamer_mult` vs tamers) × (1 + Underdog XP bonus). Every conscious creature that has been on the field gets the full amount |
 
+## How the shipped species are tiered (M6b)
+Every shipped species gets growth tiers from one rule (pinned in `tests/data/test_growth_tiers_data.gd`, which lists every
+species' tiers): a stat 8 or more above the species' own average across its nine base stats is `fast`, 8 or more below is
+`slow`, at most two of each, biggest gaps first. Two fast and two slow net 0 against `growth_budget`, so a species'
+total growth stays neutral and only its shape changes: specialists grow more specialised. A species with no stat that
+far from its average (Tidepup, Frostling) stays all-steady. Ties are broken by hand (see the test). When you add a
+species, apply the same rule and add it to that test; the validator only warns when a species is over budget.
+
+The three starters each evolve at Lv 16 by dominant Affinity (with a default branch): Tidepup into Torrentusk or Mistcoil,
+Emberkit into Blazefox (Striker and default) or Cinderwisp (Catalyst), Sprigling into Thornwall (Warden and default) or
+Mossweaver (Trickster). Starters and evolved forms are never in an encounter table; the evolved forms are evolution-only.
+
 ## Energy
 
 - Every move has a `cost`, paid when the move is used. A move costing more than the creature's

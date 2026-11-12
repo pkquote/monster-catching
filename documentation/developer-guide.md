@@ -300,7 +300,7 @@ balance), `generate_compendium.gd`, `build_locations.tscn`, `build_maps.tscn`, `
 
 - **Done:** M0-M5 (engine, battle scene, overworld, progression, box and party screens), M6 status-cure (the `cure_status` op, the
   `status` trigger, Clear Tonic), **M7 Collection and achievements** (tracking, the Codex, achievements).
-- **Still open in M6:** multi-hit moves, a growth-tier content pass, AI trigger modelling, a few pinned engine rulings.
+- **Still open in M6:** multi-hit moves, AI trigger modelling, a few pinned engine rulings. (Growth tiers and the starter evolutions are done: M6b.)
 - **Next:** M8 art and audio (the icon and sprite slots are placeholders), M9 content expansion.
 - **Specs** (the design of each piece) are in `documentation/specs/`, **plans** (how it was built) in `documentation/plans/`.
   The roadmap is `specs/2026-11-05-roadmap-m5-m8.md`; the original design is `specs/2026-11-03-monster-rpg-design.md`.

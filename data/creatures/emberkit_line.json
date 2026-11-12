@@ -1,0 +1,128 @@
+{
+  "schema": 1,
+  "entries": [
+	{
+	  "id": "emberkit",
+	  "name": "Emberkit",
+	  "dex": 4,
+	  "description": "Leaves smouldering pawprints wherever it runs.",
+	  "types": ["fire"],
+	  "base_stats": {
+		"hp": 45,
+		"patk": 45,
+		"pdef": 40,
+		"satk": 60,
+		"sdef": 45,
+		"spd": 60,
+		"luck": 55,
+		"resolve": 40,
+		"stamina": 50
+	  },
+	  "catch_rate": 0.45,
+	  "xp_yield": 55,
+	  "learnset": [
+		{"level": 1, "move": "tackle"},
+		{"level": 1, "move": "ember_flick"},
+		{"level": 6, "move": "scorch_field"},
+		{"level": 9, "move": "crossfire"},
+		{"level": 11, "move": "flare_burst"}
+	  ],
+	  "growth": [
+		{"level": 16, "affinity": "striker", "into": "blazefox"},
+		{"level": 16, "affinity": "catalyst", "into": "cinderwisp"},
+		{"level": 16, "default": true, "into": "blazefox"}
+	  ],
+	  "growth_rates": {
+		"satk": "fast",
+		"spd": "fast",
+		"pdef": "slow",
+		"resolve": "slow"
+	  },
+	  "passives": ["kindling", "ember_trail"],
+	  "affinity_passives": {
+		"striker": "finisher",
+		"warden": "guardian_aura",
+		"catalyst": "reaction_spark",
+		"trickster": "slippery"
+	  }
+	},
+	{
+	  "id": "blazefox",
+	  "name": "Blazefox",
+	  "dex": 5,
+	  "description": "Its tail trails sparks faster than the eye can follow.",
+	  "types": ["fire"],
+	  "base_stats": {
+		"hp": 55,
+		"patk": 50,
+		"pdef": 45,
+		"satk": 90,
+		"sdef": 55,
+		"spd": 95,
+		"luck": 60,
+		"resolve": 45,
+		"stamina": 55
+	  },
+	  "catch_rate": 0.1,
+	  "xp_yield": 160,
+	  "learnset": [
+		{"level": 1, "move": "ember_flick"},
+		{"level": 1, "move": "crossfire"},
+		{"level": 1, "move": "flare_burst"},
+		{"level": 16, "move": "dusk_pulse"}
+	  ],
+	  "growth_rates": {
+		"spd": "fast",
+		"satk": "fast",
+		"pdef": "slow",
+		"resolve": "slow"
+	  },
+	  "passives": ["kindling", "cold_snap"],
+	  "affinity_passives": {
+		"striker": "finisher",
+		"warden": "guardian_aura",
+		"catalyst": "reaction_spark",
+		"trickster": "slippery"
+	  }
+	},
+	{
+	  "id": "cinderwisp",
+	  "name": "Cinderwisp",
+	  "dex": 6,
+	  "description": "A restless flame that haunts the tall grass after dusk.",
+	  "types": ["fire", "ghost"],
+	  "base_stats": {
+		"hp": 60,
+		"patk": 40,
+		"pdef": 50,
+		"satk": 75,
+		"sdef": 80,
+		"spd": 70,
+		"luck": 65,
+		"resolve": 60,
+		"stamina": 65
+	  },
+	  "catch_rate": 0.1,
+	  "xp_yield": 160,
+	  "learnset": [
+		{"level": 1, "move": "ember_flick"},
+		{"level": 1, "move": "scorch_field"},
+		{"level": 1, "move": "haunt"},
+		{"level": 16, "move": "wail"}
+	  ],
+	  "growth_rates": {
+		"sdef": "fast",
+		"satk": "fast",
+		"patk": "slow",
+		"pdef": "slow"
+	  },
+	  "passives": ["ember_trail", "fog_weaver"],
+	  "affinity_passives": {
+		"striker": "finisher",
+		"warden": "guardian_aura",
+		"catalyst": "reaction_spark",
+		"trickster": "slippery"
+	  }
+	}
+  ]
+}

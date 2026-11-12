@@ -66,22 +66,25 @@ func test_grown_uses_the_species_tier() -> void:
 	def.growth_rates = saved
 
 
-func test_every_shipped_creature_is_unchanged() -> void:
+func test_every_shipped_creature_grows_by_its_tier() -> void:
 	var real := DataLoader.load_database("res://data", "res://dialogue").db
 	var flat := int(real.balance.energy_cfg.base)
 	for id in real.ids("creatures"):
-		var base: Dictionary = real.creature(id).base_stats
+		var def := real.creature(id)
+		var base: Dictionary = def.base_stats
 		for l in [1, 10, 50, 99]:
 			var c := CreatureInstance.create(real, id, l)
 			for s in DataSchemas.BASE_STATS:
+				var pct := roundi(float(real.balance.growth_tiers[def.growth_tier(s)]) * 100.0)
+				var scaled: int = (2 * int(base[s]) * pct * l) / 10000
 				var expected: int
 				if s == "hp":
-					expected = (2 * int(base.hp) * l) / 100 + l + 10
+					expected = scaled + l + 10
 				elif s == "stamina":
-					expected = (2 * int(base.stamina) * l) / 100 + flat
+					expected = scaled + flat
 				else:
-					expected = (2 * int(base[s]) * l) / 100 + 5
-				assert_int(c.grown(real, s)).is_equal(expected)
+					expected = scaled + 5
+				assert_int(c.grown(real, s)).override_failure_message("%s Lv %d %s" % [id, l, s]).is_equal(expected)
 
 
 func test_clamp_pulls_hp_and_energy_down_after_a_tier_shrinks_stats() -> void:

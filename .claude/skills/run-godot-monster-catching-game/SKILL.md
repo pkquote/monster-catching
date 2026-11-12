@@ -138,7 +138,7 @@ Salve's "use on who?" page replaces the pane -> Back -> the pane is gone after c
 timeout 200 "$GODOT" --path . --script res://.claude/skills/run-godot-monster-catching-game/driver.gd -- --mode=bag --out="$TMPDIR/bag_shots" 2>&1 | grep "\[driver\]"
 ```
 
-**Codex tour** (`--mode=codex`): new game -> Tidepup and Emberkit marked caught, Torrentusk seen (on the save) -> Menu -> Codex ->
+**Codex tour** (`--mode=codex`): new game -> Tidepup and Voltmoth marked caught, Torrentusk seen (on the save) -> Menu -> Codex ->
 real Down keys: the left pane follows (caught, seen, unseen silhouette), the unseen row does nothing -> the starter's page
 ("No wild habitat known"), a wild species' page (Route 1 location), the seen-only page ("Not caught yet"), each inside the
 640x360 screen -> Back out. About 10 s.

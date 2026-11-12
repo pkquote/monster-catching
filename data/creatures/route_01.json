@@ -2,76 +2,9 @@
   "schema": 1,
   "entries": [
 	{
-	  "id": "emberkit",
-	  "name": "Emberkit",
-	  "dex": 4,
-	  "description": "Leaves smouldering pawprints wherever it runs.",
-	  "types": ["fire"],
-	  "base_stats": {
-		"hp": 45,
-		"patk": 45,
-		"pdef": 40,
-		"satk": 60,
-		"sdef": 45,
-		"spd": 60,
-		"luck": 55,
-		"resolve": 40,
-		"stamina": 50
-	  },
-	  "catch_rate": 0.45,
-	  "xp_yield": 55,
-	  "learnset": [
-		{"level": 1, "move": "tackle"},
-		{"level": 1, "move": "ember_flick"},
-		{"level": 6, "move": "scorch_field"},
-		{"level": 9, "move": "crossfire"},
-		{"level": 11, "move": "flare_burst"}
-	  ],
-	  "passives": ["kindling", "ember_trail"],
-	  "affinity_passives": {
-		"striker": "finisher",
-		"warden": "guardian_aura",
-		"catalyst": "reaction_spark",
-		"trickster": "slippery"
-	  }
-	},
-	{
-	  "id": "sprigling",
-	  "name": "Sprigling",
-	  "dex": 5,
-	  "description": "A sprout that plants seeds in every footprint.",
-	  "types": ["grass"],
-	  "base_stats": {
-		"hp": 55,
-		"patk": 45,
-		"pdef": 55,
-		"satk": 40,
-		"sdef": 60,
-		"spd": 35,
-		"luck": 45,
-		"resolve": 60,
-		"stamina": 55
-	  },
-	  "catch_rate": 0.5,
-	  "xp_yield": 50,
-	  "learnset": [
-		{"level": 1, "move": "vine_lash"},
-		{"level": 4, "move": "seed_carpet"},
-		{"level": 8, "move": "regrowth"},
-		{"level": 10, "move": "twin_lash"}
-	  ],
-	  "passives": ["photosynth", "rootbed"],
-	  "affinity_passives": {
-		"striker": "finisher",
-		"warden": "guardian_aura",
-		"catalyst": "reaction_spark",
-		"trickster": "slippery"
-	  }
-	},
-	{
 	  "id": "voltmoth",
 	  "name": "Voltmoth",
-	  "dex": 6,
+	  "dex": 10,
 	  "description": "Its wingbeats leave the air prickling with static.",
 	  "types": ["electric"],
 	  "base_stats": {
@@ -93,6 +26,12 @@
 		{"level": 9, "move": "arc_pair"},
 		{"level": 12, "move": "thunder_cascade"}
 	  ],
+	  "growth_rates": {
+		"spd": "fast",
+		"satk": "fast",
+		"pdef": "slow",
+		"patk": "slow"
+	  },
 	  "passives": ["static_wings", "lightning_rod"],
 	  "affinity_passives": {
 		"striker": "finisher",
@@ -104,7 +43,7 @@
 	{
 	  "id": "frostling",
 	  "name": "Frostling",
-	  "dex": 7,
+	  "dex": 11,
 	  "description": "A shy spirit that frosts the ground when startled.",
 	  "types": ["ice"],
 	  "base_stats": {
@@ -136,7 +75,7 @@
 	{
 	  "id": "pebblet",
 	  "name": "Pebblet",
-	  "dex": 8,
+	  "dex": 12,
 	  "description": "Mistaken for a rock until it headbutts your shin.",
 	  "types": ["earth"],
 	  "base_stats": {
@@ -158,6 +97,12 @@
 		{"level": 7, "move": "dust_sweep"},
 		{"level": 13, "move": "quake_stomp"}
 	  ],
+	  "growth_rates": {
+		"pdef": "fast",
+		"resolve": "fast",
+		"spd": "slow",
+		"satk": "slow"
+	  },
 	  "passives": ["sturdy", "rubble_pile"],
 	  "affinity_passives": {
 		"striker": "finisher",

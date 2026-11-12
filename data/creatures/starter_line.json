@@ -65,6 +65,12 @@
 		{"level": 1, "move": "riptide"},
 		{"level": 16, "move": "quake_stomp"}
 	  ],
+	  "growth_rates": {
+		"patk": "fast",
+		"hp": "fast",
+		"satk": "slow",
+		"luck": "slow"
+	  },
 	  "passives": ["tidal_heart", "bulwark_hide"],
 	  "affinity_passives": {
 		"striker": "finisher",
@@ -98,6 +104,12 @@
 		{"level": 1, "move": "rime_veil"},
 		{"level": 16, "move": "glacier_crash"}
 	  ],
+	  "growth_rates": {
+		"satk": "fast",
+		"spd": "fast",
+		"patk": "slow",
+		"pdef": "slow"
+	  },
 	  "passives": ["fog_weaver", "chill_skin"],
 	  "affinity_passives": {
 		"striker": "finisher",

@@ -1,0 +1,127 @@
+{
+  "schema": 1,
+  "entries": [
+	{
+	  "id": "sprigling",
+	  "name": "Sprigling",
+	  "dex": 7,
+	  "description": "A sprout that plants seeds in every footprint.",
+	  "types": ["grass"],
+	  "base_stats": {
+		"hp": 55,
+		"patk": 45,
+		"pdef": 55,
+		"satk": 40,
+		"sdef": 60,
+		"spd": 35,
+		"luck": 45,
+		"resolve": 60,
+		"stamina": 55
+	  },
+	  "catch_rate": 0.5,
+	  "xp_yield": 50,
+	  "learnset": [
+		{"level": 1, "move": "vine_lash"},
+		{"level": 4, "move": "seed_carpet"},
+		{"level": 8, "move": "regrowth"},
+		{"level": 10, "move": "twin_lash"}
+	  ],
+	  "growth": [
+		{"level": 16, "affinity": "warden", "into": "thornwall"},
+		{"level": 16, "affinity": "trickster", "into": "mossweaver"},
+		{"level": 16, "default": true, "into": "thornwall"}
+	  ],
+	  "growth_rates": {
+		"sdef": "fast",
+		"resolve": "fast",
+		"spd": "slow",
+		"satk": "slow"
+	  },
+	  "passives": ["photosynth", "rootbed"],
+	  "affinity_passives": {
+		"striker": "finisher",
+		"warden": "guardian_aura",
+		"catalyst": "reaction_spark",
+		"trickster": "slippery"
+	  }
+	},
+	{
+	  "id": "thornwall",
+	  "name": "Thornwall",
+	  "dex": 8,
+	  "description": "Grows a hedge of thorns around anything it decides to guard.",
+	  "types": ["grass", "earth"],
+	  "base_stats": {
+		"hp": 80,
+		"patk": 65,
+		"pdef": 80,
+		"satk": 40,
+		"sdef": 85,
+		"spd": 30,
+		"luck": 45,
+		"resolve": 75,
+		"stamina": 70
+	  },
+	  "catch_rate": 0.1,
+	  "xp_yield": 160,
+	  "learnset": [
+		{"level": 1, "move": "vine_lash"},
+		{"level": 1, "move": "regrowth"},
+		{"level": 1, "move": "brace"},
+		{"level": 16, "move": "quake_stomp"}
+	  ],
+	  "growth_rates": {
+		"sdef": "fast",
+		"hp": "fast",
+		"spd": "slow",
+		"satk": "slow"
+	  },
+	  "passives": ["photosynth", "sturdy"],
+	  "affinity_passives": {
+		"striker": "finisher",
+		"warden": "guardian_aura",
+		"catalyst": "reaction_spark",
+		"trickster": "slippery"
+	  }
+	},
+	{
+	  "id": "mossweaver",
+	  "name": "Mossweaver",
+	  "dex": 9,
+	  "description": "Weaves moss into traps and waits for foes to trip.",
+	  "types": ["grass", "ghost"],
+	  "base_stats": {
+		"hp": 65,
+		"patk": 45,
+		"pdef": 55,
+		"satk": 75,
+		"sdef": 80,
+		"spd": 60,
+		"luck": 65,
+		"resolve": 70,
+		"stamina": 55
+	  },
+	  "catch_rate": 0.1,
+	  "xp_yield": 160,
+	  "learnset": [
+		{"level": 1, "move": "vine_lash"},
+		{"level": 1, "move": "seed_carpet"},
+		{"level": 1, "move": "haunt"},
+		{"level": 16, "move": "wail"}
+	  ],
+	  "growth_rates": {
+		"sdef": "fast",
+		"satk": "fast",
+		"patk": "slow",
+		"pdef": "slow"
+	  },
+	  "passives": ["rootbed", "chill_skin"],
+	  "affinity_passives": {
+		"striker": "finisher",
+		"warden": "guardian_aura",
+		"catalyst": "reaction_spark",
+		"trickster": "slippery"
+	  }
+	}
+  ]
+}

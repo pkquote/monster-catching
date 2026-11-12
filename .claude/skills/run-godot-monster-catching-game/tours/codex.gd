@@ -1,6 +1,6 @@
 extends RefCounted
 ## The `codex` tour (driver.gd --mode=codex).
-## New game -> Tidepup and Emberkit marked caught, Torrentusk seen, the rest unseen (on the save, no F1 page) ->
+## New game -> Tidepup and Voltmoth marked caught, Torrentusk seen, the rest unseen (on the save, no F1 page) ->
 ## Menu -> Codex -> Down through the rows with real keys: the left pane follows (a sprite, a seen name, an
 ## unseen silhouette) -> the unseen row does nothing -> the caught starter's page ("No wild habitat known"), a
 ## wild species' page (where to find it), the seen-only page ("Not caught yet") -> Back out to the world.
@@ -26,7 +26,7 @@ func run() -> void:
 
 	var save: SaveGame = gs.current
 	Codex.mark_caught(save, "tidepup")
-	Codex.mark_caught(save, "emberkit")
+	Codex.mark_caught(save, "voltmoth")
 	Codex.mark_seen(save, "torrentusk")
 	var ow = d.current_scene
 
@@ -67,7 +67,7 @@ func run() -> void:
 	# 4. Pages: the caught starter (no wild habitat), a wild species, the seen-only species.
 	await _page(ow, "#001", "cdx04_page_starter", func(p: CodexDetailPage) -> bool:
 		return "No wild habitat known" in p.page_text() and "Where to find it:" in p.page_text(), "the starter says no wild habitat")
-	await _page(ow, "#004", "cdx05_page_wild", func(p: CodexDetailPage) -> bool:
+	await _page(ow, "#010", "cdx05_page_wild", func(p: CodexDetailPage) -> bool:
 		return "Route 1 – Route 1 tall grass" in p.page_text(), "a wild species lists Route 1")
 	await _page(ow, "#002", "cdx06_page_seen", func(p: CodexDetailPage) -> bool:
 		return "Not caught yet" in p.page_text(), "a seen species ends 'Not caught yet'")

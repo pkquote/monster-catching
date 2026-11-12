@@ -26,6 +26,8 @@ const ACTION_INVALID := "action_invalid"
 const ACTION_SKIPPED := "action_skipped"
 const NO_TARGET := "no_target"
 const MISS := "miss"
+## A multi-hit move finished: { bid (the user), hits (how many landed) }
+const HIT_COUNT := "hit_count"
 
 # Effects on creatures
 const DAMAGE := "damage"
@@ -69,6 +71,7 @@ const ITEM_CONSUMED := "item_consumed"
 const ALL := [
 	BATTLE_START, ROUND_START, BATTLE_END, SEND_OUT, SWAP_OUT, REPLACEMENT_NEEDED, UNDERDOG, FLED,
 	MOVE_USED, ITEM_USED, REST, PASS, ACTION_INVALID, ACTION_SKIPPED, NO_TARGET, MISS,
+	HIT_COUNT,
 	DAMAGE, NO_EFFECT, ENDURED, HEAL, ENERGY, STATUS_APPLIED, STATUS_FAILED, STATUS_ENDED,
 	RESISTED, STAT_STAGE, FAINT,
 	FIELD_APPLIED, FIELD_REMOVED, REACTION,

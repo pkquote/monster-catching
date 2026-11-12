@@ -4,6 +4,7 @@
     "level_cap": 99,
     "party_size": 6,
     "max_moves": 4,
+    "max_hits": 5,
     "stab": 1.25,
     "spread_mults": {"2": 0.85, "3": 0.75},
     "resolve": {"resist_cap": 0.3, "endure_cap": 0.1},

@@ -294,8 +294,9 @@ func test_unlock_screen_cancel_keeps_current() -> void:
 func test_unlock_runs_after_learn_move_before_grow() -> void:
 	var c := _unlocked_pup(16)
 	c.moves = PackedStringArray(["tackle", "splash_jab", "drench", "riptide"])
-	var entry := Progression.progress_entry(DataRegistry.db, c, 13, "")
-	assert_array(entry.offered_moves).is_equal(["tide_beam"])
+	# From level 14 to 16, so exactly one move (Twin Splash, Lv 15) is offered.
+	var entry := Progression.progress_entry(DataRegistry.db, c, 14, "")
+	assert_array(entry.offered_moves).is_equal(["twin_splash"])
 	assert_bool(entry.growth_due).is_true()
 	assert_str(entry.unlocked_passive).is_equal("finisher")
 	var done: Array = []

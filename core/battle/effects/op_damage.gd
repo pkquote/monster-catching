@@ -16,5 +16,6 @@ func apply(ctx: EffectContext, e: Dictionary, target: Battler) -> void:
 		ctx.engine.emit({"type": BattleEvents.NO_EFFECT, "bid": target.bid})
 		return
 	var contact := ctx.move != null and ctx.move.category == "physical"
+	ctx.connected = true
 	if ctx.engine.deal_damage(target, result.amount, ctx.user, type, result.type_mult, contact):
 		ctx.absorbed.append(target)

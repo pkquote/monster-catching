@@ -22,6 +22,8 @@ static func move_line(db: Database, id: String) -> String:
 	var m := db.move(id)
 	var type_def := db.type_def(m.type)
 	var power := str(m.power) if m.power > 0 else "-"
+	if m.is_multi_hit():
+		power += " " + EffectText.hits_short(m)
 	return "%s  %s %s  Power %s  Cost %d" % [m.name, type_def.name if type_def != null else m.type,
 		m.category.capitalize(), power, m.cost]
 

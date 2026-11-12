@@ -84,7 +84,7 @@ Moves, items, reactions, field-state passives and abilities all share one effect
 
 Initial ops: `damage`, `heal`, `apply_status`, `apply_field_state`, `remove_field_state`, `bonus_if_field` (power multiplier, optional consume), `stat_stage`, `capture` (items only).
 
-Targets: `self`, `one_ally`, `one_enemy`, `two_enemies` (the user picks two distinct foes; see the [two-opponent moves design](2026-11-05-two-target-moves-design.md)), `all_allies`, `all_enemies`, `all`, `own_side`, `enemy_side`.
+Targets: `self`, `one_ally`, `one_enemy`, `two_enemies` (the user picks two distinct foes; see the [two-opponent moves design](2026-11-05-two-target-moves-design.md)), `all_allies`, `all_enemies`, `all`, `own_side`, `enemy_side`. A `one_enemy` move may also hit its foe several times (`hits`; see the [multi-hit moves design](2026-11-11-m6c-multi-hit-moves-design.md)).
 
 ### 2.5 Behavior-shaped growth
 

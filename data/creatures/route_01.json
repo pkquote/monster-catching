@@ -24,7 +24,8 @@
 		{"level": 1, "move": "spark_bite"},
 		{"level": 5, "move": "static_field"},
 		{"level": 9, "move": "arc_pair"},
-		{"level": 12, "move": "thunder_cascade"}
+		{"level": 12, "move": "thunder_cascade"},
+		{"level": 15, "move": "spark_volley"}
 	  ],
 	  "growth_rates": {
 		"spd": "fast",
@@ -62,6 +63,7 @@
 	  "learnset": [
 		{"level": 1, "move": "frost_nip"},
 		{"level": 6, "move": "rime_veil"},
+		{"level": 10, "move": "needle_flurry"},
 		{"level": 14, "move": "glacier_crash"}
 	  ],
 	  "passives": ["frost_guard", "cold_snap"],

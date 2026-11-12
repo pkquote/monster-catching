@@ -38,6 +38,19 @@
       "accuracy": 85,
       "target": "one_enemy",
       "effects": [{"op": "damage"}]
+    },
+    {
+      "id": "needle_flurry",
+      "name": "Needle Flurry",
+      "description": "Three needles of ice.",
+      "type": "ice",
+      "category": "physical",
+      "power": 20,
+      "cost": 5,
+      "accuracy": 95,
+      "target": "one_enemy",
+      "hits": {"min": 3, "max": 3},
+      "effects": [{"op": "damage"}]
     }
   ]
 }

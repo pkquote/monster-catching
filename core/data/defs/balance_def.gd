@@ -4,10 +4,14 @@ extends RefCounted
 
 ## Schema ceiling for balance.party_size.
 const MAX_PARTY_SIZE: int = 12
+## Schema ceiling for balance.max_hits (and any move's hits.max).
+const MAX_HITS: int = 10
 
 var level_cap: int
 var party_size: int
 var max_moves: int
+## Most times one move use may hit (a move's hits.max may not exceed it).
+var max_hits: int
 var stab: float
 ## Damage multiplier by creatures hit: keys 2 and 3 (3 also covers more).
 var spread_mults: Dictionary
@@ -42,6 +46,7 @@ static func from_dict(d: Dictionary) -> BalanceDef:
 	b.level_cap = int(d.level_cap)
 	b.party_size = int(d.party_size)
 	b.max_moves = int(d.max_moves)
+	b.max_hits = int(d.max_hits)
 	b.stab = float(d.stab)
 	b.spread_mults = {2: float(d.spread_mults["2"]), 3: float(d.spread_mults["3"])}
 	b.round_limit = int(d.round_limit)

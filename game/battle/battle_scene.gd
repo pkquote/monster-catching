@@ -172,12 +172,8 @@ func _choose_move(bid: int) -> BattleAction:
 	moves.append(engine.fallback_move())
 	for mid in moves:
 		var m := db.move(mid)
-		var cat: String = {"physical": "P", "special": "S", "status": "—"}[m.category]
-		var power := "" if m.power == 0 else str(m.power)
 		var en := engine.passive_rules.move_cost(b, m)
-		var cost := "free" if en == 0 else "%d EN" % en
-		options.append({"label": "%s · %s %s%s · %s" % [m.name, db.type_def(m.type).name, cat, power, cost],
-			"value": mid, "disabled": en > b.energy()})
+		options.append({"label": BattleText.move_label(db, m, en), "value": mid, "disabled": en > b.energy()})
 	while true:
 		var mid = await menu.choose("%s: choose a move  (EN %d/%d)" % [display_name(bid), b.energy(), b.creature.max_energy(db)], options, true)
 		if mid == null:

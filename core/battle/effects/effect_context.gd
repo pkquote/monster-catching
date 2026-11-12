@@ -19,6 +19,10 @@ var target_side: int = -1
 var targets: Array[Battler] = []
 ## How many creatures the move hits (more than one applies the spread penalty).
 var spread_count := 1
+## 0-based number of the hit being run by a multi-hit move (0 for any other move).
+var hit_index := 0
+## Set by the damage op when it dealt or absorbed damage (a multi-hit move stops when a hit did neither).
+var connected := false
 ## Multiplier from bonus_if_field for the damage/heal that follows.
 var mult := 1.0
 ## Stacks used up by a reaction (for scale_with_stacks).

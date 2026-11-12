@@ -388,11 +388,47 @@ func deal_damage(target: Battler, amount: int, attacker: Battler, type: String, 
 	passive_rules.note_damage(target)
 	if attacker != null and attacker.side != target.side and dealt > 0:
 		target.last_hit_by = attacker.bid
-		rewards.award(attacker, "hit_dealt")
+		_award_hit(attacker, "hit_dealt")
 		if target.hp() > 0:
-			rewards.award(target, "hit_survived")
+			_award_hit(target, "hit_survived")
 			passive_rules.fire(target, "hit", attacker, contact)
 	return false
+
+
+## While a multi-hit move runs, Affinity from its hits is earned once per move use, not per hit.
+var _hit_awards_once := false
+var _hit_awarded := {}
+
+
+func begin_multi_hit() -> void:
+	_hit_awards_once = true
+	_hit_awarded.clear()
+
+
+func end_multi_hit() -> void:
+	_hit_awards_once = false
+	_hit_awarded.clear()
+
+
+func _award_hit(b: Battler, happening: String) -> void:
+	if _hit_awards_once:
+		var key := "%s:%d" % [happening, b.bid]
+		if _hit_awarded.has(key):
+			return
+		_hit_awarded[key] = true
+	rewards.award(b, happening)
+
+
+## The next standing active foe of `user` after `fallen`'s slot, wrapping around the side; null if none.
+func next_foe_after(user: Battler, fallen: Battler) -> Battler:
+	var opp := sides[1 - user.side]
+	var n := opp.slots.size()
+	var start := opp.slot_of(fallen)
+	for i in range(1, n + 1):
+		var b: Battler = opp.slots[(start + i) % n]
+		if b != null and b.alive() and b.active:
+			return b
+	return null
 
 
 ## Creatures (by bid) an item's heal or cure helped during the current item use. The item's

@@ -11,6 +11,16 @@ const STAT_NAMES := {"patk": "Physical Attack", "pdef": "Physical Defense", "sat
 const SILENT := ["round_start", "energy", "bond", "replacement_needed", "capture_attempt"]
 
 
+## A move's line in the battle's move menu: "Splash Jab · Water P40 · 2 EN" ("Needle Flurry · Ice P20 x3 · 5 EN"
+## for a multi-hit move, so its power reads per hit).
+static func move_label(db: Database, m: MoveDef, energy_cost: int) -> String:
+	var cat: String = {"physical": "P", "special": "S", "status": "—"}[m.category]
+	var power := "" if m.power == 0 else str(m.power)
+	var hits := EffectText.hits_short(m)
+	var cost := "free" if energy_cost == 0 else "%d EN" % energy_cost
+	return "%s · %s %s%s%s · %s" % [m.name, db.type_def(m.type).name, cat, power, " " + hits if hits != "" else "", cost]
+
+
 static func describe(ev: Dictionary, db: Database, names: Callable, tamer_name: String = "") -> String:
 	match ev.type:
 		"battle_start":
@@ -33,6 +43,8 @@ static func describe(ev: Dictionary, db: Database, names: Callable, tamer_name: 
 			return "It doesn't affect %s..." % _n(names, ev, "bid")
 		"no_target":
 			return "But there was no target..."
+		"hit_count":
+			return "Hit %d times!" % int(ev.hits) if int(ev.hits) >= 2 else ""
 		"damage":
 			var eff := float(ev.get("effectiveness", 1.0))
 			if eff > 1.0:

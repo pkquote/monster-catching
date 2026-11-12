@@ -121,7 +121,42 @@ func _move(b: Battler, a: BattleAction) -> void:
 				e.emit({"type": BattleEvents.MISS, "bid": b.bid, "target": t.bid})
 		if ctx.targets.is_empty():
 			return
-	e.run_effects(ctx, m.effects)
+	if not m.is_multi_hit():
+		e.run_effects(ctx, m.effects)
+		e.field_rules.finish_consume(ctx)
+		return
+	_run_hits(b, m, ctx)
+
+
+## A multi-hit move: the whole effect list once per hit against the chosen foe. A foe that faints
+## is processed at once and the remaining hits go to the next standing foe in slot order. The
+## move ends when no foe is left, the battle is decided or the user itself faints.
+func _run_hits(b: Battler, m: MoveDef, ctx: EffectContext) -> void:
+	var e := engine
+	var count := e.rng.randi_range(m.hits_min, m.hits_max)
+	var landed := 0
+	var has_damage := m.effects.any(func(fx: Dictionary) -> bool: return fx.op == "damage")
+	e.begin_multi_hit()
+	for i in count:
+		ctx.hit_index = i
+		ctx.mult = 1.0  # a field bonus applies to this hit only, not compounded over the hits
+		ctx.connected = false
+		var current: Battler = ctx.targets[0]
+		e.run_effects(ctx, m.effects)
+		if has_damage and not ctx.connected:
+			break  # nothing was hurt or absorbed (an immune foe): the remaining hits would repeat that
+		landed += 1
+		e.check_faints()
+		if not b.alive() or e.sides.any(func(s: BattleSide) -> bool: return s.defeated()):
+			break
+		if not current.alive():
+			var next := e.next_foe_after(b, current)
+			if next == null:
+				break
+			ctx.targets.clear()
+			ctx.targets.append(next)
+	e.end_multi_hit()
+	e.emit({"type": BattleEvents.HIT_COUNT, "bid": b.bid, "hits": landed})
 	e.field_rules.finish_consume(ctx)
 
 

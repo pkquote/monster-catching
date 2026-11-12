@@ -14,6 +14,9 @@ var always_hits: bool
 var priority: int
 var target: String
 var effects: Array
+## How many times one use hits its target: a count rolled from hits_min to hits_max (both 1 = once).
+var hits_min: int = 1
+var hits_max: int = 1
 
 
 static func from_dict(d: Dictionary) -> MoveDef:
@@ -30,8 +33,20 @@ static func from_dict(d: Dictionary) -> MoveDef:
 	m.priority = int(d.get("priority", 0))
 	m.target = d.target
 	m.effects = d.effects.duplicate(true)
+	var hits: Dictionary = d.get("hits", {})
+	m.hits_min = int(hits.get("min", 1))
+	m.hits_max = int(hits.get("max", 1))
 	return m
 
 
 func is_damaging() -> bool:
 	return category != "status"
+
+
+func is_multi_hit() -> bool:
+	return hits_max > 1
+
+
+## Expected number of hits (the AI scores a ranged move by it).
+func mean_hits() -> float:
+	return (hits_min + hits_max) / 2.0

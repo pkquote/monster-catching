@@ -26,7 +26,8 @@
 		{"level": 5, "move": "drench"},
 		{"level": 9, "move": "riptide"},
 		{"level": 12, "move": "taunting_howl"},
-		{"level": 14, "move": "tide_beam"}
+		{"level": 14, "move": "tide_beam"},
+		{"level": 15, "move": "twin_splash"}
 	  ],
 	  "growth": [
 		{"level": 16, "affinity": "striker", "into": "torrentusk"},

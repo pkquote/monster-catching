@@ -28,6 +28,22 @@ const STAT_LABELS := {"hp": "HP", "patk": "P.Atk", "pdef": "P.Def", "satk": "S.A
 	"spd": "Spd", "acc": "Acc", "luck": "Luck", "resolve": "Resolve", "stamina": "Stamina"}
 
 
+## "Hits 3 times" / "Hits 2-5 times" for a multi-hit move; "" for any other.
+static func hits_label(m: MoveDef) -> String:
+	if not m.is_multi_hit():
+		return ""
+	if m.hits_min == m.hits_max:
+		return "Hits %d times" % m.hits_max
+	return "Hits %d-%d times" % [m.hits_min, m.hits_max]
+
+
+## "x3" / "x2-5" beside a multi-hit move's power in compact move lists; "" for any other.
+static func hits_short(m: MoveDef) -> String:
+	if not m.is_multi_hit():
+		return ""
+	return "x%d" % m.hits_max if m.hits_min == m.hits_max else "x%d-%d" % [m.hits_min, m.hits_max]
+
+
 static func effects(db: Database, effects: Array) -> String:
 	if effects.is_empty():
 		return "—"

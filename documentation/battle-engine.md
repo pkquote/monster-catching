@@ -49,6 +49,20 @@ Move targets: `self`, `one_ally`, `one_enemy`, `two_enemies`, `all_allies`, `all
 - `resolve_targets` keeps each valid pick (a standing, active foe), drops a missing, invalid or duplicate one, then fills the gaps at random from the remaining standing foes. With one foe left the move hits just that one (and takes no spread reduction); with none it reports `no_target`.
 - In the battle scene the player picks in two steps: `BattleScene._choose_target` shows the first menu, then `_choose_two_targets` shows a second menu titled with the first pick's name. Cancelling the second step returns to the first. With two or fewer foes standing the menu is skipped.
 
+### Multi-hit moves
+
+A `one_enemy` move may carry `"hits": {"min": 2, "max": 5}`: one use hits its target that many times (`min == max` is a fixed count; a move without `hits` hits once). `balance.max_hits` (5 in the shipped data, 2–10 allowed) caps `hits.max`, and the validator rejects `hits` on any other target. `MoveDef.hits_min`, `hits_max`, `is_multi_hit()` and `mean_hits()` expose it.
+
+- **Accuracy is rolled once per move,** as for any move, against the chosen target. If it connects, every hit lands, spill hits included. A miss deals no hits and emits no `hit_count`.
+- **The whole `effects` list runs once per hit** (`ActionRunner._run_hits`): a status chance is rolled per hit and a self effect on the move would stack per hit, so such moves are balanced one by one. `EffectContext.hit_index` is the 0-based hit. The count is drawn from the battle RNG only for multi-hit moves, so other moves' seeded outcomes are unchanged. `finish_consume` runs once, after the last hit.
+- **Each hit goes through `deal_damage`,** so hit triggers (passive and held), the once-per-battle Resolve endure and type absorption apply to every hit. `hit_dealt` and `hit_survived` Affinity is earned once per move use, not per hit (`BattleEngine.begin_multi_hit` / `_award_hit`).
+- **A faint is processed between hits.** After each hit `check_faints()` runs: the creature faints at once (its `faint` event and its faint and knockout triggers), then the remaining hits go to the next standing active foe in slot order, wrapping around the side (`BattleEngine.next_foe_after`). Spill hits take no new accuracy roll and no spread penalty (`spread_count` stays 1). Benched creatures are never hit and no replacement enters mid-move (replacements come at end of round).
+  Example, 3 foes in slots 0, 1, 2, the user aims `triple` (3 hits) at slot 2, which has 1 HP: `damage` slot 2, `faint` slot 2, then `damage` slot 0 twice.
+- **Each hit starts fresh:** `ctx.mult` (a `bonus_if_field` multiplier) is reset before every hit, so a field cash-in applies once per hit and does not compound; the consumed state is removed once, after the last hit.
+- **A hit that neither hurts nor is absorbed ends the move** (an immune foe: "It doesn't affect X..." shows once, not once per hit). Such a hit is not counted, so `hit_count.hits` is 0 and no "Hit N times!" line shows; a hit absorbed by a passive does count (the absorber heals every hit). The op sets `EffectContext.connected` when it dealt or absorbed damage.
+- **The move ends early** when no foe is left standing, when the battle is decided, or when the user itself faints (for example to a damaging hit trigger).
+- **`hit_count`** `{bid, hits}` closes a multi-hit move with the number of hits that landed (a 5-hit roll that finished the last foe on hit 3 reports 3); it comes before `battle_end` when the move ended the battle. The battle text line reads "Hit N times!" for N of 2 or more. In the battle's move menu (`BattleText.move_label`) and the Learn Move / Summary line (`LearnMoveScreen.move_line`) a multi-hit move's power carries its count, "P20 x3" / "Power 16 x2-5" (`EffectText.hits_short`), so it is not read as a weak single hit.
+
 ### Actions
 
 | Action | Constructor | Notes |
@@ -292,6 +306,8 @@ chance), and absorb, block and own-effect estimates read the held item through t
 
 For a `two_enemies` move the AI builds one option per unordered pair of standing foes and scores the pair as a whole: the damage estimate uses the real spread count (2), the pair's knockouts and setup values add up, and the best pair wins. `basic` picks a random pair.
 
+A multi-hit move is scored at its mean hit count: the per-hit damage estimate is multiplied by `(hits_min + hits_max) / 2`, and the tactician's retaliation cost is charged once per expected hit. The spill to another foe after a faint is not modelled.
+
 Every AI picks only moves it can afford, falls back on Scrap, and considers Rest below 20% energy.
 
 ### Passives and the AI
@@ -339,6 +355,7 @@ in `BattleText` (and `BattlePlayback` if it changes what's on screen).
 | `item_used` | `bid`, `item`, `targets`, `left` |
 | `swap_out` | `bid`, `side`, `slot` (followed by `send_out`) |
 | `miss`, `no_effect`, `no_target` | `bid`, `target` |
+| `hit_count` | `bid` (the user), `hits` (hits landed; multi-hit moves only) |
 | `damage` | `bid`, `amount`, `hp`, `max_hp`, `by`, `damage_type`, `effectiveness` |
 | `endured` | `bid` (survived at 1 HP through Resolve) |
 | `resisted` | `bid`, `status` or `stat` |
@@ -470,6 +487,8 @@ passives, held items and moves to `FixtureDB.raw()`, so real balance changes don
 | `test_swaps.gd` | A swap is one action at priority 6; stages reset on leaving; refused swaps; 12-creature benches; entry triggers fire once per entry |
 | `test_targeting_matrix.gd` | Every creature target key against 1–3 standing foes and allies, with the spread multiplier each hit takes |
 | `test_multi_format_effects.gd` | In 2v2 and 3v3: auras (passive and held) cover every ally and no foe; a `consumed` item is used up once per holder when two holders fire in one round; a `per_battle` item fires once per battle across swaps; absorb on one target of a spread or `two_enemies` move spares only that target while the other takes the same spread-reduced damage; Underdog's stat bonus, spread reduction and extra actions for 1v2, 1v3 and 2v3, and none at even sizes |
+| `test_multi_hit_moves.gd` | Fixed and ranged hit counts, accuracy rolled once, the effect list and hit triggers per hit, Resolve once, Affinity once per move, a faint processed between hits with the spill in slot order (wraparound, fainted slots and the bench skipped, a lone foe, the battle-ending hit, the attacker fainting) |
+| `test_ai_multi_hit.gd` | A multi-hit move is estimated and scored at its mean hit count; retaliation counts per expected hit |
 | `test_simulation_invariants.gd` | Seeded AI battles on the real data (see below) and a stalled battle that ends in a draw at exactly `round_limit` |
 | `test_testpack_mechanics.gd` | One pinned behaviour per mechanic family on the test pack: each move op, priority, accuracy, energy, every target kind in 2v3, every trigger kind, held use kinds, the depth guard, all 8 reactions, Underdog tamer content |
 | `test_testpack_simulations.gd` | Seeded AI battles over `data/` plus the test pack (see below) |

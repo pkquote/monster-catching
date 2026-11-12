@@ -278,6 +278,10 @@ const ENTRY := {
 		"always_hits": {"t": "bool", "opt": true},
 		"priority": {"t": "int", "opt": true, "min": -3, "max": 3},
 		"target": {"t": "enum", "values": MOVE_TARGETS},
+		"hits": {"t": "dict", "opt": true, "fields": {
+			"min": {"t": "int", "min": 1, "max": BalanceDef.MAX_HITS},
+			"max": {"t": "int", "min": 1, "max": BalanceDef.MAX_HITS},
+		}},
 		"effects": {"t": "effects"},
 	},
 	"items": {
@@ -380,6 +384,7 @@ const ENTRY := {
 		"level_cap": {"t": "int", "min": 1, "max": 100},
 		"party_size": {"t": "int", "min": 1, "max": BalanceDef.MAX_PARTY_SIZE},
 		"max_moves": {"t": "int", "min": 1, "max": 8},
+		"max_hits": {"t": "int", "min": 2, "max": BalanceDef.MAX_HITS},
 		"stab": {"t": "number", "min": 1.0, "max": 3.0},
 		"max_field_states": {"t": "int", "min": 1, "max": 5},
 		"growth_affinity_threshold": {"t": "int", "min": 0},

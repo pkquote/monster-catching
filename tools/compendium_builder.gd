@@ -366,6 +366,8 @@ func _moves() -> void:
 			var who: PackedStringArray = learned_by.get(mid, PackedStringArray())
 			who.sort()
 			var effects := EffectText.effects(db, m.effects)
+			if m.is_multi_hit():
+				effects = "%s; %s" % [EffectText.hits_label(m), effects]
 			if not m.description.is_empty():
 				effects = "%s<br>*%s*" % [effects, m.description]
 			var learners := ", ".join(who)

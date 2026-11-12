@@ -56,6 +56,22 @@
         {"op": "damage"},
         {"op": "apply_status", "status": "shock", "chance": 10}
       ]
+    },
+    {
+      "id": "spark_volley",
+      "name": "Spark Volley",
+      "description": "A rapid burst of sparks that may shock.",
+      "type": "electric",
+      "category": "special",
+      "power": 16,
+      "cost": 6,
+      "accuracy": 100,
+      "target": "one_enemy",
+      "hits": {"min": 2, "max": 5},
+      "effects": [
+        {"op": "damage"},
+        {"op": "apply_status", "status": "shock", "chance": 10}
+      ]
     }
   ]
 }

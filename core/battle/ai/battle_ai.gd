@@ -108,7 +108,7 @@ static func score(engine: BattleEngine, b: Battler, m: MoveDef, target_bid: int,
 		else:
 			value += landed + (KO_BONUS if est >= t.hp() else 0.0)
 			if style == "tactician" and est < t.hp():
-				value -= _retaliation(engine, b, m, t, ref)
+				value -= _retaliation(engine, b, m, t, ref) * m.mean_hits()
 	for e in m.effects:
 		if e.op == "heal":
 			var max_hp := float(b.creature.max_hp(db))
@@ -148,7 +148,8 @@ static func best_damage(engine: BattleEngine, b: Battler) -> float:
 	return best
 
 
-## Average expected damage of `m` from `b` against `t` (no randomness).
+## Average expected damage of `m` from `b` against `t` (no randomness); a multi-hit move counts
+## its mean number of hits. Spill to another foe after a faint is not modelled.
 static func estimate_damage(engine: BattleEngine, b: Battler, m: MoveDef, t: Battler, spread_count: int) -> float:
 	var ctx := EffectContext.new()
 	ctx.engine = engine
@@ -165,7 +166,7 @@ static func estimate_damage(engine: BattleEngine, b: Battler, m: MoveDef, t: Bat
 				ctx.mult *= float(e.mult)
 		elif e.op == "damage" and engine.passive_rules.absorbs(t, ctx.damage_type(e)) <= 0.0:
 			total += BattleMath.damage(engine, ctx, e, t, false).amount
-	return total
+	return total * m.mean_hits()
 
 
 ## HP that `m`'s damage effects would heal `t` through an absorb_type passive.

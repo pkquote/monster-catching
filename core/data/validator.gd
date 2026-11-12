@@ -384,6 +384,16 @@ func _check_cross_rules() -> void:
 			_err("power", "status moves must have power 0")
 		if m.get("category") in ["physical", "special"] and m.get("power", 0) == 0.0:
 			_err("power", "damaging moves need power > 0")
+		var hits = m.get("hits")
+		if hits is Dictionary:
+			if m.get("target") != "one_enemy":
+				_err("hits", "only one_enemy moves can have hits")
+			if _is_number(hits.get("min")) and _is_number(hits.get("max")):
+				var cap = _raw.singles["balance"].data.get("max_hits") if _raw.singles.has("balance") else null
+				if float(hits.min) > float(hits.max):
+					_err("hits", "min must not exceed max")
+				elif _is_number(cap) and float(hits.max) > float(cap):
+					_err("hits", "max %d is above balance.max_hits (%d)" % [int(hits.max), int(cap)])
 
 
 func _check_when_pair(w: Variant, path: String) -> void:

@@ -13,7 +13,7 @@
 | [Reactions](#reactions) | 8 |
 | [Passives](#passives) | 19 |
 | [Held items](#held-items) | 5 |
-| [Moves](#moves) | 47 |
+| [Moves](#moves) | 50 |
 | [Items](#items) | 7 |
 | [Creatures](#creatures) | 12 |
 | [Tamers](#tamers) | 4 |
@@ -467,6 +467,7 @@ Grouped by type. Physical moves use P.Atk vs P.Def; special moves use S.Atk vs S
 |---|---|---|---|---|---|---|---|---|---|
 | **Arc Pair** | `arc_pair` | Special | 44 | 5 | 100% | 0 | Two foes | Damage; Inflicts Shock (10%)<br>*Lightning arcs between two foes of your choice.* | Voltmoth |
 | **Spark Bite** | `spark_bite` | Physical | 45 | 3 | 100% | 0 | One enemy | Damage; Inflicts Shock (15%) | Voltmoth |
+| **Spark Volley** | `spark_volley` | Special | 16 | 6 | 100% | 0 | One enemy | Hits 2-5 times; Damage; Inflicts Shock (10%)<br>*A rapid burst of sparks that may shock.* | Voltmoth |
 | **Static Field** | `static_field` | Status | — | 4 | — | 0 | Enemy side | Applies Charged to the enemy side<br>*Charges the air over the enemy side.* | Voltmoth |
 | **Thunder Cascade** | `thunder_cascade` | Special | 50 | 7 | 90% | 0 | All enemies | x1.4 if the target's side is Charged; Damage | Voltmoth |
 
@@ -502,6 +503,7 @@ Grouped by type. Physical moves use P.Atk vs P.Def; special moves use S.Atk vs S
 |---|---|---|---|---|---|---|---|---|---|
 | **Frost Nip** | `frost_nip` | Physical | 40 | 2 | 100% | 0 | One enemy | Damage; Inflicts Chill (20%) | Frostling |
 | **Glacier Crash** | `glacier_crash` | Physical | 80 | 9 | 85% | 0 | One enemy | Damage | Frostling, Mistcoil |
+| **Needle Flurry** | `needle_flurry` | Physical | 20 | 5 | 95% | 0 | One enemy | Hits 3 times; Damage<br>*Three needles of ice.* | Frostling |
 | **Rime Veil** | `rime_veil` | Status | — | 4 | — | 0 | Enemy side | Applies Frosted to the enemy side<br>*Coats the enemy side in frost.* | Frostling, Mistcoil |
 
 ### Iron moves
@@ -561,6 +563,7 @@ Grouped by type. Physical moves use P.Atk vs P.Def; special moves use S.Atk vs S
 | **Riptide** | `riptide` | Physical | 55 | 6 | 95% | 0 | One enemy | x1.5 if the target's side is Soaked (consumes it); Damage<br>*Stronger on a Soaked side, draining the water.* | Tidepup, Torrentusk |
 | **Splash Jab** | `splash_jab` | Physical | 40 | 2 | 100% | 0 | One enemy | Damage | Tidepup, Torrentusk |
 | **Tide Beam** | `tide_beam` | Special | 55 | 6 | 100% | 0 | One enemy | Damage<br>*A focused jet of water.* | Mistcoil, Tidepup |
+| **Twin Splash** | `twin_splash` | Special | 28 | 5 | 100% | 0 | One enemy | Hits 2 times; Damage<br>*Two quick jets of water.* | Tidepup |
 
 ## Items
 
@@ -671,6 +674,7 @@ Base stats. *Total* sums the six battle stats (HP to Spd); Luck, Resolve and Sta
 |---|---|---|---|---|---|---|
 | 1 | Frost Nip | Ice | Physical | 40 | 2 | 100% |
 | 6 | Rime Veil | Ice | Status | — | 4 | — |
+| 10 | Needle Flurry | Ice | Physical | 20 | 5 | 95% |
 | 14 | Glacier Crash | Ice | Physical | 80 | 9 | 85% |
 
 ### Mistcoil
@@ -792,6 +796,7 @@ Base stats. *Total* sums the six battle stats (HP to Spd); Luck, Resolve and Sta
 | 9 | Riptide | Water | Physical | 55 | 6 | 95% |
 | 12 | Taunting Howl | Neutral | Status | — | 3 | 100% |
 | 14 | Tide Beam | Water | Special | 55 | 6 | 100% |
+| 15 | Twin Splash | Water | Special | 28 | 5 | 100% |
 
 ### Torrentusk
 
@@ -830,6 +835,7 @@ Base stats. *Total* sums the six battle stats (HP to Spd); Luck, Resolve and Sta
 | 5 | Static Field | Electric | Status | — | 4 | — |
 | 9 | Arc Pair | Electric | Special | 44 | 5 | 100% |
 | 12 | Thunder Cascade | Electric | Special | 50 | 7 | 90% |
+| 15 | Spark Volley | Electric | Special | 16 | 6 | 100% |
 
 ## Tamers
 

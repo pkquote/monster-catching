@@ -101,6 +101,14 @@ back in the world the Summary reads "Held item: none". The tour puts the berry i
 timeout 300 "$GODOT" --path . --script res://.claude/skills/run-godot-monster-catching-game/driver.gd -- --mode=held --out="$TMPDIR/held_shots" 2>&1 | grep "\[driver\]"
 ```
 
+**Multi-hit tour** (`--mode=multihit`): new game -> a Voltmoth knowing Spark Volley (2-5 hits) leads, against a wild pack of three
+1-HP Frostlings (a seeded battle) -> Fight -> Spark Volley on the first foe: it faints at once, the remaining hits spill to the next
+foe in slot order, and the text line reads "Hit N times!". The checks read the battle log (`MOVE_USED`, `FAINT`, `DAMAGE`, `HIT_COUNT`).
+
+```bash
+timeout 300 "$GODOT" --path . --script res://.claude/skills/run-godot-monster-catching-game/driver.gd -- --mode=multihit --out="$TMPDIR/multihit_shots" 2>&1 | grep "\[driver\]"
+```
+
 **Team-builder tour** (`--mode=builder`): new game -> F1 test party -> Custom battle -> grow your team to
 `party_size`, All levels 40, You field 2 -> Foe team: Tamer, Foes field 3, `party_size` foes -> Edit foe 1 (a
 "✗ can't learn" move, the move list open) -> Your team -> Bag... -> Start a 2v3 exhibition -> fight to the results
@@ -169,6 +177,7 @@ timeout 60 "$GODOT" --path . --script res://.claude/skills/run-godot-monster-cat
 | `--mode=progress` | the progress tour above (`p01_…` to `p21_…` screenshots) |
 | `--mode=passives` | the passives tour above (`x01_…` to `x08_…` screenshots) |
 | `--mode=held` | the held-items tour above (`h01_…` to `h06_…` screenshots) |
+| `--mode=multihit` | the multi-hit tour above (`m01_…` to `m03_…` screenshots) |
 | `--mode=builder` | the team-builder tour above (`t01_…` to `t12_…` screenshots) |
 | `--mode=party` | the party tour above (`qNN_01_…` to `qNN_12_…`); `--party-size=N` sets the party size in memory |
 | `--mode=box` | the box tour (`bx01_…` to `bx07_…`): browse, pick up and place, a marked group moved to another box, a refusal, Unlock a box, the Party screen with its card |
@@ -180,7 +189,7 @@ timeout 60 "$GODOT" --path . --script res://.claude/skills/run-godot-monster-cat
 | `--out=<dir>` | screenshot folder; `user://` paths allowed (default `user://run_shots`) |
 
 Each tour is its own file in `tours/` (`frontend.gd`, `battle.gd`, `overworld.gd`, `progress.gd`,
-`passives.gd`, `held.gd`, `builder.gd`, `party.gd`, `bag.gd`):
+`passives.gd`, `held.gd`, `multihit.gd`, `builder.gd`, `party.gd`, `bag.gd`):
 a `RefCounted` with `var d` (the driver) and `func run()`. To drive a new flow, add
 `tours/<name>.gd`, add `<name>` to the `match` in `driver.gd`'s `_initialize`, and call the
 driver's helpers through `d.`: `wait_scene(name, max_frames)`,

@@ -13,6 +13,8 @@ extends SceneTree
 ##                        unlocks Finisher, the Passive Unlocked screen, Summary -> Use Finisher.
 ##   --mode=held          held-items tour: Summary -> Give held item (Oran Berry), a battle where it fires
 ##                        (banner naming it, "used up"), the Summary again with the item gone.
+##   --mode=multihit     a Voltmoth's Spark Volley (2-5 hits) against three 1-HP foes: the faint is processed between
+##                        hits, the rest spill to the next foe, and the log reads "Hit N times!".
 ##   --mode=builder       F1 Custom battle team builder: full teams, All levels, slot editor, bag page,
 ##                        a 2v3 exhibition to the results; the save must be unchanged.
 ##   --mode=party         every screen that lists the party (Party, Summary, Bag targets, Storage,
@@ -53,7 +55,7 @@ func _initialize() -> void:
 	match _opts.mode:
 		"scene":
 			_run_scene()
-		"battle", "overworld", "progress", "passives", "held", "builder", "party", "bag", "codex", "achievements", "ui", "box":
+		"battle", "overworld", "progress", "passives", "held", "multihit", "builder", "party", "bag", "codex", "achievements", "ui", "box":
 			_tour(_opts.mode)
 		_:
 			_tour("frontend")

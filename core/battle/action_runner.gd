@@ -50,6 +50,7 @@ func execute(a: BattleAction) -> void:
 	var b := e.battler(a.actor)
 	if b == null or not b.alive() or not b.active:
 		return
+	b.acted = true
 	match a.kind:
 		"pass":
 			e.emit({"type": BattleEvents.PASS, "bid": b.bid})

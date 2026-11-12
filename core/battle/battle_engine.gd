@@ -548,6 +548,7 @@ func place(side: BattleSide, slot: int, b: Battler) -> void:
 	side.slots[slot] = b
 	b.active = true
 	b.participated = true
+	b.acted = _starting
 	emit({"type": BattleEvents.SEND_OUT, "side": side.index, "slot": slot, "bid": b.bid,
 		"species": b.creature.species, "level": b.creature.level,
 		"hp": b.hp(), "max_hp": b.creature.max_hp(db),

@@ -30,17 +30,29 @@ const REST_VALUE := 6.0
 const ENERGY_VALUE := 0.25
 ## Aggressive trusts HP, not setup: trigger effects paid in stages, statuses, energy or field states count this much.
 const AGGRESSIVE_SETUP_MULT := 0.5
+## A swap's offence term counts the bench creature's damage edge over this many rounds (it acts from next round).
+const OFFENCE_ROUNDS := 1.0
+## A swap must beat the best non-swap option by this much, x ref, so near-ties stay with the move.
+const SWAP_MARGIN := 0.25
 
 
 static func choose_all(engine: BattleEngine, side_index: int) -> Array:
 	var style := engine.sides[side_index].ai
 	var out: Array = []
+	var claimed: Array[int] = []  # bench creatures already taken by a swap this round
+	var swapped: Array[int] = []  # a swap is the creature's whole turn: it takes no further actions
 	for bid in engine.actions_needed(side_index):
-		out.append(choose(engine, bid, style))
+		if swapped.has(bid):
+			continue
+		var a := choose(engine, bid, style, claimed)
+		if a.kind == "swap":
+			claimed.append(a.swap_in)
+			swapped.append(bid)
+		out.append(a)
 	return out
 
 
-static func choose(engine: BattleEngine, bid: int, style: String) -> BattleAction:
+static func choose(engine: BattleEngine, bid: int, style: String, claimed: Array[int] = []) -> BattleAction:
 	var b := engine.battler(bid)
 	var options: Array = []
 	var known_affordable := 0
@@ -74,7 +86,23 @@ static func choose(engine: BattleEngine, bid: int, style: String) -> BattleActio
 	for o in options:
 		if o.score > best.score:
 			best = o
+	if style == "tactician" and b.acted:
+		var swap := _best_swap(engine, b, claimed, ref)
+		if not swap.is_empty() and swap.score > best.score + SWAP_MARGIN * ref:
+			return swap.action
 	return best.action
+
+
+## The best swap for `b` among the unclaimed bench creatures ({} when there is none).
+static func _best_swap(engine: BattleEngine, b: Battler, claimed: Array[int], ref: float) -> Dictionary:
+	var best := {}
+	for c in engine.sides[b.side].bench():
+		if claimed.has(c.bid):
+			continue
+		var s := swap_score(engine, b, c, "tactician", ref)
+		if best.is_empty() or s > best.score:
+			best = {"action": BattleAction.swap(b.bid, c.bid), "score": s}
+	return best
 
 
 ## Position of `foe_bid` among `b`'s active foes (orders pairs so each is scored once).
@@ -90,6 +118,61 @@ static func _foe_index(engine: BattleEngine, b: Battler, foe_bid: int) -> int:
 static func rest_score(engine: BattleEngine, b: Battler) -> float:
 	var base := float(engine.db.balance.energy_cfg.rest_fraction)
 	return REST_VALUE * (base + engine.passive_rules.rest_bonus(b)) / base
+
+
+## Expected damage `x` takes next round: the sum over its foes of each foe's best usable damaging move on `x`, as if
+## every foe targets `x` (pessimistic on purpose). Accuracy is ignored, as in `best_damage`.
+static func threat(engine: BattleEngine, x: Battler) -> float:
+	var total := 0.0
+	var mine := engine.sides[x.side].active().size()
+	for foe in engine.sides[1 - x.side].active():
+		var best := 0.0
+		for mid in engine.usable_moves(foe.bid):
+			var m := engine.db.move(mid)
+			if m.is_damaging():
+				best = maxf(best, estimate_damage(engine, foe, m, x, _hit_count(engine, foe, m, mine)))
+		total += best
+	return total
+
+
+## What swapping active `b` for benched `c` is worth to `b`'s side, in the units `score` uses: damage avoided (with a
+## knockout bonus when the swap saves `b` and `c` survives), `c`'s damage edge, `c`'s enter triggers, and the cost
+## `b` carries that the swap drops (stat stages reset on the way out; a status that skips turns costs a turn).
+## `c` is also charged for its own turn-skipping status (statuses do not tick on the bench). Benched, `c` loses its own
+## passive, held item and ally auras in `threat` and `best_damage` (`PassiveRules` ignores inactive creatures), while
+## `b` keeps them, so the matchup terms lean against swapping; field states still apply to both.
+static func swap_score(engine: BattleEngine, b: Battler, c: Battler, style: String, ref: float) -> float:
+	var hp_b := float(b.hp())
+	var hp_c := float(c.hp())
+	var t_b := threat(engine, b)
+	var t_c := threat(engine, c)
+	var value := minf(t_b, hp_b) - minf(t_c, hp_c)
+	if t_b >= hp_b and t_c < hp_c:
+		value += KO_BONUS
+	value += (best_damage(engine, c) - best_damage(engine, b)) * OFFENCE_ROUNDS
+	value += enter_value(engine, b, c, style)
+	value += _escape_value(engine, b, ref) - _skip_cost(engine, c, ref)
+	return value
+
+
+## The cost `b` carries that a swap removes: negative stages (positive ones are a loss) and a turn-skipping status.
+static func _escape_value(engine: BattleEngine, b: Battler, ref: float) -> float:
+	var value := 0.0
+	for stat in b.stages:
+		value -= float(DEBUFF_VALUE.get(stat, 0.0)) * ref * float(b.stages[stat])
+	return value + _skip_cost(engine, b, ref)
+
+
+## Turns `x` is expected to lose to a skip_chance status, in `ref` units. A status does not tick on the bench, so it
+## is also what bringing `x` back in costs.
+static func _skip_cost(engine: BattleEngine, x: Battler, ref: float) -> float:
+	var value := 0.0
+	if x.status() != "":
+		var rounds := float(mini(x.status_turns, STATUS_HORIZON))
+		for e in engine.db.status(x.status()).effects:
+			if e.op == "skip_chance":
+				value += float(e.chance) / 100.0 * ref * rounds
+	return value
 
 
 static func score(engine: BattleEngine, b: Battler, m: MoveDef, target_bid: int, style: String,

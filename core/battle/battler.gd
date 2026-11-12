@@ -28,6 +28,9 @@ var last_hit_by := -1
 var endured := false
 ## Has already lost Bond for being overworked this battle.
 var overworked := false
+## Has run an action since it was last placed. True for battle-start creatures (and for one never placed);
+## false after a swap-in or faint replacement. The AI does not swap such a creature straight back out.
+var acted := true
 ## A per_battle held item has already fired this battle.
 var held_spent := false
 

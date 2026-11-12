@@ -26,6 +26,10 @@ const FOLLOW_DISCOUNT := 0.6
 ## Below this share of max energy, Rest becomes an option worth REST_VALUE.
 const LOW_ENERGY := 0.2
 const REST_VALUE := 6.0
+## x ref per full energy bar restored by a trigger.
+const ENERGY_VALUE := 0.25
+## Aggressive trusts HP, not setup: trigger effects paid in stages, statuses, energy or field states count this much.
+const AGGRESSIVE_SETUP_MULT := 0.5
 
 
 static func choose_all(engine: BattleEngine, side_index: int) -> Array:
@@ -106,16 +110,25 @@ static func score(engine: BattleEngine, b: Battler, m: MoveDef, target_bid: int,
 		if t.side == b.side:
 			value -= landed * 1.5
 		else:
+			if style != "basic" and est < float(t.hp()):
+				# A foe that heals itself at round end gives back some of a hit that doesn't finish it.
+				landed = maxf(0.0, landed - round_end_hp(engine, t, t.hp() - roundi(est)))
 			value += landed + (KO_BONUS if est >= t.hp() else 0.0)
 			if style == "tactician" and est < t.hp():
 				value -= _retaliation(engine, b, m, t, ref) * m.mean_hits()
+		if style != "basic" and est >= float(t.hp()):
+			value += _kill_triggers_value(engine, b, t, ref, style)
 	for e in m.effects:
 		if e.op == "heal":
 			var max_hp := float(b.creature.max_hp(db))
 			var missing := max_hp - b.hp()
+			if style != "basic":
+				missing = maxf(0.0, missing - round_end_hp(engine, b))  # a round-end heal does part of the job
 			value += minf(missing, max_hp * float(e.fraction)) * (1.0 if b.hp() < max_hp * 0.5 else 0.2)
 		elif e.op == "cure_status":
 			value += _cure_value(engine, b, e, targets, ref)
+		elif e.op == "apply_status" and style != "basic":
+			value += _status_trigger_value(engine, b, e, targets, ref, style)
 	if style == "tactician":
 		value += _setup_value(engine, b, m, targets, ref)
 	if not m.always_hits:
@@ -229,6 +242,174 @@ static func _retaliation(engine: BattleEngine, b: Battler, m: MoveDef, t: Battle
 	return cost
 
 
+## The triggers of kind `on` that `holder`'s passive and held item carry (a spent per_battle item is ignored).
+static func _triggers(engine: BattleEngine, holder: Battler, on: String) -> Array:
+	var defs: Array[PassiveDef] = []
+	var pdef := engine.db.passive(Passives.active_id(holder.creature))
+	if pdef != null:
+		defs.append(pdef)
+	var item: ItemDef = HeldItems.def_of(engine.db, holder.creature)
+	if item != null and not (item.held_use == "per_battle" and holder.held_spent):
+		# A benched creature (an incoming swap) has no held_def, but its enter triggers still count.
+		var held: PassiveDef = item.held if on == "enter" else engine.passive_rules.held_def(holder)
+		if held != null:
+			defs.append(held)
+	var out := []
+	for d in defs:
+		for trig: Dictionary in d.triggers:
+			if trig.on == on:
+				out.append(trig)
+	return out
+
+
+## Weight of an effect in a trigger's value: HP effects count fully for every style, setup effects
+## (statuses, stages, energy, cures, field states) count AGGRESSIVE_SETUP_MULT for the aggressive style.
+static func _style_weight(style: String, op: String) -> float:
+	if style == "aggressive" and op != "damage" and op != "heal":
+		return AGGRESSIVE_SETUP_MULT
+	return 1.0
+
+
+## Value to side `b.side` of trigger `trig` (held by `holder`) firing, its effects landing on `landing`
+## unless an effect names its own target. Positive helps b's side. Weighted by the trigger's chance;
+## 0 when its `when` fails. A fainting holder receives nothing from its own faint trigger.
+static func trigger_value(engine: BattleEngine, b: Battler, holder: Battler, trig: Dictionary,
+		landing: Battler, ref: float, style: String, pending_status := "") -> float:
+	if not engine.passive_rules.when_holds(holder, trig.get("when", {})):
+		return 0.0
+	var ctx := EffectContext.new()
+	ctx.engine = engine
+	ctx.user = holder
+	ctx.source = "passive"
+	ctx.target_side = holder.side
+	if trig.on == "faint":
+		ctx.attacker = landing
+	elif trig.on == "status":
+		ctx.attacker = b  # the engine passes whoever inflicted the status
+	var total := 0.0
+	for e: Dictionary in trig.effects:
+		if e.op == "apply_field_state":
+			var s := ctx.side_index(e.side)
+			if s != -1:
+				total += _field_state_value(engine, b, holder, e, s, ref, true) * _style_weight(style, e.op)
+			continue
+		var victims: Array[Battler] = []
+		if e.has("target"):
+			victims = _trigger_targets(engine, ctx, e.target)
+		else:
+			victims.append(landing)
+		for t in victims:
+			if not t.alive() or (trig.on == "faint" and t == holder):
+				continue
+			var owner_sign := 1.0 if t.side == b.side else -1.0
+			total += _effect_value(engine, holder, e, t, ref, pending_status) * _style_weight(style, e.op) * owner_sign
+	return total * float(trig.get("chance", 100)) / 100.0
+
+
+## The creatures a trigger effect's own `target` names. The engine picks a random creature for
+## `one_enemy` and `one_ally`; scoring must not draw from the RNG, so those two get their
+## deterministic fallback (the holder for `one_ally`, nobody for `one_enemy`).
+static func _trigger_targets(engine: BattleEngine, ctx: EffectContext, key: String) -> Array[Battler]:
+	if key == "one_enemy" or key == "one_ally":
+		return engine.resolve_targets(ctx.user, key, -1, -1, false)
+	return engine._effect_targets(ctx, key)
+
+
+## What trigger effect `e` (run by `holder`) is worth to the creature `t` it lands on. `pending_status`
+## is a status about to land on `t` (a status trigger runs after it lands, so a cure should cancel it).
+static func _effect_value(engine: BattleEngine, holder: Battler, e: Dictionary, t: Battler, ref: float,
+		pending_status := "") -> float:
+	var db := engine.db
+	match e.op:
+		"damage":
+			var ctx := EffectContext.new()
+			ctx.engine = engine
+			ctx.user = holder
+			ctx.source = "passive"
+			ctx.attacker = t
+			ctx.targets.append(t)
+			return -minf(float(t.hp()), float(BattleMath.damage(engine, ctx, e, t, false).amount))
+		"heal":
+			var max_hp := float(t.creature.max_hp(db))
+			return minf(max_hp - t.hp(), float(e.fraction) * max_hp)
+		"apply_status":
+			if t.status() != "" or engine.passive_rules.blocks_status(t, e.status):
+				return 0.0
+			return -status_value(engine, t, e.status, ref) * float(e.get("chance", 100)) / 100.0
+		"stat_stage":
+			var stages := int(e.stages)
+			if stages < 0 and engine.passive_rules.guards_stage(t, e.stat, holder):
+				return 0.0
+			return float(DEBUFF_VALUE.get(e.stat, 0.1)) * ref * stages
+		"restore_energy":
+			var missing := 1.0 - float(t.energy()) / float(t.creature.max_energy(db))
+			return ENERGY_VALUE * ref * minf(float(e.fraction), maxf(0.0, missing))
+		"cure_status":
+			if t.status() != "" and (not e.has("status") or e.status == t.status()):
+				return status_value(engine, t, t.status(), ref, t.status_turns)
+			if t.status() == "" and pending_status != "" and (not e.has("status") or e.status == pending_status):
+				return status_value(engine, t, pending_status, ref)
+	return 0.0
+
+
+## Value to `b`'s side of `incoming` entering the field, from its enter triggers. M6f's swap scoring calls it;
+## nothing in choose does yet.
+static func enter_value(engine: BattleEngine, b: Battler, incoming: Battler, style := "tactician") -> float:
+	var ref := best_damage(engine, b)
+	var total := 0.0
+	for trig: Dictionary in _triggers(engine, incoming, "enter"):
+		total += trigger_value(engine, b, incoming, trig, incoming, ref, style)
+	return total
+
+
+## What the status triggers of the foes `e` (an apply_status effect) would hit are worth to `b`'s side,
+## weighted by the effect's chance. They land on the statused foe, so they are usually a cost. The
+## aggressive style never seeks a status out, so its term is capped at 0.
+static func _status_trigger_value(engine: BattleEngine, b: Battler, e: Dictionary, targets: Array[Battler],
+		ref: float, style: String) -> float:
+	var total := 0.0
+	for t in targets:
+		if t.side == b.side or t.status() != "" or engine.passive_rules.blocks_status(t, e.status):
+			continue
+		for trig: Dictionary in _triggers(engine, t, "status"):
+			total += trigger_value(engine, b, t, trig, t, ref, style, e.status)
+	total *= float(e.get("chance", 100)) / 100.0
+	return minf(0.0, total) if style == "aggressive" else total
+
+
+## Expected change to `t`'s HP from its own round_end triggers (heals, minus damage to itself), with
+## its HP taken as `hp_now` when given. Effects with another target are ignored.
+static func round_end_hp(engine: BattleEngine, t: Battler, hp_now := -1) -> float:
+	var hp := float(t.hp() if hp_now < 0 else hp_now)
+	var max_hp := float(t.creature.max_hp(engine.db))
+	var total := 0.0
+	for trig: Dictionary in _triggers(engine, t, "round_end"):
+		if not engine.passive_rules.when_holds(t, trig.get("when", {})):
+			continue
+		var part := 0.0
+		for e: Dictionary in trig.effects:
+			if e.has("target") and e.target != "self":
+				continue
+			if e.op == "heal":
+				part += minf(max_hp - hp, float(e.fraction) * max_hp)
+			elif e.op == "damage":
+				part += _effect_value(engine, t, e, t, 0.0)
+		total += part * float(trig.get("chance", 100)) / 100.0
+	return total
+
+
+## What finishing `t` is worth beyond its HP: `b`'s own knockout triggers (for a foe only) and the
+## faint triggers `t` carries, which land on `b`, the killer.
+static func _kill_triggers_value(engine: BattleEngine, b: Battler, t: Battler, ref: float, style: String) -> float:
+	var total := 0.0
+	if t.side != b.side:
+		for trig: Dictionary in _triggers(engine, b, "knockout"):
+			total += trigger_value(engine, b, b, trig, b, ref, style)
+	for trig: Dictionary in _triggers(engine, t, "faint"):
+		total += trigger_value(engine, b, t, trig, b, ref, style)
+	return total
+
+
 ## Expected payoff of reaction `r` firing on `side_index`, triggered by `b`.
 ## Positive for harm to b's foes, negative for harm to b's own side.
 static func reaction_value(engine: BattleEngine, b: Battler, r: ReactionDef, side_index: int,
@@ -307,7 +488,6 @@ static func status_value(engine: BattleEngine, t: Battler, status_id: String, re
 
 
 static func _setup_value(engine: BattleEngine, b: Battler, m: MoveDef, targets: Array[Battler], ref: float) -> float:
-	var db := engine.db
 	var value := 0.0
 	for e in m.effects:
 		match e.op:
@@ -317,48 +497,8 @@ static func _setup_value(engine: BattleEngine, b: Battler, m: MoveDef, targets: 
 				ctx.user = b
 				ctx.target_side = 1 - b.side if m.target == "enemy_side" else b.side
 				var s := ctx.side_index(e.side)
-				if s == -1:
-					continue
-				var field := engine.sides[s].field
-				var stacks := int(e.get("stacks", 1)) + engine.passive_rules.field_boost(b).x
-				if field.has(e.state):
-					value += RESTACK * ref
-					continue
-				var fired := false
-				for existing in field.ids():
-					var r := db.find_reaction(existing, e.state)
-					if r != null:
-						# Stacks used up: the consumed existing states plus the incoming one if consumed.
-						var used := 0
-						for c in r.consumes:
-							used += stacks if c == e.state else field.stacks(c)
-						value += reaction_value(engine, b, r, s, used, ref)
-						fired = true
-						break
-				if fired:
-					continue
-				# At the cap the oldest state is pushed out: good if it helped the enemy or hurt us.
-				if field.size() >= db.balance.max_field_states:
-					var lost := state_benefit(engine, field.states[0].id)
-					var sign_for_us := -1.0 if s == b.side else 1.0
-					if lost > 0.0:
-						value += sign_for_us * REPLACE * ref
-					elif lost < 0.0:
-						value -= sign_for_us * REPLACE * ref
-				var benefit := state_benefit(engine, e.state)
-				if s == b.side:
-					if benefit > 0.0:
-						value += OWN_BUFF * ref
-					continue
-				if benefit > 0.0:
-					value -= OWN_BUFF * ref  # never buff the enemy
-					continue
-				value += NEW_STATE * ref
-				var follow := _best_follow_up(engine, b, e.state, s, stacks, ref)
-				if follow > 0.0:
-					value += FOLLOW_DISCOUNT * follow
-				elif _team_can_cash_in(engine, b.side, e.state):
-					value += FOLLOW_CASH_IN * ref
+				if s != -1:
+					value += _field_state_value(engine, b, b, e, s, ref)
 			"apply_status":
 				for t in targets:
 					if t.side != b.side and t.status() == "" and not engine.passive_rules.blocks_status(t, e.status):
@@ -368,6 +508,57 @@ static func _setup_value(engine: BattleEngine, b: Battler, m: MoveDef, targets: 
 					for t in targets:
 						if t.side != b.side and not engine.passive_rules.guards_stage(t, e.stat, b):
 							value += float(DEBUFF_VALUE.get(e.stat, 0.1)) * ref * -int(e.stages)
+	return value
+
+
+## Value to `b`'s side of field-state effect `e` landing on side `side_index`: stacking, the reaction
+## it would set off, the oldest state it would push out, and whether the state helps its holder.
+## `source` is the creature whose field_boost adds stacks (the mover; a trigger's holder).
+static func _field_state_value(engine: BattleEngine, b: Battler, source: Battler, e: Dictionary,
+		side_index: int, ref: float, for_trigger := false) -> float:
+	var db := engine.db
+	var s := side_index
+	var field := engine.sides[s].field
+	var stacks := int(e.get("stacks", 1)) + engine.passive_rules.field_boost(source).x
+	if field.has(e.state):
+		if for_trigger:
+			# Restacking helps us when a helpful state lands on our side or a hostile one on theirs.
+			var held := state_benefit(engine, e.state)
+			var good := held == 0.0 or (held > 0.0) == (s == b.side)
+			return (RESTACK if good else -RESTACK) * ref
+		return RESTACK * ref
+	for existing in field.ids():
+		var r := db.find_reaction(existing, e.state)
+		if r != null:
+			# Stacks used up: the consumed existing states plus the incoming one if consumed.
+			var used := 0
+			for c in r.consumes:
+				used += stacks if c == e.state else field.stacks(c)
+			return reaction_value(engine, b, r, s, used, ref)
+	var value := 0.0
+	# At the cap the oldest state is pushed out: good if it helped the enemy or hurt us.
+	if field.size() >= db.balance.max_field_states:
+		var lost := state_benefit(engine, field.states[0].id)
+		var sign_for_us := -1.0 if s == b.side else 1.0
+		if lost > 0.0:
+			value += sign_for_us * REPLACE * ref
+		elif lost < 0.0:
+			value -= sign_for_us * REPLACE * ref
+	var benefit := state_benefit(engine, e.state)
+	if s == b.side:
+		if benefit > 0.0:
+			value += OWN_BUFF * ref
+		elif for_trigger and benefit < 0.0:
+			value -= NEW_STATE * ref  # a hostile state landing on our own side (only a trigger does that)
+		return value
+	if benefit > 0.0:
+		return value - OWN_BUFF * ref  # never buff the enemy
+	value += NEW_STATE * ref
+	var follow := _best_follow_up(engine, b, e.state, s, stacks, ref)
+	if follow > 0.0:
+		value += FOLLOW_DISCOUNT * follow
+	elif _team_can_cash_in(engine, b.side, e.state):
+		value += FOLLOW_CASH_IN * ref
 	return value
 
 

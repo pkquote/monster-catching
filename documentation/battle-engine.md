@@ -303,7 +303,7 @@ chance), and absorb, block and own-effect estimates read the held item through t
 | Style | Behavior |
 | --- | --- |
 | `basic` | Random move and target. |
-| `aggressive` | Highest expected damage, with a bonus for knockouts. Heals when below half HP. |
+| `aggressive` | Highest expected damage, with a bonus for knockouts. Heals when below half HP. Reads knockout, faint, status and round-end triggers, counting setup effects at half weight. |
 | `tactician` | Aggressive scoring plus value for setting up reactions on the enemy side, new states its team can follow up on, statuses and debuffs. Setup values are multiples of its best available damage, so they scale with level. It avoids triggering reactions on its own side. |
 
 For a `two_enemies` move the AI builds one option per unordered pair of standing foes and scores the pair as a whole: the damage estimate uses the real spread count (2), the pair's knockouts and setup values add up, and the best pair wins. `basic` picks a random pair.
@@ -323,8 +323,14 @@ Damage estimates already include stat, type-power, resistance, Scrap and reactio
 - **Retaliation (tactician):** a hit that doesn't knock the target out is charged the expected cost of the target's `hit` triggers on the attacker (status, stat drop or damage, weighted by chance; `contact` triggers need a physical move), less whatever the attacker's own passive blocks.
 
 - **Cures:** a move with a `cure_status` effect (on the move's targets, or the effect's own `target`) is worth the status value of each matching afflicted creature on the user's own side, counting only the rounds the status has left. Curing a foe's status costs the same amount; nothing to cure scores zero.
+- **Other triggers (tactician and aggressive):** a trigger's effects are priced from the AI's side by `BattleAI.trigger_value` (positive helps the AI's side), weighted by `chance` and zero when its `when` fails or a `per_battle` item is spent. HP effects (`damage`, `heal`) count fully for both styles; setup effects (statuses, stat stages, energy, cures, field states) count in `ref` units, at x`AGGRESSIVE_SETUP_MULT` (0.5) for aggressive. A hostile field state landing on the AI's own side costs `NEW_STATE` x `ref` (only a trigger does that); restacking a state counts for or against by whose side it helps.
+  - **`knockout`:** a move that finishes a foe gains the value of the user's own `knockout` triggers (Finisher's energy, Cold Snap's +1 Speed).
+  - **`faint`:** the same move pays the target's `faint` triggers, which land on the killer (Ember Trail scorching the AI's side). A fainting holder receives nothing from its own trigger. Finishing the AI's own ally pays the faint term only.
+  - **`status`:** a move that would status a foe pays that foe's `status` triggers, weighted by the status chance. For aggressive the term is capped at 0 (it avoids a punishing status but never seeks one).
+  - **`round_end`:** the AI's own end-of-round healing lowers how urgent a heal move is, and a foe's lowers the credit for a hit that doesn't finish it (`BattleAI.round_end_hp`).
+  - **`enter`:** not part of move scoring (the AI never swaps). `BattleAI.enter_value(engine, b, incoming, style)` prices an entry for the swap logic planned in M6f (a benched creature's held-item enter triggers count; its `field_boost` stacks do not, since it is 0 while benched).
 
-Not modelled: faint, knockout, enter, round-end and status triggers.
+Not modelled: `status` triggers on the AI's own creatures (no move gives an ally a status), and `enter` in move scoring.
 
 ## Code layout
 
@@ -492,6 +498,7 @@ passives, held items and moves to `FixtureDB.raw()`, so real balance changes don
 | `test_multi_format_effects.gd` | In 2v2 and 3v3: auras (passive and held) cover every ally and no foe; a `consumed` item is used up once per holder when two holders fire in one round; a `per_battle` item fires once per battle across swaps; absorb on one target of a spread or `two_enemies` move spares only that target while the other takes the same spread-reduced damage; Underdog's stat bonus, spread reduction and extra actions for 1v2, 1v3 and 2v3, and none at even sizes |
 | `test_multi_hit_moves.gd` | Fixed and ranged hit counts, accuracy rolled once, the effect list and hit triggers per hit, Resolve once, Affinity once per move, a faint processed between hits with the spill in slot order (wraparound, fainted slots and the bench skipped, a lone foe, the battle-ending hit, the attacker fainting) |
 | `test_ai_multi_hit.gd` | A multi-hit move is estimated and scored at its mean hit count; retaliation counts per expected hit |
+| `test_ai_triggers.gd` | The AI prices knockout, faint, status, round-end and enter triggers: HP effects equal for both styles, setup effects at half for aggressive, `when`, chance, spent items, own-target effects, once per finished target, no RNG draw, `basic` unchanged, shipped passives |
 | `test_simulation_invariants.gd` | Seeded AI battles on the real data (see below) and a stalled battle that ends in a draw at exactly `round_limit` |
 | `test_testpack_mechanics.gd` | One pinned behaviour per mechanic family on the test pack: each move op, priority, accuracy, energy, every target kind in 2v3, every trigger kind, held use kinds, the depth guard, all 8 reactions, Underdog tamer content |
 | `test_testpack_simulations.gd` | Seeded AI battles over `data/` plus the test pack (see below) |

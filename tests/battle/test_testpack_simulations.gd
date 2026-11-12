@@ -46,6 +46,7 @@ const MAX_EXEMPT_MOVES: int = 5
 const EXEMPT_TRIGGERS: Dictionary = {
 	"tp_hit_contact_rare": "1% chance per contact hit",
 	"tp_h_pb_knockout": "needs its holder to land a knockout while its side is outnumbered",
+	"tp_knockout_when_underdog": "same condition as tp_h_pb_knockout; which of the two the seeded run reaches shifts with AI scoring",
 	"tp_h_pb_status": "its holder must be given a status; the status trigger is covered in test_cure_status.gd",
 }
 const MAX_EXEMPT_TRIGGERS: int = 4

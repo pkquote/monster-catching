@@ -43,5 +43,11 @@ func test_codex_targets_fit_the_species() -> void:
 	var species := Codex.order(db).size()
 	for id in db.ids("achievements"):
 		var c: Dictionary = db.achievement(id).criterion
-		if c.kind == "codex" and c.mode != "species":
+		if c.kind == "codex" and c.has("target"):
 			assert_int(int(c.target)).is_less_equal(species)
+
+
+func test_collector_asks_for_every_species_not_a_number() -> void:
+	var c: Dictionary = db.achievement("collector").criterion
+	assert_bool(bool(c.get("all", false))).is_true()
+	assert_bool(c.has("target")).is_false()

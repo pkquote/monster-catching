@@ -451,8 +451,8 @@ func _criterion_text(c: Dictionary) -> String:
 				"species":
 					return "%s caught" % db.creature(str(c.species)).name
 				"caught":
-					return "%d species caught" % int(c.target)
-			return "%d species seen" % int(c.target)
+					return "every species caught" if c.get("all", false) else "%d species caught" % int(c.target)
+			return "every species seen" if c.get("all", false) else "%d species seen" % int(c.target)
 		"flag":
 			return "story flag `%s`" % c.flag
 		"creature":

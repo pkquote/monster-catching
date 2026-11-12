@@ -115,3 +115,21 @@ func test_creature_evolved_follows_the_counter() -> void:
 func test_registry() -> void:
 	assert_object(Criteria.for_kind("nope")).is_null()
 	assert_array(Array(Criteria.kinds())).contains_exactly_in_any_order(["counter", "codex", "flag", "creature"])
+
+
+func test_codex_all_targets_every_listed_species() -> void:
+	var n := Codex.order(db).size()
+	var c := {"kind": "codex", "mode": "caught", "all": true}
+	assert_dict(_p(c)).is_equal({"current": 0, "target": n})
+	for id in Codex.order(db):
+		Codex.mark_caught(save, id)
+	assert_dict(_p(c)).is_equal({"current": n, "target": n})
+
+
+func test_codex_problem_all_excludes_a_target_and_species_mode() -> void:
+	var k := Criteria.for_kind("codex")
+	assert_str(k.problem({"kind": "codex", "mode": "seen", "all": true})).is_empty()
+	assert_str(k.problem({"kind": "codex", "mode": "seen", "all": true, "target": 3})).is_not_empty()
+	assert_str(k.problem({"kind": "codex", "mode": "seen", "all": false})).is_not_empty()  # no target either
+	assert_str(k.problem({"kind": "codex", "mode": "seen", "all": false, "target": 2})).is_empty()
+	assert_str(k.problem({"kind": "codex", "mode": "species", "species": "blob", "all": true})).is_not_empty()

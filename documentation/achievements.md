@@ -9,13 +9,13 @@ A "folder" category. Each entry is `{id, name, description, hidden?, criterion}`
 | Kind | Fields | Met when | Watch key |
 |---|---|---|---|
 | `counter` | `stat` (one of `Counters.BUILT_IN`), `target` | the counter reaches `target` | `counter:<stat>` |
-| `codex` | `mode` `seen`/`caught` with `target`, or `mode` `species` with `species` | enough species seen or caught (only species in the Codex list count), or that species is caught | `codex` |
+| `codex` | `mode` `seen`/`caught` with `target` (or `all: true` for every listed species), or `mode` `species` with `species` | enough species seen or caught (only species in the Codex list count), or that species is caught | `codex` |
 | `flag` | `flag` | the story flag is set | `flag:<flag>` |
 | `creature` | `what` `level`/`bond`/`evolved`, `target` | the highest level or Bond among owned creatures (party and boxes) reaches `target`, or that many creatures have evolved | `creature` (and `counter:creatures_evolved` for `evolved`) |
 
 A `hidden: true` achievement shows only `???` until it is earned. Ids starting `tp_` are test content: evaluated, never
 listed. The validator checks the kind, the fields per kind (`DataSchemas.CRITERIA`), that a counter's `stat` is built in,
-that a named species exists, that targets are at least 1, and that a `codex` target is not above the species count.
+that a named species exists, that targets are at least 1, that a `codex` target is not above the species count and a `codex` species is not test content, and that a `creature` target is within the level cap or Bond maximum.
 A story flag is a free-form id and is not cross-checked.
 
 ## How an unlock happens

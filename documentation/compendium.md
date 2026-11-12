@@ -817,7 +817,7 @@ Unlocked by play and shown in the Achievements screen. A hidden one reads "???" 
 | **Tamer Trouncer** | `tamer_trouncer` | 1 tamers defeated |
 | **First Catch** | `first_catch` | 1 creatures caught |
 | **Field Notes** | `field_notes` | 4 species seen |
-| **Collector** | `collector` | 8 species caught |
+| **Collector** | `collector` | every species caught |
 | **First Evolution** | `first_evolution` | 1 creature(s) evolved |
 | **Rising Star** | `rising_star` | a creature at level 20 |
 | **Close Friends** | `close_friends` | a creature at Bond 80 |

@@ -36,7 +36,8 @@ static func fill_box(db: Database, save: SaveGame, count: int, level: int, rng: 
 		var c := CreatureInstance.create(db, species[rng.randi() % species.size()], level,
 			PackedStringArray(), rng)
 		if not BoxStorage.add(save, c):
-			return
+			break
+	AchievementWatch.push(AchievementWatch.CREATURE)
 
 
 ## Debug helper until starters exist (M3): a small party and bag, once per playthrough.

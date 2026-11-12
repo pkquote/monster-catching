@@ -83,6 +83,13 @@ func test_results_push_the_creature_key_after_the_battle_copies_are_written_back
 	AchievementWatch.clear()
 
 
+func test_fill_box_pushes_the_creature_key() -> void:
+	var s := _save()
+	AchievementWatch.clear()
+	BattleLauncher.fill_box(real, s, 3, 9, RandomNumberGenerator.new())
+	assert_array(Array(AchievementWatch.drain())).contains("creature")
+
+
 func test_full_party_sends_catches_to_storage() -> void:
 	var s := _save()
 	for i in db.balance.party_size:

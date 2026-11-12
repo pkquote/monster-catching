@@ -12,7 +12,7 @@
     {"id": "field_notes", "name": "Field Notes", "description": "See 4 different species.",
       "criterion": {"kind": "codex", "mode": "seen", "target": 4}},
     {"id": "collector", "name": "Collector", "description": "Catch every species.",
-      "criterion": {"kind": "codex", "mode": "caught", "target": 8}},
+      "criterion": {"kind": "codex", "mode": "caught", "all": true}},
     {"id": "first_evolution", "name": "First Evolution", "description": "Evolve a creature.",
       "criterion": {"kind": "creature", "what": "evolved", "target": 1}},
     {"id": "rising_star", "name": "Rising Star", "description": "Raise a creature to level 20.",

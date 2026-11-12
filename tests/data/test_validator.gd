@@ -512,3 +512,34 @@ func test_achievement_hidden_must_be_bool() -> void:
 	var raw := _base()
 	raw.add_entry("achievements", _ach({"hidden": "yes"}))
 	assert_str(_errors_for(raw)).contains("hidden: expected bool")
+
+
+func test_achievement_creature_target_cannot_exceed_the_level_cap_or_bond_max() -> void:
+	var raw := _base()
+	raw.add_entry("achievements", _ach({"id": "a1", "criterion": {"kind": "creature", "what": "level", "target": 100}}))
+	raw.add_entry("achievements", _ach({"id": "a2", "criterion": {"kind": "creature", "what": "bond", "target": 101}}))
+	raw.add_entry("achievements", _ach({"id": "a3", "criterion": {"kind": "creature", "what": "level", "target": 99}}))
+	raw.add_entry("achievements", _ach({"id": "a4", "criterion": {"kind": "creature", "what": "bond", "target": 100}}))
+	var errs := _errors_for(raw)
+	assert_str(errs).contains("[achievements:a1] criterion.target: 100 is more than the level cap 99")
+	assert_str(errs).contains("[achievements:a2] criterion.target: 101 is more than the Bond maximum 100")
+	assert_str(errs).not_contains("[achievements:a3]")
+	assert_str(errs).not_contains("[achievements:a4]")
+
+
+func test_achievement_species_cannot_be_test_content() -> void:
+	var raw := _base()
+	raw.add_entry("creatures", _creature({"id": "tp_extra"}))
+	raw.add_entry("achievements", _ach({"criterion": {"kind": "codex", "mode": "species", "species": "tp_extra"}}))
+	assert_str(_errors_for(raw)).contains("test content")
+
+
+func test_achievement_codex_all_replaces_the_target() -> void:
+	var raw := _base()
+	raw.add_entry("achievements", _ach({"id": "a1", "criterion": {"kind": "codex", "mode": "caught", "all": true}}))
+	raw.add_entry("achievements", _ach({"id": "a2", "criterion": {"kind": "codex", "mode": "seen", "all": true, "target": 1}}))
+	raw.add_entry("achievements", _ach({"id": "a3", "criterion": {"kind": "codex", "mode": "species", "species": "pup", "all": true}}))
+	var errs := _errors_for(raw)
+	assert_str(errs).not_contains("[achievements:a1]")
+	assert_str(errs).contains("[achievements:a2]")
+	assert_str(errs).contains("[achievements:a3]")

@@ -283,12 +283,30 @@ func _check_cross_rules() -> void:
 	for id in _ids["creatures"]:
 		if not Database.is_test_content(id):
 			species_count += 1
+	var level_cap := -1
+	var bond_max := -1
+	if _raw.singles.has("balance"):
+		var bal: Dictionary = _raw.singles["balance"].data
+		level_cap = int(bal.get("level_cap", -1)) if _is_number(bal.get("level_cap")) else -1
+		var bond = bal.get("bond", {})
+		bond_max = int(bond.get("max", -1)) if bond is Dictionary and _is_number(bond.get("max")) else -1
 	for rec in _raw.get_entries("achievements"):
 		var crit = rec.entry.get("criterion")
-		if crit is Dictionary and crit.get("kind") == "codex" and crit.get("mode") in ["seen", "caught"] 				and (crit.get("target") is float or crit.get("target") is int) and int(crit.target) > species_count:
-			_file = rec.file
-			_label = "[achievements:%s]" % rec.entry.get("id", "?")
-			_err("criterion.target", "%d is more than the %d species" % [int(crit.target), species_count])
+		if not crit is Dictionary:
+			continue
+		_file = rec.file
+		_label = "[achievements:%s]" % rec.entry.get("id", "?")
+		var target = crit.get("target")
+		if crit.get("kind") == "codex":
+			if crit.get("mode") in ["seen", "caught"] and _is_number(target) and int(target) > species_count:
+				_err("criterion.target", "%d is more than the %d species" % [int(target), species_count])
+			if crit.get("species") is String and Database.is_test_content(crit.species):
+				_err("criterion.species", "'%s' is test content, which is never in the Codex" % crit.species)
+		elif crit.get("kind") == "creature" and _is_number(target):
+			if crit.get("what") == "level" and level_cap > 0 and int(target) > level_cap:
+				_err("criterion.target", "%d is more than the level cap %d" % [int(target), level_cap])
+			elif crit.get("what") == "bond" and bond_max > 0 and int(target) > bond_max:
+				_err("criterion.target", "%d is more than the Bond maximum %d" % [int(target), bond_max])
 
 	for rec in _raw.get_entries("passives"):
 		var p: Dictionary = rec.entry

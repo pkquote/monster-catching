@@ -220,6 +220,7 @@ const CRITERIA := {
 		"mode": {"t": "enum", "values": ["seen", "caught", "species"]},
 		"target": {"t": "int", "opt": true, "min": 1},
 		"species": {"t": "ref", "cat": "creatures", "opt": true},
+		"all": {"t": "bool", "opt": true},
 	},
 	"flag": {
 		"flag": {"t": "id"},

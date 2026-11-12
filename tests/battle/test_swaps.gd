@@ -64,9 +64,9 @@ func test_swap_takes_the_swappers_action() -> void:
 	assert_object(e2.sides[0].active()[0]).is_same(lead2)
 
 
-# PIN: pins current engine behaviour; revisit if the design decision changes. The docs only say
-# "each action runs if its creature is still on the field"; nothing says who keeps the extra slots.
-func test_underdog_swapper_loses_its_remaining_actions_current_behaviour() -> void:
+# A swap is the creature's whole turn (decided in M6): its other action slots are dropped and the
+# newcomer gets none. The battle scene stops asking for those slots (BattleAction.next_slot).
+func test_underdog_swap_is_the_creatures_whole_turn() -> void:
 	# 1v3: three action slots for the lead. The swap runs first, and the lead's queued moves are
 	# dropped because it is no longer on the field; the newcomer gets none of them. The foes act
 	# too, so MOVE_USED is not empty for lack of actions: only side 0's moves are missing.

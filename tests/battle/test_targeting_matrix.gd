@@ -194,8 +194,7 @@ func _run(database: Database, allies: Array, foes: Array, seed_value: int, move:
 		if hit.size() != 1 or not foes_up.has(hit[0]):
 			problems.append("%s: hit %s, expected one standing foe" % [label, str(hit)])
 	elif move == "cheer" and aim == "fainted":
-		# PIN: a fainted ally is not a legal pick. The docs (an invalid target "is replaced with a
-		# random valid one") allow any standing ally; the engine currently picks the user.
+		# A fainted ally is not a legal pick: it is replaced with a random standing ally (the user included).
 		if hit.size() != 1 or not allies_up.has(hit[0]):
 			problems.append("%s: hit %s, expected one standing ally" % [label, str(hit)])
 	else:

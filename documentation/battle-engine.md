@@ -67,7 +67,7 @@ A `one_enemy` move may carry `"hits": {"min": 2, "max": 5}`: one use hits its ta
 
 | Action | Constructor | Notes |
 | --- | --- | --- |
-| Move | `BattleAction.use_move(bid, move_id, target_bid, second_target_bid)` | Target is only needed for `one_enemy` / `one_ally` / `two_enemies` moves; `second_target_bid` is only read for `two_enemies`. An invalid target is replaced with a random valid one. |
+| Move | `BattleAction.use_move(bid, move_id, target_bid, second_target_bid)` | Target is only needed for `one_enemy` / `one_ally` / `two_enemies` moves; `second_target_bid` is only read for `two_enemies`. An invalid target is replaced with a random valid one: a standing foe for `one_enemy` / `two_enemies`, a standing ally (the user included) for `one_ally`. |
 | Item | `BattleAction.use_item(bid, item_id, target_bid)` | Uses up one item from the side's bag. Capture items only work in wild battles. Healing items can target benched allies. |
 | Swap | `BattleAction.swap(bid, bench_bid)` | The creature leaving the field has its stat stages reset. |
 | Rest | `BattleAction.rest(bid)` | Restores `rest_fraction` of max energy instead of acting. |
@@ -181,6 +181,8 @@ When one side has fewer creatures on the field (`r = enemy / ally > 1`):
 | XP | `+xp_bonus_per_ratio × (r − 1)` |
 
 It is recalculated at battle start, after replacements, and at the end of every round.
+
+A swap is the swapping creature's whole turn: its other action slots that round are dropped and the newcomer does not act. The battle scene stops asking for those slots once a swap is picked (`BattleAction.next_slot`).
 
 ## Affinity
 
@@ -484,8 +486,9 @@ passives, held items and moves to `FixtureDB.raw()`, so real balance changes don
 | Suite | Covers |
 | --- | --- |
 | `test_formats.gd` | 1v1 to 3v3 with benches of 0, 3 and 9: the opening line-up, refilling slots, no creature on the field twice, every battle finishing; 1 vs a 12-creature party |
-| `test_swaps.gd` | A swap is one action at priority 6; stages reset on leaving; refused swaps; 12-creature benches; entry triggers fire once per entry |
+| `test_swaps.gd` | A swap is one action at priority 6 and an Underdog creature's whole turn (`test_swap_slots.gd` covers the scene's slot skipping); stages reset on leaving; refused swaps; 12-creature benches; entry triggers fire once per entry |
 | `test_targeting_matrix.gd` | Every creature target key against 1–3 standing foes and allies, with the spread multiplier each hit takes |
+| `test_one_ally_retarget.gd` | An illegal `one_ally` pick (fainted, missing, a foe) becomes a random standing ally, the user included; a legal pick is kept with no RNG draw |
 | `test_multi_format_effects.gd` | In 2v2 and 3v3: auras (passive and held) cover every ally and no foe; a `consumed` item is used up once per holder when two holders fire in one round; a `per_battle` item fires once per battle across swaps; absorb on one target of a spread or `two_enemies` move spares only that target while the other takes the same spread-reduced damage; Underdog's stat bonus, spread reduction and extra actions for 1v2, 1v3 and 2v3, and none at even sizes |
 | `test_multi_hit_moves.gd` | Fixed and ranged hit counts, accuracy rolled once, the effect list and hit triggers per hit, Resolve once, Affinity once per move, a faint processed between hits with the spill in slot order (wraparound, fainted slots and the bench skipped, a lone foe, the battle-ending hit, the attacker fainting) |
 | `test_ai_multi_hit.gd` | A multi-hit move is estimated and scored at its mean hit count; retaliation counts per expected hit |

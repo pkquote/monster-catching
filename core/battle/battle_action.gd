@@ -69,3 +69,14 @@ func describe() -> String:
 		"item": return "%d:item %s->%d" % [actor, item, target]
 		"swap": return "%d:swap->%d" % [actor, swap_in]
 	return "%d:%s" % [actor, kind]
+
+
+## The slot to ask about after `action` was chosen for slot `i` of `needed` (one bid per action slot).
+## A swap is the swapping creature's whole turn, so its remaining slots are skipped; anything else
+## moves on by one.
+static func next_slot(needed: Array[int], i: int, action: BattleAction) -> int:
+	var next := i + 1
+	if action.kind == "swap":
+		while next < needed.size() and needed[next] == action.actor:
+			next += 1
+	return next

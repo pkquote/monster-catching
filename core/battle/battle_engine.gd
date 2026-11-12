@@ -301,7 +301,15 @@ func resolve_targets(user: Battler, key: String, chosen: int, second := -1, allo
 		"one_ally":
 			var c := battler(chosen)
 			# Items may target benched allies too.
-			out.append(c if c != null and c.side == own.index and c.alive() else user)
+			if c != null and c.side == own.index and c.alive():
+				out.append(c)
+			elif allow_random and not own.active().is_empty():
+				# An illegal pick (fainted, missing, a foe) becomes a random standing ally,
+				# the user included, like the foe targets.
+				var pool := own.active()
+				out.append(pool[rng.randi_range(0, pool.size() - 1)])
+			else:
+				out.append(user)
 		"all_enemies":
 			out.append_array(opp.active())
 		"all_allies":

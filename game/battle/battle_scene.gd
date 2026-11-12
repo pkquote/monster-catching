@@ -99,15 +99,18 @@ func _command_phase() -> Array:
 	var needed := engine.actions_needed(0)
 	var actions: Array = []
 	var i := 0
+	# The slot each chosen action was picked for, so Back returns to it (a swap skips slots).
+	var slots: Array[int] = []
 	while i < needed.size():
 		var a = await _choose_action(needed[i], actions)
 		if a == null:
 			if i > 0:
-				i -= 1
+				i = slots.pop_back()
 				actions.pop_back()
 			continue
 		actions.append(a)
-		i += 1
+		slots.append(i)
+		i = BattleAction.next_slot(needed, i, a)
 		if a.kind == "flee":
 			break
 	if Settings.data.confirm_end_turn and not actions.is_empty():

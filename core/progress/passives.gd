@@ -65,16 +65,20 @@ static func backfill(db: Database, c: CreatureInstance) -> void:
 	if c.passive.is_empty() and not def.passives.is_empty():
 		c.passive = def.passives[absi(hash("%s%d%d" % [c.species, c.level, c.xp])) % def.passives.size()]
 		Log.debug(Log.SAVE, "Passive backfilled", {"species": c.species, "passive": c.passive})
-	# Saves from before passives: a track already at the threshold unlocks (highest first).
-	var best := ""
-	var best_points := 0
+	# Saves from before passives: a track already at the threshold unlocks (highest first; a tie goes to the track
+	# listed first). A track the species has no passive for is skipped, so the next one can unlock.
+	var eligible: Array[String] = []
 	for a in db.ids("affinities"):
-		var p := int(c.affinity.get(a, 0))
-		if p >= db.balance.growth_affinity_threshold and p > best_points:
-			best = a
-			best_points = p
-	if best != "":
-		try_unlock(db, c, best)
+		if int(c.affinity.get(a, 0)) >= db.balance.growth_affinity_threshold:
+			eligible.append(a)
+	var listed := db.ids("affinities")
+	eligible.sort_custom(func(x: String, y: String) -> bool:
+		var px := int(c.affinity.get(x, 0))
+		var py := int(c.affinity.get(y, 0))
+		return px > py or (px == py and listed.find(x) < listed.find(y)))
+	for a in eligible:
+		if try_unlock(db, c, a) != "":
+			break
 
 
 ## Unlocks the creature's Affinity passive if `track` has reached the growth threshold and

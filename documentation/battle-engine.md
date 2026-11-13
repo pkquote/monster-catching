@@ -197,6 +197,8 @@ come from `balance.affinity_awards`:
 | `field_applied`, `reaction_triggered`, `field_cashed_in` | The creature whose move did it |
 | `status_inflicted`, `stat_lowered` | The creature that inflicted it on a foe |
 
+A knockout is credited to the last creature that damaged the one that fainted (`Battler.last_hit_by`), so a status tick that delivers the final HP still credits whoever hit it last, and an absorbed hit never counts as a hit. This is deliberate: the status was part of that attacker's pressure, and it keeps a tick from awarding nothing.
+
 Nothing a passive trigger's effects do earns Affinity (for anyone), so a passive can't steer which
 Affinity passive unlocks or which growth branch is taken. Bond is unaffected.
 
@@ -579,6 +581,7 @@ passives, held items and moves to `FixtureDB.raw()`, so real balance changes don
 | `test_ai_styles.gd` | Styles read from data: the weights scale the terms they name (rest, swap-avoid, heal, damage, ko, setup, retaliation), the reference constants match the data; `passive` (own buffs, buff over attack, heals below half, weakest hit and no chasing a knockout, a hit over a pointless move, no reward for a full-HP heal, Rest at low energy, never swaps, no RNG); `defensive` (heals earlier, takes a swap the tactician declines, damage avoided and retaliation weighed more); `trickster` (status over hit, still takes a knockout, ignores a blocked status) |
 | `test_ai_swaps.gd` | `swap_score` terms (damage avoided, offence, entry, stages and skip status) and `threat`; the tactician swaps a doomed creature and not a healthy one, a swap is chosen exactly when it clears `SWAP_MARGIN`, `basic` and `aggressive` never swap, two actives claim distinct bench creatures, a swapper takes no further actions, a fresh swap-in does not swap back, no bench, no RNG draw |
 | `test_battler_acted.gd` | `Battler.acted`: true at battle start, false after a swap-in or faint replacement, true once the creature acts |
+| `test_replace_settling.gd` | What `replace()` settles: a replacement whose entry knocks out the last foes leaves `battle_end` as the last event (Underdog is refreshed first), and a knocked-out foe on an auto-replace side is refilled at once, not a round later |
 | `test_ai_triggers.gd` | The AI prices knockout, faint, status, round-end and enter triggers: HP effects equal for both styles, setup effects at half for aggressive, `when`, chance, spent items, own-target effects, once per finished target, no RNG draw, `basic` unchanged, shipped passives |
 | `test_simulation_invariants.gd` | Seeded AI battles on the real data (see below) and a stalled battle that ends in a draw at exactly `round_limit` |
 | `test_testpack_mechanics.gd` | One pinned behaviour per mechanic family on the test pack: each move op, priority, accuracy, energy, every target kind in 2v3, every trigger kind, held use kinds, the depth guard, all 8 reactions, Underdog tamer content |

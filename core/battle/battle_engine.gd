@@ -215,10 +215,16 @@ func replace(side_index: int, bid: int) -> Array:
 		emit({"type": BattleEvents.ACTION_INVALID, "bid": bid, "reason": "bad_replacement"})
 		return _take_events()
 	place(side, open[0], b)
-	# Its entry trigger may have knocked creatures out (e.g. through a reaction).
+	# Its entry trigger may have knocked creatures out (e.g. through a reaction). Underdog is refreshed before the
+	# battle can end, so BATTLE_END stays the last event; a foe on an auto-replace side that was knocked out is
+	# refilled now, not at the end of the next round.
 	check_faints()
-	check_end()
 	_update_underdog()
+	check_end()
+	if not _over:
+		_refill_auto_replace()
+		if not _over:
+			_update_underdog()
 	return _take_events()
 
 
@@ -660,8 +666,22 @@ func _end_of_round() -> void:
 	if _over:
 		return
 	field_rules.tick_all()
-	# Refill auto-replace sides. An entry trigger can knock creatures out on either side,
-	# so faints are checked after each placement and refilling repeats until nothing changes.
+	_refill_auto_replace()
+	if _over:
+		return
+	for side in sides:
+		if not side.auto_replace:
+			var n := pending_replacements(side.index)
+			if n > 0:
+				emit({"type": BattleEvents.REPLACEMENT_NEEDED, "side": side.index, "count": n})
+	_update_underdog()
+	if round_number >= db.balance.round_limit:
+		finish(-1, "round_limit")
+
+
+## Refills the slots of auto-replace sides from their benches. An entry trigger can knock creatures out on either
+## side, so faints are checked after each placement and refilling repeats until nothing changes or the battle ends.
+func _refill_auto_replace() -> void:
 	var refilled := true
 	while refilled:
 		refilled = false
@@ -675,14 +695,6 @@ func _end_of_round() -> void:
 				check_end()
 				if _over:
 					return
-	for side in sides:
-		if not side.auto_replace:
-			var n := pending_replacements(side.index)
-			if n > 0:
-				emit({"type": BattleEvents.REPLACEMENT_NEEDED, "side": side.index, "count": n})
-	_update_underdog()
-	if round_number >= db.balance.round_limit:
-		finish(-1, "round_limit")
 
 
 func _update_underdog() -> void:

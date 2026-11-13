@@ -351,3 +351,16 @@ func test_set_active_refuses_locked() -> void:
 	assert_str(Passives.active_id(c)).is_equal("tidal_heart")
 	c.passive = ""
 	assert_str(Passives.set_active(c, Passives.SLOT_ROLLED)).is_equal("locked")  # an empty slot
+
+
+func test_backfill_falls_back_to_the_next_track_when_the_highest_has_no_passive() -> void:
+	# The species lists no passive for its creature's strongest track: the next eligible track unlocks instead of none.
+	var def := db.creature("emberkit")
+	var saved: Dictionary = def.affinity_passives.duplicate()
+	def.affinity_passives.erase("catalyst")
+	var c := CreatureInstance.create(db, "emberkit", 20)
+	c.affinity["catalyst"] = 50
+	c.affinity["striker"] = 31
+	Passives.backfill(db, c)
+	def.affinity_passives = saved
+	assert_str(c.affinity_passive).is_equal("finisher")

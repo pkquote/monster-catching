@@ -48,6 +48,13 @@ static func balance() -> Dictionary:
 	}
 
 
+## Adds the shipped AI styles (data/ai_styles.json) to `r`, so tests run on the real weights.
+static func add_ai_styles(r: RawData) -> void:
+	var doc: Dictionary = JSON.parse_string(FileAccess.get_file_as_string("res://data/ai_styles.json"))
+	for entry: Dictionary in doc.entries:
+		r.add_entry("ai_styles", entry)
+
+
 static func raw() -> RawData:
 	var r := RawData.new()
 	for t in [
@@ -61,6 +68,7 @@ static func raw() -> RawData:
 		r.add_entry("types", t)
 	for a in ["striker", "warden", "catalyst", "trickster"]:
 		r.add_entry("affinities", {"id": a, "name": a.capitalize()})
+	add_ai_styles(r)
 	r.add_entry("statuses", {"id": "burn", "name": "Burn", "turns": 2,
 		"effects": [{"op": "damage_fraction", "fraction": 0.125}]})
 	r.add_entry("statuses", {"id": "shock", "name": "Shock", "turns": 2,

@@ -12,7 +12,7 @@ var max_active := 1
 var field_count := 1
 ## item id -> count. The engine uses its own copy.
 var items: Dictionary = {}
-## AI style ("basic", "aggressive", "tactician"), or "" for a side the caller controls.
+## AI style (an id from data/ai_styles.json, such as "basic" or "tactician"), or "" for a side the caller controls.
 var ai := ""
 var is_wild := false
 ## Fill empty slots from the bench automatically at the end of each round.

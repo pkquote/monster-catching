@@ -8,6 +8,7 @@ func _base() -> RawData:
 		"pros": ["Splashy"], "cons": ["Soggy"]})
 	for aff in ["striker", "warden", "catalyst", "trickster"]:
 		raw.add_entry("affinities", {"id": aff, "name": aff.capitalize()})
+	FixtureDB.add_ai_styles(raw)
 	raw.add_entry("statuses", {"id": "burn", "name": "Burn", "turns": 3,
 		"effects": [{"op": "damage_fraction", "fraction": 0.1}]})
 	raw.add_entry("field_states", {"id": "soaked", "name": "Soaked", "max_stacks": 3, "default_turns": 3})

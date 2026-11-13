@@ -17,7 +17,7 @@ static func from_dict(d: Dictionary) -> TamerDef:
 	t.id = d.id
 	t.name = d.name
 	t.max_active = int(d.max_active)
-	t.ai = d.ai
+	t.ai = d.get("ai", "basic")
 	t.reward_money = int(d.reward_money)
 	t.party = []
 	for p in d.party:

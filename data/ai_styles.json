@@ -1,0 +1,59 @@
+{
+  "schema": 1,
+  "entries": [
+    {
+      "id": "basic",
+      "name": "Basic",
+      "description": "Picks a random move and target. The default style.",
+      "random": true,
+      "damage": 1.0, "ko": 1.0, "retaliation": 1.0, "setup": 1.0, "buff": 0.0, "heal": 1.0, "rest": 1.0,
+      "trigger_setup": 1.0, "seeks_status": true, "attack": "best",
+      "swap": false, "swap_margin": 0.25, "swap_avoid": 1.0
+    },
+    {
+      "id": "aggressive",
+      "name": "Aggressive",
+      "description": "Most expected damage, favouring knockouts. Reads triggers, counting setup effects at half weight.",
+      "random": false,
+      "damage": 1.0, "ko": 1.0, "retaliation": 0.0, "setup": 0.0, "buff": 0.0, "heal": 1.0, "rest": 1.0,
+      "trigger_setup": 0.5, "seeks_status": false, "attack": "best",
+      "swap": false, "swap_margin": 0.25, "swap_avoid": 1.0
+    },
+    {
+      "id": "tactician",
+      "name": "Tactician",
+      "description": "Aggressive scoring plus the value of field setup, reactions, statuses, debuffs and swapping.",
+      "random": false,
+      "damage": 1.0, "ko": 1.0, "retaliation": 1.0, "setup": 1.0, "buff": 0.0, "heal": 1.0, "rest": 1.0,
+      "trigger_setup": 1.0, "seeks_status": true, "attack": "best",
+      "swap": true, "swap_margin": 0.25, "swap_avoid": 1.0
+    },
+    {
+      "id": "passive",
+      "name": "Passive",
+      "description": "Goes easy: prefers heals, buffs and Rest, and when nothing is worth doing takes its weakest hit. Never swaps.",
+      "random": false,
+      "damage": 1.0, "ko": 0.0, "retaliation": 1.0, "setup": 1.0, "buff": 1.0, "heal": 1.5, "rest": 2.0,
+      "trigger_setup": 1.0, "seeks_status": true, "attack": "weakest",
+      "swap": false, "swap_margin": 0.25, "swap_avoid": 1.0
+    },
+    {
+      "id": "defensive",
+      "name": "Defensive",
+      "description": "Plays for survival: heals and rests earlier, weighs the damage it would take, and swaps out of danger sooner.",
+      "random": false,
+      "damage": 0.7, "ko": 1.0, "retaliation": 1.5, "setup": 0.5, "buff": 0.5, "heal": 1.5, "rest": 1.5,
+      "trigger_setup": 1.0, "seeks_status": true, "attack": "best",
+      "swap": true, "swap_margin": 0.1, "swap_avoid": 1.5
+    },
+    {
+      "id": "trickster",
+      "name": "Trickster",
+      "description": "Statuses, debuffs and field setup first; damage is secondary, but a finishing blow still counts.",
+      "random": false,
+      "damage": 0.6, "ko": 1.0, "retaliation": 1.0, "setup": 1.5, "buff": 0.5, "heal": 1.0, "rest": 1.0,
+      "trigger_setup": 1.0, "seeks_status": true, "attack": "best",
+      "swap": false, "swap_margin": 0.25, "swap_avoid": 1.0
+    }
+  ]
+}

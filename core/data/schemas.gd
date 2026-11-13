@@ -48,6 +48,7 @@ const CATEGORIES := {
 	"creatures": "folder",
 	"moves": "folder",
 	"items": "folder",
+	"ai_styles": "file",
 	"tamers": "folder",
 	"encounters": "folder",
 	"locations": "file",
@@ -64,6 +65,8 @@ const CATEGORIES := {
 
 const SCHEMA_VERSION := 1
 
+## An AI style weight: 1.0 is "as the tactician does today".
+const _WEIGHT := {"t": "number", "min": 0.0, "max": 3.0}
 const _STAT_RULE := {"t": "int", "min": 1, "max": 255}
 const _BASE_STATS := {
 	"hp": _STAT_RULE, "patk": _STAT_RULE, "pdef": _STAT_RULE, "satk": _STAT_RULE, "sdef": _STAT_RULE,
@@ -298,7 +301,7 @@ const ENTRY := {
 		"id": {"t": "id"},
 		"name": {"t": "string"},
 		"max_active": {"t": "int", "min": 1, "max": 3},
-		"ai": {"t": "enum", "values": ["basic", "aggressive", "tactician"]},
+		"ai": {"t": "ref", "cat": "ai_styles", "opt": true},
 		"reward_money": {"t": "int", "min": 0},
 		"party": {"t": "array", "min": 1, "max": 6, "of": {"t": "dict", "fields": {
 			"species": {"t": "ref", "cat": "creatures"},
@@ -333,6 +336,25 @@ const ENTRY := {
 		"matchups": {"t": "map", "opt": true,
 			"key": {"t": "ref", "cat": "types"},
 			"value": {"t": "number", "min": 0.0, "max": 4.0}},
+	},
+	"ai_styles": {
+		"id": {"t": "id"},
+		"name": {"t": "string"},
+		"description": {"t": "string", "opt": true},
+		"random": {"t": "bool"},
+		"damage": _WEIGHT,
+		"ko": _WEIGHT,
+		"retaliation": _WEIGHT,
+		"setup": _WEIGHT,
+		"buff": _WEIGHT,
+		"heal": _WEIGHT,
+		"rest": _WEIGHT,
+		"trigger_setup": _WEIGHT,
+		"seeks_status": {"t": "bool"},
+		"attack": {"t": "enum", "values": ["best", "weakest"]},
+		"swap": {"t": "bool"},
+		"swap_margin": _WEIGHT,
+		"swap_avoid": _WEIGHT,
 	},
 	"statuses": {
 		"id": {"t": "id"},

@@ -6,7 +6,7 @@ extends RefCounted
 ## Section headings in reading order (spec 2026-11-05-m5a-housekeeping-design §5.2). Rules come
 ## first because everything after refers to them.
 const SECTIONS: Array[String] = ["Rules and Balance", "Types", "Affinities", "Statuses", "Field States",
-	"Reactions", "Passives", "Held items", "Moves", "Items", "Creatures", "Tamers", "Encounters", "Achievements"]
+	"Reactions", "Passives", "Held items", "Moves", "Items", "Creatures", "AI Styles", "Tamers", "Encounters", "Achievements"]
 const RULES := "Rules and Balance"
 
 var db: Database
@@ -45,6 +45,7 @@ func _build() -> void:
 	_moves()
 	_items()
 	_creatures()
+	_ai_styles()
 	_tamers()
 	_encounters()
 	_achievements()
@@ -624,3 +625,22 @@ func _power(m: MoveDef) -> String:
 
 func _acc(m: MoveDef) -> String:
 	return "—" if m.always_hits else "%d%%" % m.accuracy
+
+
+func _ai_styles() -> void:
+	_section("AI Styles", "Weight profiles for the battle AI, 1.0 meaning \"as the tactician does\". A tamer with no style uses `basic`.")
+	_w("| Style | Id | Damage | KO | Retaliation | Setup | Buff | Heal | Rest | Swaps | Attacks | Description |")
+	_w("|---|---|---|---|---|---|---|---|---|---|---|---|")
+	for id in _sorted_ids("ai_styles"):
+		var s := db.ai_style(id)
+		if s.random:
+			_w("| **%s** | `%s` | random | random | random | random | random | random | random | no | random | %s |" % [s.name, s.id, s.description])
+			continue
+		_w("| **%s** | `%s` | %s | %s | %s | %s | %s | %s | %s | %s | %s | %s |" % [s.name, s.id, _num(s.damage), _num(s.ko),
+			_num(s.retaliation), _num(s.setup), _num(s.buff), _num(s.heal), _num(s.rest),
+			"yes (margin %s)" % _num(s.swap_margin) if s.swap else "no", s.attack, s.description])
+	_w("")
+
+
+func _num(x: float) -> String:
+	return "%g" % x

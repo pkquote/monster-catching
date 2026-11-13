@@ -2,7 +2,7 @@ extends GdUnitTestSuite
 ## Seeded AI-vs-AI battles over data/ plus the debug test pack (data_testpack/), the way
 ## tools/simulate.gd --pack=1 runs them. Formats 1v1, 2v2, 3v3, 1v3, 2v3 and 3v6 (3 fielded,
 ## 6-creature teams) x seeds 1..30; level 5 on odd seeds and 60 on even ones; AI styles rotate
-## through basic, tactician and aggressive. Every other creature is a pack species taken in turn
+## through the six AI styles (basic, tactician, aggressive, passive, defensive, trickster). Every other creature is a pack species taken in turn
 ## and the rest are random pack species (never base ones, so growing data/ doesn't shift the run);
 ## pack moves, passives and held items are dealt out in turn as well, so the run covers the whole
 ## pack deterministically. Base content takes part through data/'s types, statuses, field states,
@@ -28,7 +28,7 @@ const PACK_ROOT: String = "res://data_testpack"
 ## [fielded side 0, fielded side 1, team size (0 = fielded + a seed-dependent bench of 0..2)].
 const FORMATS: Array = [[1, 1, 0], [2, 2, 0], [3, 3, 0], [1, 3, 0], [2, 3, 0], [3, 3, 6]]
 const SEED_COUNT: int = 30
-const AIS: Array = ["basic", "tactician", "aggressive"]
+const AIS: Array = ["basic", "tactician", "aggressive", "passive", "defensive", "trickster"]
 ## Observed: 0 of 180 battles draw (all end by defeat). 5% (at most 9 of 180) leaves room for a
 ## stall from a degenerate pack combo without letting the simulation drift into draws.
 const MAX_DRAW_PERCENT: int = 5
@@ -39,6 +39,7 @@ const EXEMPT_MOVES: Dictionary = {
 	# and the few fielded basic-AI holders in the plan never rolled these.
 	"tp_restore_energy_full_self": "the AI gives restore_energy no score, so only basic would pick it",
 	"tp_stage_luck_swing": "costs 23 energy for +/-2 luck, scored below any attack",
+	"tp_clear_radiant": "removes a state from its own side, which no AI style scores; only basic would pick it, and the seeded run never rolled it",
 }
 ## About 5% of the pack's moves (92 today).
 const MAX_EXEMPT_MOVES: int = 5
@@ -48,8 +49,9 @@ const EXEMPT_TRIGGERS: Dictionary = {
 	"tp_h_pb_knockout": "needs its holder to land a knockout while its side is outnumbered",
 	"tp_knockout_when_underdog": "same condition as tp_h_pb_knockout; which of the two the seeded run reaches shifts with AI scoring",
 	"tp_h_pb_status": "its holder must be given a status; the status trigger is covered in test_cure_status.gd",
+	"tp_h_pb_round_end": "needs Overgrown on its holder's side at round end; which seeded battles reach that shifts with the AI style rotation (M6g)",
 }
-const MAX_EXEMPT_TRIGGERS: int = 4
+const MAX_EXEMPT_TRIGGERS: int = 5
 ## Events whose `bid` is the creature acting.
 const ACTION_EVENTS: Array = [BattleEvents.MOVE_USED, BattleEvents.ITEM_USED, BattleEvents.REST,
 	BattleEvents.PASS, BattleEvents.FLED, BattleEvents.SWAP_OUT, BattleEvents.DISOBEYED,

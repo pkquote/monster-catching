@@ -258,3 +258,17 @@ func _scan(dir: String, hits: PackedStringArray) -> int:
 		if rx.search(fa.get_as_text()) != null:
 			hits.append(path)
 	return n
+
+
+func test_a_tamer_without_ai_uses_basic() -> void:
+	var t: TamerDef = _db.tamer("tp_tamer_default_ai_2v2")
+	assert_object(t).is_not_null()
+	assert_str(t.ai).is_equal("basic")
+
+
+func test_every_ai_style_has_a_pack_tamer() -> void:
+	var used := {}
+	for t: TamerDef in _tamers:
+		used[t.ai] = true
+	for id: String in _db.ids("ai_styles"):
+		assert_bool(used.has(id)).override_failure_message("no pack tamer uses style %s" % id).is_true()

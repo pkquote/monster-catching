@@ -4,7 +4,7 @@ extends GdUnitTestSuite
 ## the other sections rely on (spec 2026-11-05-m5a-housekeeping-design §5).
 
 const SECTIONS: Array[String] = ["Rules and Balance", "Types", "Affinities", "Statuses", "Field States",
-	"Reactions", "Passives", "Held items", "Moves", "Items", "Creatures", "Tamers", "Encounters", "Achievements"]
+	"Reactions", "Passives", "Held items", "Moves", "Items", "Creatures", "AI Styles", "Tamers", "Encounters", "Achievements"]
 ## The contents row for Rules and Balance has no count: it is a settings page, not a list.
 const NO_COUNT := "—"
 

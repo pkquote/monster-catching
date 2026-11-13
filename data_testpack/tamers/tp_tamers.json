@@ -143,6 +143,86 @@
         {"item": "tp_potion_full", "count": 5},
         {"item": "tp_energy_small", "count": 3}
       ]
+    },
+    {
+      "id": "tp_tamer_passive_2v2",
+      "name": "TP Passive 2v2",
+      "max_active": 2,
+      "ai": "passive",
+      "reward_money": 200,
+      "party": [
+        {
+          "species": "tp_chain2_tank",
+          "level": 20,
+          "moves": ["tp_hit_iron_special_prio_minus1", "tp_apply_soaked"]
+        },
+        {
+          "species": "tp_chain2_caster",
+          "level": 20,
+          "moves": ["tp_hit_magic_special_prio_minus3", "tp_inflict_chill", "tp_cash_frosted"]
+        }
+      ]
+    },
+    {
+      "id": "tp_tamer_defensive_2v2",
+      "name": "TP Defensive 2v2",
+      "max_active": 2,
+      "ai": "defensive",
+      "reward_money": 300,
+      "party": [
+        {
+          "species": "tp_chain2_tank",
+          "level": 20,
+          "moves": ["tp_hit_iron_special_prio_minus1", "tp_apply_soaked"]
+        },
+        {
+          "species": "tp_chain2_caster",
+          "level": 20,
+          "moves": ["tp_hit_magic_special_prio_minus3", "tp_inflict_chill", "tp_cash_frosted"]
+        },
+        {
+          "species": "tp_iron_status_only",
+          "level": 20,
+          "moves": ["tp_apply_magnetized", "tp_clear_magnetized"]
+        }
+      ]
+    },
+    {
+      "id": "tp_tamer_trickster_2v2",
+      "name": "TP Trickster 2v2",
+      "max_active": 2,
+      "ai": "trickster",
+      "reward_money": 300,
+      "party": [
+        {
+          "species": "tp_chain2_tank",
+          "level": 20,
+          "moves": ["tp_hit_iron_special_prio_minus1", "tp_apply_soaked"]
+        },
+        {
+          "species": "tp_chain2_caster",
+          "level": 20,
+          "moves": ["tp_hit_magic_special_prio_minus3", "tp_inflict_chill", "tp_cash_frosted"]
+        }
+      ]
+    },
+    {
+      "id": "tp_tamer_default_ai_2v2",
+      "name": "TP Default AI 2v2 (no ai field: basic)",
+      "max_active": 2,
+      "reward_money": 100,
+      "party": [
+        {
+          "species": "tp_chain2_tank",
+          "level": 20,
+          "moves": ["tp_hit_iron_special_prio_minus1", "tp_apply_soaked"]
+        },
+        {
+          "species": "tp_chain2_caster",
+          "level": 20,
+          "moves": ["tp_hit_magic_special_prio_minus3", "tp_inflict_chill", "tp_cash_frosted"]
+        }
+      ]
     }
   ]
 }

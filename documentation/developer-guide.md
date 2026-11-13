@@ -159,9 +159,12 @@ Entry in `data/passives/core.json` with `effects`, `triggers` and/or `field` ops
 creature's `passives` or `affinity_passives`. Triggers and when they fire: battle-engine.md → Passives.
 
 ### Add a tamer (a trainer you can battle)
-1. Entry in `data/tamers/` with `max_active`, `ai` (`basic`/`aggressive`/`tactician`), `reward_money`, and the `party`.
+1. Entry in `data/tamers/` with `max_active`, optionally `ai` (a style id from `data/ai_styles.json`: `basic`, `aggressive`, `tactician`, `passive`, `defensive`, `trickster`; `basic` when omitted), `reward_money`, and the `party`.
 2. A `Tamer` piece on a map (`tamer_id`, `sight`, `before_title`, `after_title`).
 3. In the `before_title` dialogue, call `$> Story.start_battle("<tamer_id>")`.
+
+### Add or tune an AI style
+Entry in `data/ai_styles.json`: a name and the fourteen weight fields (all required; ranges in `DataSchemas.ENTRY["ai_styles"]`). A tamer picks it with `ai`. What each field does, and the shipped styles: battle-engine.md → AI styles. Compare styles with `tools/simulate.gd --ai=A,B`.
 
 ### Add a wild area
 1. Encounter table in `data/encounters/` (species, weights, level range, pack size).

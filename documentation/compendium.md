@@ -16,6 +16,7 @@
 | [Moves](#moves) | 50 |
 | [Items](#items) | 7 |
 | [Creatures](#creatures) | 12 |
+| [AI Styles](#ai-styles) | 6 |
 | [Tamers](#tamers) | 4 |
 | [Encounters](#encounters) | 2 |
 | [Achievements](#achievements) | 11 |
@@ -836,6 +837,19 @@ Base stats. *Total* sums the six battle stats (HP to Spd); Luck, Resolve and Sta
 | 9 | Arc Pair | Electric | Special | 44 | 5 | 100% |
 | 12 | Thunder Cascade | Electric | Special | 50 | 7 | 90% |
 | 15 | Spark Volley | Electric | Special | 16 | 6 | 100% |
+
+## AI Styles
+
+Weight profiles for the battle AI, 1.0 meaning "as the tactician does". A tamer with no style uses `basic`.
+
+| Style | Id | Damage | KO | Retaliation | Setup | Buff | Heal | Rest | Swaps | Attacks | Description |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| **Aggressive** | `aggressive` | %g | %g | %g | %g | %g | %g | %g | no | best | Most expected damage, favouring knockouts. Reads triggers, counting setup effects at half weight. |
+| **Basic** | `basic` | random | random | random | random | random | random | random | no | random | Picks a random move and target. The default style. |
+| **Defensive** | `defensive` | %g | %g | %g | %g | %g | %g | %g | yes (margin %g) | best | Plays for survival: heals and rests earlier, weighs the damage it would take, and swaps out of danger sooner. |
+| **Passive** | `passive` | %g | %g | %g | %g | %g | %g | %g | no | weakest | Goes easy: prefers heals, buffs and Rest, and when nothing is worth doing takes its weakest hit. Never swaps. |
+| **Tactician** | `tactician` | %g | %g | %g | %g | %g | %g | %g | yes (margin %g) | best | Aggressive scoring plus the value of field setup, reactions, statuses, debuffs and swapping. |
+| **Trickster** | `trickster` | %g | %g | %g | %g | %g | %g | %g | no | best | Statuses, debuffs and field setup first; damage is secondary, but a finishing blow still counts. |
 
 ## Tamers
 

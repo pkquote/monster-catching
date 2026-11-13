@@ -29,11 +29,22 @@ const REST_VALUE := 6.0
 ## x ref per full energy bar restored by a trigger.
 const ENERGY_VALUE := 0.25
 ## Aggressive trusts HP, not setup: trigger effects paid in stages, statuses, energy or field states count this much.
-const AGGRESSIVE_SETUP_MULT := 0.5
+const AGGRESSIVE_SETUP_MULT := 0.5  # reference value: the data (data/ai_styles.json) is authoritative, a test pins them equal
 ## A swap's offence term counts the bench creature's damage edge over this many rounds (it acts from next round).
 const OFFENCE_ROUNDS := 1.0
 ## A swap must beat the best non-swap option by this much, x ref, so near-ties stay with the move.
-const SWAP_MARGIN := 0.25
+const SWAP_MARGIN := 0.25  # reference value for tactician, as above
+## HP-equivalent score range of an attack for an `attack: weakest` style: the weakest hit scores BAND, the strongest
+## half of it, so every attack still beats a pointless move worth 0 but loses to anything worth more than the band.
+const WEAK_ATTACK_BAND := 0.5
+
+
+## The style's weights (an `ai_styles` entry). An unknown id is a programming error: data validation keeps tamers
+## to known ids, and the simulator rejects an unknown name.
+static func profile(engine: BattleEngine, style: String) -> AiStyleDef:
+	var p := engine.db.ai_style(style)
+	assert(p != null, "Unknown AI style '%s'" % style)
+	return p
 
 
 static func choose_all(engine: BattleEngine, side_index: int) -> Array:
@@ -54,6 +65,7 @@ static func choose_all(engine: BattleEngine, side_index: int) -> Array:
 
 static func choose(engine: BattleEngine, bid: int, style: String, claimed: Array[int] = []) -> BattleAction:
 	var b := engine.battler(bid)
+	var prof := profile(engine, style)
 	var options: Array = []
 	var known_affordable := 0
 	var ref := best_damage(engine, b)
@@ -61,45 +73,45 @@ static func choose(engine: BattleEngine, bid: int, style: String, claimed: Array
 		var m := engine.db.move(mid)
 		if mid != engine.fallback_move():
 			known_affordable += 1
-		elif style == "basic" and known_affordable > 0:
+		elif prof.random and known_affordable > 0:
 			continue  # basic AI only flails when it has nothing else
 		for t in engine.targets_for(bid, mid):
 			var seconds: Array[int] = engine.second_targets_for(bid, mid, t)
 			if m.target != "two_enemies" or seconds.is_empty():
 				options.append({"action": BattleAction.use_move(bid, mid, t),
-					"score": 0.0 if style == "basic" else score(engine, b, m, t, style, ref)})
+					"score": 0.0 if prof.random else score(engine, b, m, t, style, ref)})
 				continue
 			# One option per unordered pair of foes, so each pair is scored once.
 			for t2 in seconds:
 				if _foe_index(engine, b, t2) < _foe_index(engine, b, t):
 					continue
 				options.append({"action": BattleAction.use_move(bid, mid, t, t2),
-					"score": 0.0 if style == "basic" else score(engine, b, m, t, style, ref, t2)})
+					"score": 0.0 if prof.random else score(engine, b, m, t, style, ref, t2)})
 	var max_e := float(b.creature.max_energy(engine.db))
 	if float(b.energy()) < max_e * LOW_ENERGY:
-		options.append({"action": BattleAction.rest(bid), "score": rest_score(engine, b)})
+		options.append({"action": BattleAction.rest(bid), "score": rest_score(engine, b, style)})
 	if options.is_empty():
 		return BattleAction.pass_turn(bid)
-	if style == "basic":
+	if prof.random:
 		return options[engine.rng.randi_range(0, options.size() - 1)].action
 	var best: Dictionary = options[0]
 	for o in options:
 		if o.score > best.score:
 			best = o
-	if style == "tactician" and b.acted:
-		var swap := _best_swap(engine, b, claimed, ref)
-		if not swap.is_empty() and swap.score > best.score + SWAP_MARGIN * ref:
+	if prof.swap and b.acted:
+		var swap := _best_swap(engine, b, claimed, ref, style)
+		if not swap.is_empty() and swap.score > best.score + prof.swap_margin * ref:
 			return swap.action
 	return best.action
 
 
 ## The best swap for `b` among the unclaimed bench creatures ({} when there is none).
-static func _best_swap(engine: BattleEngine, b: Battler, claimed: Array[int], ref: float) -> Dictionary:
+static func _best_swap(engine: BattleEngine, b: Battler, claimed: Array[int], ref: float, style: String) -> Dictionary:
 	var best := {}
 	for c in engine.sides[b.side].bench():
 		if claimed.has(c.bid):
 			continue
-		var s := swap_score(engine, b, c, "tactician", ref)
+		var s := swap_score(engine, b, c, style, ref)
 		if best.is_empty() or s > best.score:
 			best = {"action": BattleAction.swap(b.bid, c.bid), "score": s}
 	return best
@@ -115,9 +127,9 @@ static func _foe_index(engine: BattleEngine, b: Battler, foe_bid: int) -> int:
 
 
 ## What Rest is worth: REST_VALUE, scaled up by the creature's rest_bonus passive.
-static func rest_score(engine: BattleEngine, b: Battler) -> float:
+static func rest_score(engine: BattleEngine, b: Battler, style := "tactician") -> float:
 	var base := float(engine.db.balance.energy_cfg.rest_fraction)
-	return REST_VALUE * (base + engine.passive_rules.rest_bonus(b)) / base
+	return REST_VALUE * (base + engine.passive_rules.rest_bonus(b)) / base * profile(engine, style).rest
 
 
 ## Expected damage `x` takes next round: the sum over its foes of each foe's best usable damaging move on `x`, as if
@@ -146,9 +158,10 @@ static func swap_score(engine: BattleEngine, b: Battler, c: Battler, style: Stri
 	var hp_c := float(c.hp())
 	var t_b := threat(engine, b)
 	var t_c := threat(engine, c)
-	var value := minf(t_b, hp_b) - minf(t_c, hp_c)
+	var avoided := minf(t_b, hp_b) - minf(t_c, hp_c)
 	if t_b >= hp_b and t_c < hp_c:
-		value += KO_BONUS
+		avoided += KO_BONUS
+	var value := avoided * profile(engine, style).swap_avoid
 	value += (best_damage(engine, c) - best_damage(engine, b)) * OFFENCE_ROUNDS
 	value += enter_value(engine, b, c, style)
 	value += _escape_value(engine, b, ref) - _skip_cost(engine, c, ref)
@@ -178,6 +191,7 @@ static func _skip_cost(engine: BattleEngine, x: Battler, ref: float) -> float:
 static func score(engine: BattleEngine, b: Battler, m: MoveDef, target_bid: int, style: String,
 		ref := -1.0, second_bid := -1) -> float:
 	var db := engine.db
+	var prof := profile(engine, style)
 	if ref < 0.0:
 		ref = best_damage(engine, b)
 	var targets := engine.resolve_targets(b, m.target, target_bid, second_bid, false)
@@ -191,29 +205,41 @@ static func score(engine: BattleEngine, b: Battler, m: MoveDef, target_bid: int,
 			continue
 		var landed := minf(est, float(t.hp()))
 		if t.side == b.side:
-			value -= landed * 1.5
+			value -= landed * 1.5 * prof.damage
 		else:
-			if style != "basic" and est < float(t.hp()):
+			if not prof.random and est < float(t.hp()):
 				# A foe that heals itself at round end gives back some of a hit that doesn't finish it.
 				landed = maxf(0.0, landed - round_end_hp(engine, t, t.hp() - roundi(est)))
-			value += landed + (KO_BONUS if est >= t.hp() else 0.0)
-			if style == "tactician" and est < t.hp():
-				value -= _retaliation(engine, b, m, t, ref) * m.mean_hits()
-		if style != "basic" and est >= float(t.hp()):
-			value += _kill_triggers_value(engine, b, t, ref, style)
+			if prof.attack == "weakest":
+				# Score by weakness, not damage: the weaker the hit the better. A spread move splits one band.
+				value += WEAK_ATTACK_BAND * (1.0 - 0.5 * minf(1.0, est / maxf(ref, 1.0))) / float(targets.size())
+			else:
+				value += landed * prof.damage + (KO_BONUS * prof.ko if est >= t.hp() else 0.0)
+			if prof.retaliation > 0.0 and est < t.hp():
+				var cost := _retaliation(engine, b, m, t, ref) * m.mean_hits() * prof.retaliation
+				if prof.attack == "weakest":
+					# Real HP would sink every weak attack below a worth-0 move. Here retaliation only ranks the
+					# attacks (up to 0.4 of the band), so a weak attack still beats a pointless move.
+					value -= WEAK_ATTACK_BAND * 0.4 * minf(1.0, cost / maxf(ref, 1.0))
+				else:
+					value -= cost
+		if not prof.random and est >= float(t.hp()):
+			value += _kill_triggers_value(engine, b, t, ref, style) * prof.ko
 	for e in m.effects:
 		if e.op == "heal":
 			var max_hp := float(b.creature.max_hp(db))
 			var missing := max_hp - b.hp()
-			if style != "basic":
+			if not prof.random:
 				missing = maxf(0.0, missing - round_end_hp(engine, b))  # a round-end heal does part of the job
-			value += minf(missing, max_hp * float(e.fraction)) * (1.0 if b.hp() < max_hp * 0.5 else 0.2)
+			value += minf(missing, max_hp * float(e.fraction)) * (1.0 if b.hp() < max_hp * 0.5 else 0.2) * prof.heal
 		elif e.op == "cure_status":
 			value += _cure_value(engine, b, e, targets, ref)
-		elif e.op == "apply_status" and style != "basic":
+		elif e.op == "apply_status" and not prof.random:
 			value += _status_trigger_value(engine, b, e, targets, ref, style)
-	if style == "tactician":
-		value += _setup_value(engine, b, m, targets, ref)
+	if prof.setup > 0.0:
+		value += _setup_value(engine, b, m, targets, ref) * prof.setup
+	if prof.buff > 0.0:
+		value += _buff_value(engine, b, m, targets, ref) * prof.buff
 	if not m.always_hits:
 		value *= minf(1.0, BattleMath.hit_chance(engine, b, m) / 100.0)
 	return value
@@ -346,10 +372,10 @@ static func _triggers(engine: BattleEngine, holder: Battler, on: String) -> Arra
 
 
 ## Weight of an effect in a trigger's value: HP effects count fully for every style, setup effects
-## (statuses, stages, energy, cures, field states) count AGGRESSIVE_SETUP_MULT for the aggressive style.
-static func _style_weight(style: String, op: String) -> float:
-	if style == "aggressive" and op != "damage" and op != "heal":
-		return AGGRESSIVE_SETUP_MULT
+## (statuses, stages, energy, cures, field states) count the style's `trigger_setup`.
+static func _style_weight(engine: BattleEngine, style: String, op: String) -> float:
+	if op != "damage" and op != "heal":
+		return profile(engine, style).trigger_setup
 	return 1.0
 
 
@@ -374,7 +400,7 @@ static func trigger_value(engine: BattleEngine, b: Battler, holder: Battler, tri
 		if e.op == "apply_field_state":
 			var s := ctx.side_index(e.side)
 			if s != -1:
-				total += _field_state_value(engine, b, holder, e, s, ref, true) * _style_weight(style, e.op)
+				total += _field_state_value(engine, b, holder, e, s, ref, true) * _style_weight(engine, style, e.op)
 			continue
 		var victims: Array[Battler] = []
 		if e.has("target"):
@@ -385,7 +411,7 @@ static func trigger_value(engine: BattleEngine, b: Battler, holder: Battler, tri
 			if not t.alive() or (trig.on == "faint" and t == holder):
 				continue
 			var owner_sign := 1.0 if t.side == b.side else -1.0
-			total += _effect_value(engine, holder, e, t, ref, pending_status) * _style_weight(style, e.op) * owner_sign
+			total += _effect_value(engine, holder, e, t, ref, pending_status) * _style_weight(engine, style, e.op) * owner_sign
 	return total * float(trig.get("chance", 100)) / 100.0
 
 
@@ -457,7 +483,7 @@ static func _status_trigger_value(engine: BattleEngine, b: Battler, e: Dictionar
 		for trig: Dictionary in _triggers(engine, t, "status"):
 			total += trigger_value(engine, b, t, trig, t, ref, style, e.status)
 	total *= float(e.get("chance", 100)) / 100.0
-	return minf(0.0, total) if style == "aggressive" else total
+	return total if profile(engine, style).seeks_status else minf(0.0, total)
 
 
 ## Expected change to `t`'s HP from its own round_end triggers (heals, minus damage to itself), with
@@ -591,6 +617,25 @@ static func _setup_value(engine: BattleEngine, b: Battler, m: MoveDef, targets: 
 					for t in targets:
 						if t.side != b.side and not engine.passive_rules.guards_stage(t, e.stat, b):
 							value += float(DEBUFF_VALUE.get(e.stat, 0.1)) * ref * -int(e.stages)
+	return value
+
+
+## Value of `m`'s own-side stat buffs: a positive stat_stage on the user or an ally is worth what the same drop is worth
+## on a foe (DEBUFF_VALUE x ref x stages), 0 for a creature already at the stage cap.
+static func _buff_value(engine: BattleEngine, b: Battler, m: MoveDef, targets: Array[Battler], ref: float) -> float:
+	var value := 0.0
+	for e in m.effects:
+		if e.op != "stat_stage" or int(e.stages) <= 0:
+			continue
+		var landing := targets
+		if e.has("target"):  # an effect can name its own target (a buff on the user riding on an attack)
+			var ctx := EffectContext.new()
+			ctx.engine = engine
+			ctx.user = b
+			landing = engine._effect_targets(ctx, e.target)
+		for t in landing:
+			if t.side == b.side and int(t.stages[e.stat]) < Battler.STAGE_MAX:
+				value += float(DEBUFF_VALUE.get(e.stat, 0.1)) * ref * int(e.stages)
 	return value
 
 

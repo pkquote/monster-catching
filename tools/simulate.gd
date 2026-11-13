@@ -9,7 +9,8 @@ extends SceneTree
 ##   --party=N          creatures per team (default 3), clamped to 1..balance.party_size and never
 ##                      below the larger fielded side (with party_size 6, --party=12 runs with 6)
 ##   --level=N          level of every creature (default 10)
-##   --ai=A,B           AI style per side: basic | aggressive | tactician (default tactician,aggressive)
+##   --ai=A,B           AI style per side, any id in data/ai_styles.json: basic | aggressive | tactician | passive |
+##                      defensive | trickster (default tactician,aggressive)
 ##   --pack=1|0         1 (default): also load the debug test content pack (res://data_testpack, skipped
 ##                      when absent) and draw species from data/ plus the pack; 0: data/ only
 
@@ -37,6 +38,11 @@ func _init() -> void:
 		print("--party=%d clamped to %d (balance.party_size %d, format %s)" % [int(_opts.party), party_size,
 			db.balance.party_size, _opts.format])
 	var ais: PackedStringArray = str(_opts.ai).split(",")
+	for style in ais:
+		if db.ai_style(style) == null:
+			printerr("Unknown AI style \"%s\"; use one of: %s" % [style, ", ".join(db.ids("ai_styles"))])
+			quit(1)
+			return
 	var species := db.ids("creatures")
 
 	var wins := [0, 0]

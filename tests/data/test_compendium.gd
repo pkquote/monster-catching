@@ -269,3 +269,16 @@ func test_creatures_say_where_they_are_found() -> void:
 	var lines := Locations.for_species(_db, wild).map(func(r: Dictionary) -> String: return Locations.line(r))
 	assert_str(creatures).contains("- **Found:** " + "; ".join(lines))
 	assert_str(creatures).contains("- **Found:** Not found in the wild")
+
+
+func test_no_unfilled_format_codes() -> void:
+	# GDScript's format strings have no %g: an unsupported code is printed as typed, which once filled the AI Styles table.
+	var bad := []
+	for token in ["%g", "%s", "%d", "%f"]:
+		if _text.contains(token):
+			bad.append(token)
+	assert_array(bad).is_empty()
+
+
+func test_ai_styles_table_shows_the_weights() -> void:
+	assert_str(_text).contains("| **Defensive** | `defensive` | 0.7 | 1 | 1.5 | 0.5 | 0.5 | 1.5 | 1.5 | 1 | yes | yes (margin 0.1, avoid 1.5) | best |")

@@ -2,7 +2,7 @@
 
 How to change this project by hand: where things live, how a change travels through the code, a recipe for each
 common change, and what to do when a check fails. For what the game *is*, see the [README](../README.md) and the
-[design spec](specs/2026-11-03-monster-rpg-design.md). Status: complete through M7 (M6 partly: see
+[design spec](specs/2026-11-03-monster-rpg-design.md). Status: complete through M7 and the M6 engine backlog (see
 [Roadmap](#roadmap-and-where-the-plans-are)).
 
 Contents: [Setup](#setup-and-the-daily-loop) · [How it fits together](#how-it-fits-together) ·
@@ -110,6 +110,7 @@ change also pushes a key into `AchievementWatch`; the service checks only the ac
 | What people say, and story events | `dialogue/<area>/*.dialogue` |
 | The story state a script reads/writes | `Story` (`game/autoload/story.gd`); data in `core/story/story_state.gd` |
 | How a battle plays out (damage, order, effects, AI) | `core/battle/` ([battle-engine.md](battle-engine.md)) |
+| How an AI opponent behaves (its styles and their weights) | `data/ai_styles.json` (the styles), `core/battle/ai/battle_ai.gd` (the scoring); [battle-engine.md](battle-engine.md) → AI styles |
 | Creature stats, XP, growth, Bond, passives, training | `core/progress/` |
 | Menus, screens, their layout | `game/progress/`, `game/menus/`, `game/overworld/ui/`, `game/battle/` |
 | Colours, fonts, shared widgets | `game/ui/ui_kit.gd` and the widgets beside it |
@@ -301,9 +302,12 @@ balance), `generate_compendium.gd`, `build_locations.tscn`, `build_maps.tscn`, `
 
 ## Roadmap and where the plans are
 
-- **Done:** M0-M5 (engine, battle scene, overworld, progression, box and party screens), M6 status-cure (the `cure_status` op, the
-  `status` trigger, Clear Tonic), **M7 Collection and achievements** (tracking, the Codex, achievements).
-- **Still open in M6:** AI trigger modelling, a few pinned engine rulings. (Growth tiers and the starter evolutions are done: M6b; multi-hit moves: M6c.)
+- **Done:** M0-M5 (engine, battle scene, overworld, progression, box and party screens), **M6 engine backlog** (the `cure_status`
+  op and `status` trigger, growth tiers and the starter evolutions, multi-hit moves, the pinned `one_ally` and Underdog-swap
+  rulings, AI modelling of knockout/faint/status/round-end/enter triggers, AI swapping, and AI styles as data with `passive`,
+  `defensive` and `trickster`), and **M7 Collection and achievements** (tracking, the Codex, achievements).
+- **Still open:** a list of small leftovers (extra tests, AI modelling details, a few edge cases) kept in
+  `.superpowers/HANDOFF.md` and `.superpowers/2026-11-12-minors-and-docs-audit.md`.
 - **Next:** M8 art and audio (the icon and sprite slots are placeholders), M9 content expansion.
 - **Specs** (the design of each piece) are in `documentation/specs/`, **plans** (how it was built) in `documentation/plans/`.
   The roadmap is `specs/2026-11-05-roadmap-m5-m8.md`; the original design is `specs/2026-11-03-monster-rpg-design.md`.

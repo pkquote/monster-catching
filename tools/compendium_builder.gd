@@ -629,18 +629,19 @@ func _acc(m: MoveDef) -> String:
 
 func _ai_styles() -> void:
 	_section("AI Styles", "Weight profiles for the battle AI, 1.0 meaning \"as the tactician does\". A tamer with no style uses `basic`.")
-	_w("| Style | Id | Damage | KO | Retaliation | Setup | Buff | Heal | Rest | Swaps | Attacks | Description |")
-	_w("|---|---|---|---|---|---|---|---|---|---|---|---|")
+	_w("| Style | Id | Damage | KO | Retaliation | Setup | Buff | Heal | Rest | Trigger setup | Seeks status | Swaps | Attacks | Description |")
+	_w("|---|---|---|---|---|---|---|---|---|---|---|---|---|---|")
 	for id in _sorted_ids("ai_styles"):
 		var s := db.ai_style(id)
 		if s.random:
-			_w("| **%s** | `%s` | random | random | random | random | random | random | random | no | random | %s |" % [s.name, s.id, s.description])
+			_w("| **%s** | `%s` | random | random | random | random | random | random | random | random | random | no | random | %s |" % [s.name, s.id, s.description])
 			continue
-		_w("| **%s** | `%s` | %s | %s | %s | %s | %s | %s | %s | %s | %s | %s |" % [s.name, s.id, _num(s.damage), _num(s.ko),
-			_num(s.retaliation), _num(s.setup), _num(s.buff), _num(s.heal), _num(s.rest),
-			"yes (margin %s)" % _num(s.swap_margin) if s.swap else "no", s.attack, s.description])
+		_w("| **%s** | `%s` | %s | %s | %s | %s | %s | %s | %s | %s | %s | %s | %s | %s |" % [s.name, s.id, _num(s.damage), _num(s.ko),
+			_num(s.retaliation), _num(s.setup), _num(s.buff), _num(s.heal), _num(s.rest), _num(s.trigger_setup),
+			"yes" if s.seeks_status else "no",
+			"yes (margin %s, avoid %s)" % [_num(s.swap_margin), _num(s.swap_avoid)] if s.swap else "no", s.attack, s.description])
 	_w("")
 
 
 func _num(x: float) -> String:
-	return "%g" % x
+	return EffectText.num(x)

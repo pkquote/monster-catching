@@ -5,7 +5,7 @@ field states with combo reactions, behavior-shaped growth, N-vs-M battles with U
 and creature passives (a rolled passive for life plus one unlocked through Affinity; one is active at a time).
 
 **Status:** milestones M0-M7 are done (battle engine, overworld, progression, the box and party screens, the Codex and
-achievements); M6 is partly done and M8 (art and audio) and M9 (content) are next. All art is still placeholder.
+achievements), and so is the M6 engine backlog (AI trigger modelling, swapping and styles; multi-hit moves; status cure); M8 (art and audio) and M9 (content) are next. All art is still placeholder.
 
 **Making a change by hand? Start with the [developer guide](documentation/developer-guide.md):** setup, how the code fits
 together, where to find things, a recipe for each common change (a creature, a move, a map, dialogue, an achievement, a
@@ -13,10 +13,10 @@ screen, a save field...) and what to do when a check fails.
 
 Design spec: [documentation/specs/2026-11-03-monster-rpg-design.md](documentation/specs/2026-11-03-monster-rpg-design.md)
 
-Content reference (every creature, move, item, status, field state, reaction, passive, tamer and encounter):
-[documentation/compendium.md](documentation/compendium.md). It is generated from `data/` by `tools/generate_compendium.gd` (via `tools/compendium_builder.gd`), so don't edit it by hand. Rules and Balance come first, then Types through Held items, Moves, Items, Creatures, Tamers and Encounters.
+Content reference (every creature, move, item, status, field state, reaction, passive, AI style, tamer, encounter and achievement):
+[documentation/compendium.md](documentation/compendium.md). It is generated from `data/` by `tools/generate_compendium.gd` (via `tools/compendium_builder.gd`), so don't edit it by hand. Rules and Balance come first, then Types through Held items, Moves, Items, Creatures, AI Styles, Tamers, Encounters and Achievements.
 
-Battle engine reference (API, round order, formulas, passives and their triggers, events, AI):
+Battle engine reference (API, round order, formulas, passives and their triggers, events, effect ops, AI styles and swapping):
 [documentation/battle-engine.md](documentation/battle-engine.md)
 
 Building maps (painting tiles, placing doors, NPCs, items, tamers, triggers; checking them):
@@ -40,7 +40,7 @@ Tracking and collection: [tracking.md](documentation/tracking.md) (the Codex's s
 | `core/story/`, `core/world/`, `core/minigames/` | Story state; overworld rules (encounters, sight lines, shop, defeat, map checks); minigame rules. |
 | `game/` | Scenes and autoloads that present `core/`: splash, menus, overworld, battle, the progression screens (`game/progress/`: party, summary, Codex, Achievements...), shared UI widgets (`game/ui/`), and the autoloads `DataRegistry`, `GameState`, `SceneRouter`, `Story`, `Cutscene`, `Settings`, `AchievementService`, `DebugMenu`. |
 | `game/maps/` | One scene per map (built in the Godot editor; see the map-building guide). |
-| `data/` | All content as JSON (creatures, moves, items, passives, tamers, encounters, ...). |
+| `data/` | All content as JSON (creatures, moves, items, passives, AI styles, tamers, encounters, ...). |
 | `dialogue/` | Dialogue Manager `.dialogue` files for conversations and cutscenes. |
 | `tests/` | gdUnit4 suites. |
 | `data_testpack/` | Debug-only test content (`tp_` ids), never in release builds. |
@@ -80,6 +80,8 @@ readable description in `EffectText.effect()` in `core/data/effect_text.gd`.
 A few categories need one more step: after changing which encounter tables a map uses, regenerate the where-to-find data with
 `godot --headless --path . res://tools/build_locations.tscn` (the check tells you when it is stale); every shipped creature needs a
 unique `dex` and a `description`. The [developer guide](documentation/developer-guide.md) has a recipe for each kind of change.
+
+How an AI opponent plays is content too: `data/ai_styles.json` holds weight profiles (`basic`, `aggressive`, `tactician`, `passive`, `defensive`, `trickster`), and a tamer picks one with its `ai` field (`basic` when omitted).
 
 After changing content, regenerate the compendium (`scripts/check.sh` does this too):
 

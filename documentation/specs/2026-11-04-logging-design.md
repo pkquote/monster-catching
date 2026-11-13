@@ -1,7 +1,7 @@
 # Logging — Design
 
 Date: 2026-11-04
-Status: Approved (plan: [documentation/plans/2026-11-04-logging.md](../plans/2026-11-04-logging.md))
+Status: Implemented (plan: [documentation/plans/2026-11-04-logging.md](../plans/2026-11-04-logging.md))
 
 ## 1. Goal
 

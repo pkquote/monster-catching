@@ -360,7 +360,7 @@ Not modelled: `status` triggers on the AI's own creatures (no move gives an ally
 
 `BattleEngine` is the public face: the battle screen, the AI and effect ops call only it. It owns the
 battle state, targeting, the mutations effect ops use (`deal_damage`, `heal`, `inflict_status`...)
-and the round loop, and hands the rest to three parts (each extends `BattlePart`, which holds the
+and the round loop, and hands the rest to four parts (each extends `BattlePart`, which holds the
 engine weakly so the engine can be freed):
 
 | Part | File | Owns |
@@ -404,6 +404,7 @@ in `BattleText` (and `BattlePlayback` if it changes what's on screen).
 | `field_removed` | `side`, `state`, `reason`: `expired` \| `replaced` \| `reacted` \| `cashed_in` \| `cleared` |
 | `reaction` | `reaction`, `side`, `inputs`, `stacks`, `by` |
 | `capture_attempt` | `bid`, `target`, `item`, `chance`, `success` |
+| `capture_failed` | `bid`, `target`, `reason` (`not_wild`: a capture item used on a tamer's creature) |
 | `captured` | `bid`, `species` |
 | `faint` | `bid`, `side` |
 | `xp_gain`, `level_up`, `move_learned`, `move_offered` | `bid`, `amount` / `level` / `move` |
@@ -414,6 +415,44 @@ in `BattleText` (and `BattlePlayback` if it changes what's on screen).
 | `pass`, `fled` | `bid` |
 | `action_invalid` | `bid`, `reason` |
 | `battle_end` | `winner` (−1 = none), `reason`: `defeat` \| `fled` \| `round_limit`, `captured`, `rounds` |
+
+## Effect ops
+
+Moves, items, statuses, passives, held items and reactions are lists of effects: `{"op": ..., fields...}`. Every op may
+also carry `target` (who it lands on; see Targeting) and a trigger or passive effect may carry `when`. The fields and
+ranges are `DataSchemas.EFFECT_OPS`; a test fails if this table misses an op. `EffectText.effect()` writes the sentence
+the compendium shows.
+
+| Op | Fields | Does |
+| --- | --- | --- |
+| `damage` | `power`, `type`, `scale_with_stacks` | Deals damage (the move's own power and type unless given); `scale_with_stacks` scales with the stacks a reaction consumed |
+| `heal` | `fraction` | Restores that fraction of max HP |
+| `restore_energy` | `fraction` | Restores that fraction of max energy |
+| `apply_status` | `status`, `chance` | Inflicts a status (blocked by `status_immune`, or a creature that already has one) |
+| `cure_status` | `status` | Cures that status, or any status when none is named |
+| `stat_stage` | `stat`, `stages` | Raises or lowers a stat stage (-3 to 3 per effect; stages reset on leaving the field) |
+| `apply_field_state` | `side`, `state`, `stacks`, `turns` | Puts a field state on a side (see Field states and reactions) |
+| `remove_field_state` | `side`, `state` | Clears one state, or every state when none is named |
+| `bonus_if_field` | `side`, `state`, `mult`, `consume` | Multiplies the move's damage while that state is on the side; `consume` uses it up (a cash-in) |
+| `damage_fraction` | `fraction` | Status effect: loses that fraction of max HP each round |
+| `skip_chance` | `chance` | Status effect: that percent chance to lose its action |
+| `stat_mod` | `stat`, `mult` | Always-on multiplier on a stat (a status, passive, held item or field state) |
+| `incoming_type_mod` | `type`, `mult` | Damage taken (of that type, or all) is multiplied |
+| `type_power` | `type`, `mult` | Moves of that type deal more or less |
+| `absorb_type` | `type`, `fraction` | Damage of that type heals this fraction of max HP instead |
+| `status_immune` | `status` | Cannot be given that status, or any |
+| `guard_stages` | `stat` | Foes cannot lower that stat, or any |
+| `field_shelter` | `state` | Sheltered from that field state's effects |
+| `field_boost` | `stacks`, `turns` | Field states this creature applies get extra stacks and rounds |
+| `reaction_power` | `mult` | Reactions this creature triggers hit harder or softer |
+| `energy_discount` | `type`, `amount` | Moves (of that type, or all) cost less energy |
+| `rest_bonus` | `fraction` | Rest restores extra max energy |
+| `scrap_power` | `mult` | The fallback move Scrap deals more or less |
+| `encounter_rate` | `mult` | Wild encounter rate (overworld) |
+| `xp_mult` | `mult` | XP the creature earns |
+| `bond_gain` | `mult` | Bond gains |
+| `capture` | `mult`, `field_bonus` | A capture item's strength, with a bonus per field state on the target's side |
+| `reset_training` | none | Returns all spent training points (field use only) |
 
 ## Adding a new effect op
 
@@ -515,6 +554,21 @@ passives, held items and moves to `FixtureDB.raw()`, so real balance changes don
 
 | Suite | Covers |
 | --- | --- |
+| `test_battle_engine.gd` | Turn flow, damage, statuses, swaps, faints, XP and determinism (the same seed gives the same event log) |
+| `test_stats_energy_bond.gd` | The Physical/Special split, energy and Rest, Resolve and Endure, and Bond in battle |
+| `test_field_reactions.gd` | Field states per side, passives that touch them, and reactions |
+| `test_underdog.gd` | Underdog compensation for the outnumbered side: bonus actions, stat bonus, spread reduction, XP |
+| `test_two_target_moves.gd` | Moves aimed at two chosen foes (`two_enemies`): picking, replacement and the spread penalty |
+| `test_capture_items.gd` | Catching, items, fleeing, and tamer battle setup |
+| `test_cure_status.gd` | The `cure_status` op and the `status` trigger: moves, items, passives and held items |
+| `test_passives_battle.gd` | Creature passives in battle: always-on effects, `when` conditions and ally auras |
+| `test_held_items_battle.gd` | Held items in battle: always-on effects, ally auras and protection banners |
+| `test_battle_events.gd` | Every event the engine sends is a known `BattleEvents` type, and the battle screen describes each type or keeps it silent |
+| `test_battle_summary.gd` | `BattleSummary` and `ProgressEntry`: the typed results a battle hands to the overworld |
+| `test_creature_spec.gd` | `CreatureSpec`: one debug-team slot |
+| `test_ai.gd` | AI choices and the effect-op registry (every schema op has a handler) |
+| `test_ai_passives.gd` | How the AI weighs passives: absorbs, protections, the user's own modifiers and what a foe's hit triggers do back |
+| `test_ai_cure.gd` | How the AI scores moves with a `cure_status` effect |
 | `test_formats.gd` | 1v1 to 3v3 with benches of 0, 3 and 9: the opening line-up, refilling slots, no creature on the field twice, every battle finishing; 1 vs a 12-creature party |
 | `test_swaps.gd` | A swap is one action at priority 6 and an Underdog creature's whole turn (`test_swap_slots.gd` covers the scene's slot skipping); stages reset on leaving; refused swaps; 12-creature benches; entry triggers fire once per entry |
 | `test_targeting_matrix.gd` | Every creature target key against 1–3 standing foes and allies, with the spread multiplier each hit takes |

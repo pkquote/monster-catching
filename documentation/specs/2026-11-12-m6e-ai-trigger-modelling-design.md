@@ -1,6 +1,6 @@
 # M6e AI trigger modelling: design
 
-Status: Draft, 2026-11-12. Part of M6 (engine backlog) in the
+Status: Implemented, 2026-11-12. Part of M6 (engine backlog) in the
 [roadmap](2026-11-05-roadmap-m5-m8.md). Builds on "Passives and the AI" and "Held items and the AI" in the
 [battle engine reference](../battle-engine.md).
 

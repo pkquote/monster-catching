@@ -1,6 +1,6 @@
 # M6g AI styles: design
 
-Status: Draft, 2026-11-12 (revised: styles are data). Part of M6 (engine backlog) in the
+Status: Implemented, 2026-11-12 (revised: styles are data). Part of M6 (engine backlog) in the
 [roadmap](2026-11-05-roadmap-m5-m8.md). Builds on [M6e](2026-11-12-m6e-ai-trigger-modelling-design.md) (the
 trigger valuators) and [M6f](2026-11-12-m6f-ai-swapping-design.md) (`swap_score`, tactician-only swapping). Engine
 facts are in the [battle engine reference](../battle-engine.md).

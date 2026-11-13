@@ -1,10 +1,14 @@
 class_name BattleAI
 extends RefCounted
-## Chooses actions for AI-controlled sides. Styles (from tamer data):
-##   basic      : random usable move and target
+## Chooses actions for AI-controlled sides. A style is a data entry (data/ai_styles.json, AiStyleDef) whose weights
+## this class reads; see "AI styles" in documentation/battle-engine.md. The shipped styles:
+##   basic      : random usable move and target (the default)
 ##   aggressive : most expected damage, favouring knockouts
-##   tactician  : aggressive scoring plus the expected payoff of field setup,
-##                reactions, statuses and debuffs
+##   tactician  : aggressive scoring plus the expected payoff of field setup, reactions, statuses and debuffs,
+##                and swapping
+##   passive    : prefers heals, buffs and Rest; otherwise its weakest hit
+##   defensive  : survival: earlier heals, heavier retaliation, swaps sooner
+##   trickster  : statuses, debuffs and field setup first
 ##
 ## Scores are in HP-equivalent units. Non-damage effects are valued as multiples
 ## of `ref`, the creature's best available single-target damage, so setup and

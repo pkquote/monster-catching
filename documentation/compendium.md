@@ -842,14 +842,14 @@ Base stats. *Total* sums the six battle stats (HP to Spd); Luck, Resolve and Sta
 
 Weight profiles for the battle AI, 1.0 meaning "as the tactician does". A tamer with no style uses `basic`.
 
-| Style | Id | Damage | KO | Retaliation | Setup | Buff | Heal | Rest | Swaps | Attacks | Description |
-|---|---|---|---|---|---|---|---|---|---|---|---|
-| **Aggressive** | `aggressive` | %g | %g | %g | %g | %g | %g | %g | no | best | Most expected damage, favouring knockouts. Reads triggers, counting setup effects at half weight. |
-| **Basic** | `basic` | random | random | random | random | random | random | random | no | random | Picks a random move and target. The default style. |
-| **Defensive** | `defensive` | %g | %g | %g | %g | %g | %g | %g | yes (margin %g) | best | Plays for survival: heals and rests earlier, weighs the damage it would take, and swaps out of danger sooner. |
-| **Passive** | `passive` | %g | %g | %g | %g | %g | %g | %g | no | weakest | Goes easy: prefers heals, buffs and Rest, and when nothing is worth doing takes its weakest hit. Never swaps. |
-| **Tactician** | `tactician` | %g | %g | %g | %g | %g | %g | %g | yes (margin %g) | best | Aggressive scoring plus the value of field setup, reactions, statuses, debuffs and swapping. |
-| **Trickster** | `trickster` | %g | %g | %g | %g | %g | %g | %g | no | best | Statuses, debuffs and field setup first; damage is secondary, but a finishing blow still counts. |
+| Style | Id | Damage | KO | Retaliation | Setup | Buff | Heal | Rest | Trigger setup | Seeks status | Swaps | Attacks | Description |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| **Aggressive** | `aggressive` | 1 | 1 | 0 | 0 | 0 | 1 | 1 | 0.5 | no | no | best | Most expected damage, favouring knockouts. Reads triggers, counting setup effects at half weight. |
+| **Basic** | `basic` | random | random | random | random | random | random | random | random | random | no | random | Picks a random move and target. The default style. |
+| **Defensive** | `defensive` | 0.7 | 1 | 1.5 | 0.5 | 0.5 | 1.5 | 1.5 | 1 | yes | yes (margin 0.1, avoid 1.5) | best | Plays for survival: heals and rests earlier, weighs the damage it would take, and swaps out of danger sooner. |
+| **Passive** | `passive` | 1 | 0 | 1 | 1 | 1 | 1.5 | 2 | 1 | yes | no | weakest | Goes easy: prefers heals, buffs and Rest, and when nothing is worth doing takes its weakest hit. Never swaps. |
+| **Tactician** | `tactician` | 1 | 1 | 1 | 1 | 0 | 1 | 1 | 1 | yes | yes (margin 0.25, avoid 1) | best | Aggressive scoring plus the value of field setup, reactions, statuses, debuffs and swapping. |
+| **Trickster** | `trickster` | 0.6 | 1 | 1 | 1.5 | 0.5 | 1 | 1 | 1 | yes | no | best | Statuses, debuffs and field setup first; damage is secondary, but a finishing blow still counts. |
 
 ## Tamers
 

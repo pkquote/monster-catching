@@ -1,6 +1,6 @@
 # M6f AI swapping: design
 
-Status: Draft, 2026-11-12. Part of M6 (engine backlog) in the
+Status: Implemented, 2026-11-12. Part of M6 (engine backlog) in the
 [roadmap](2026-11-05-roadmap-m5-m8.md). Builds on [M6e](2026-11-12-m6e-ai-trigger-modelling-design.md), whose
 `BattleAI.enter_value` this piece finally calls. Engine facts are in the
 [battle engine reference](../battle-engine.md).

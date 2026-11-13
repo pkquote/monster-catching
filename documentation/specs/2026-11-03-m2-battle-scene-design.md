@@ -1,6 +1,7 @@
 # M2 Battle Scene — Design
 
 Date: 2026-11-03
+Status: Implemented (M2)
 Builds on: [monster RPG design spec](2026-11-03-monster-rpg-design.md) §2–3, §6 and
 [battle engine reference](../battle-engine.md).
 

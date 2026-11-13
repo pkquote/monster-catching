@@ -17,7 +17,7 @@ extends RefCounted
 ## { type: BattleEvents.*, ... }; see documentation/battle-engine.md.
 ##
 ## This class is the public face: the screen, the AI and effect ops call it.
-## The work is split across three parts:
+## The work is split across four parts:
 ##   actions     (ActionRunner)  turn order and running moves, items, swaps, Rest, fleeing
 ##   field_rules (FieldRules)    field states and reactions
 ##   rewards     (BattleRewards) XP, Bond and Affinity

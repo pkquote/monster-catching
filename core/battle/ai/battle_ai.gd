@@ -14,7 +14,9 @@ extends RefCounted
 ## of `ref`, the creature's best available single-target damage, so setup and
 ## attacking stay comparable at every level.
 
-const KO_BONUS := 30.0
+## A knockout is worth this many of the creature's best hits (ref), so finishing blows keep their weight at every level.
+## 1.4 is what the old flat 30 came to at level 10 (mean ref 21 there; 59 at level 40, where 30 was only 0.5 hits).
+const KO_FACTOR := 1.4
 ## Stat-drop value per stage per foe, x ref. Speed and accuracy matter less than offense/defense.
 const DEBUFF_VALUE := {"patk": 0.2, "satk": 0.2, "pdef": 0.2, "sdef": 0.2, "spd": 0.08, "acc": 0.12,
 	"resolve": 0.05, "luck": 0.0}
@@ -49,6 +51,11 @@ static func profile(engine: BattleEngine, style: String) -> AiStyleDef:
 	var p := engine.db.ai_style(style)
 	assert(p != null, "Unknown AI style '%s'" % style)
 	return p
+
+
+## The value of a knockout, in the units `score` uses: KO_FACTOR best hits.
+static func ko_bonus(ref: float) -> float:
+	return KO_FACTOR * ref
 
 
 static func choose_all(engine: BattleEngine, side_index: int) -> Array:
@@ -136,8 +143,10 @@ static func rest_score(engine: BattleEngine, b: Battler, style := "tactician") -
 	return REST_VALUE * (base + engine.passive_rules.rest_bonus(b)) / base * profile(engine, style).rest
 
 
-## Expected damage `x` takes next round: the sum over its foes of each foe's best usable damaging move on `x`, as if
-## every foe targets `x` (pessimistic on purpose). Accuracy is ignored, as in `best_damage`.
+## Expected damage `x` takes next round: the sum over its foes of each foe's best usable damaging move on `x`, each
+## weighted by how likely that move is to be aimed at `x` (see `_share`: a single-target move is aimed at one of our `n`
+## active creatures, so it counts 1/n; a spread move counts in full). A side of one creature gets the plain sum.
+## Accuracy is ignored, as in `best_damage`.
 static func threat(engine: BattleEngine, x: Battler) -> float:
 	var total := 0.0
 	var mine := engine.sides[x.side].active().size()
@@ -146,9 +155,22 @@ static func threat(engine: BattleEngine, x: Battler) -> float:
 		for mid in engine.usable_moves(foe.bid):
 			var m := engine.db.move(mid)
 			if m.is_damaging():
-				best = maxf(best, estimate_damage(engine, foe, m, x, _hit_count(engine, foe, m, mine)))
+				best = maxf(best, estimate_damage(engine, foe, m, x, _hit_count(engine, foe, m, mine)) * _share(m, mine))
 		total += best
 	return total
+
+
+## The chance a move of `m`'s target kind is aimed at one particular creature of a side with `n` active creatures,
+## assuming the foe picks uniformly: spread moves (`all_enemies`, `all`) hit everyone, `two_enemies` hits two of the
+## `n`, anything else one of the `n`. `n` below 1 counts as 1.
+static func _share(m: MoveDef, n: int) -> float:
+	var count := maxi(n, 1)
+	match m.target:
+		"all_enemies", "all":
+			return 1.0
+		"two_enemies":
+			return minf(2.0, float(count)) / float(count)
+	return 1.0 / float(count)
 
 
 ## What swapping active `b` for benched `c` is worth to `b`'s side, in the units `score` uses: damage avoided (with a
@@ -161,15 +183,39 @@ static func swap_score(engine: BattleEngine, b: Battler, c: Battler, style: Stri
 	var hp_b := float(b.hp())
 	var hp_c := float(c.hp())
 	var t_b := threat(engine, b)
-	var t_c := threat(engine, c)
+	var best_b := best_damage(engine, b)
+	# `c` is scored as it would be after the swap, in `b`'s slot: its own passive and held item, and the allies' auras.
+	var in_place: Array = _with_swapped_in(engine, b, c, func() -> Array:
+		return [threat(engine, c), best_damage(engine, c), enter_value(engine, b, c, style, ref)])
+	var t_c: float = in_place[0]
 	var avoided := minf(t_b, hp_b) - minf(t_c, hp_c)
 	if t_b >= hp_b and t_c < hp_c:
-		avoided += KO_BONUS
+		avoided += ko_bonus(ref)
 	var value := avoided * profile(engine, style).swap_avoid
-	value += (best_damage(engine, c) - best_damage(engine, b)) * OFFENCE_ROUNDS
-	value += enter_value(engine, b, c, style)
+	value += (float(in_place[1]) - best_b) * OFFENCE_ROUNDS
+	value += float(in_place[2])
 	value += _escape_value(engine, b, ref) - _skip_cost(engine, c, ref)
 	return value
+
+
+## Calls `f` with bench creature `c` temporarily standing in active `b`'s slot (`b` benched, `c` active), then puts both
+## back and returns `f`'s result. `PassiveRules` only sees active creatures, so inside `f` `c` has its own passive and held
+## item and receives its new allies' auras, exactly as after the swap. `f` must not emit events, draw from the RNG or
+## change battle state (scoring never does), and there is no early exit between the swap and the restore. If `b` is not on
+## the field or `c` already is, nothing is swapped and `f` runs as is.
+static func _with_swapped_in(engine: BattleEngine, b: Battler, c: Battler, f: Callable) -> Variant:
+	var side := engine.sides[b.side]
+	var slot := side.slot_of(b)
+	if slot == -1 or not b.active or c.active:
+		return f.call()
+	side.slots[slot] = c
+	b.active = false
+	c.active = true
+	var result: Variant = f.call()
+	side.slots[slot] = b
+	b.active = true
+	c.active = false
+	return result
 
 
 ## The cost `b` carries that a swap removes: negative stages (positive ones are a loss) and a turn-skipping status.
@@ -218,9 +264,9 @@ static func score(engine: BattleEngine, b: Battler, m: MoveDef, target_bid: int,
 				# Score by weakness, not damage: the weaker the hit the better. A spread move splits one band.
 				value += WEAK_ATTACK_BAND * (1.0 - 0.5 * minf(1.0, est / maxf(ref, 1.0))) / float(targets.size())
 			else:
-				value += landed * prof.damage + (KO_BONUS * prof.ko if est >= t.hp() else 0.0)
+				value += landed * prof.damage + (ko_bonus(ref) * prof.ko if est >= t.hp() else 0.0)
 			if prof.retaliation > 0.0 and est < t.hp():
-				var cost := _retaliation(engine, b, m, t, ref) * m.mean_hits() * prof.retaliation
+				var cost := _retaliation(engine, b, m, t, ref, style, est) * prof.retaliation
 				if prof.attack == "weakest":
 					# Real HP would sink every weak attack below a worth-0 move. Here retaliation only ranks the
 					# attacks (up to 0.4 of the band), so a weak attack still beats a pointless move.
@@ -308,70 +354,52 @@ static func _absorbed_heal(engine: BattleEngine, m: MoveDef, t: Battler) -> floa
 	return minf(healed, max_hp - t.hp())
 
 
-## Expected cost to `b` of the hit triggers on `t`'s passive and held item when `m` hits it:
-## statuses, stat drops and damage that land on the attacker, weighted by chance, less
-## whatever b's own passive blocks. Triggers whose `when` fails cost nothing; a spent
-## per_battle item is ignored.
-static func _retaliation(engine: BattleEngine, b: Battler, m: MoveDef, t: Battler, ref: float) -> float:
-	var defs: Array[PassiveDef] = []
-	var pdef := engine.db.passive(Passives.active_id(t.creature))
-	if pdef != null:
-		defs.append(pdef)
-	var item: ItemDef = HeldItems.def_of(engine.db, t.creature)
-	if item != null and not (item.held_use == "per_battle" and t.held_spent):
-		var held: PassiveDef = engine.passive_rules.held_def(t)
-		if held != null:
-			defs.append(held)
+## Expected cost to `b` of the hit triggers on `t`'s passive and held item when `m` hits it, priced through the same
+## valuator as every other trigger (`trigger_value`, landing on the attacker unless an effect names its own target):
+## statuses, stat drops, damage and anything that helps the foe (a self-heal on hit), weighted by chance and `when`,
+## less whatever b's own passive blocks. The engine fires hit triggers after the damage, so they are priced at the HP
+## `t` is left with (`est` is the move's expected damage). A passive's triggers fire on every hit; a consumed or
+## per_battle item's fire once. A contact trigger costs nothing for a non-physical move, and a spent per_battle item
+## costs nothing.
+static func _retaliation(engine: BattleEngine, b: Battler, m: MoveDef, t: Battler, ref: float, style: String,
+		est := 0.0) -> float:
+	var hits := m.mean_hits()
+	var hp_before := t.creature.hp
+	if est > 0.0:
+		t.creature.hp = maxi(1, hp_before - roundi(est))  # restored below; scoring changes nothing it leaves behind
 	var cost := 0.0
-	var triggers: Array = []
-	for d in defs:
-		triggers.append_array(d.triggers)
-	for trig: Dictionary in triggers:
-		if trig.on != "hit" or (trig.contact and m.category != "physical"):
+	for entry: Dictionary in _trigger_entries(engine, t, "hit"):
+		var trig: Dictionary = entry.trig
+		if trig.contact and m.category != "physical":
 			continue
-		if not engine.passive_rules.when_holds(t, trig.get("when", {})):
-			continue
-		var chance := float(trig.chance) / 100.0
-		for e: Dictionary in trig.effects:
-			if e.get("target", "attacker") != "attacker":
-				continue
-			var each := 0.0
-			match e.op:
-				"apply_status":
-					if b.status() == "" and not engine.passive_rules.blocks_status(b, e.status):
-						each = status_value(engine, b, e.status, ref) * float(e.get("chance", 100)) / 100.0
-				"stat_stage":
-					if int(e.stages) < 0 and not engine.passive_rules.guards_stage(b, e.stat, t):
-						each = float(DEBUFF_VALUE.get(e.stat, 0.1)) * ref * -int(e.stages)
-				"damage":
-					var ctx := EffectContext.new()
-					ctx.engine = engine
-					ctx.user = t
-					ctx.source = "passive"
-					ctx.attacker = b
-					ctx.targets.append(b)
-					each = minf(float(b.hp()), float(BattleMath.damage(engine, ctx, e, b, false).amount))
-			cost += each * chance
+		cost -= trigger_value(engine, b, t, trig, b, ref, style) * (1.0 if entry.once else hits)
+	t.creature.hp = hp_before
 	return cost
 
 
 ## The triggers of kind `on` that `holder`'s passive and held item carry (a spent per_battle item is ignored).
 static func _triggers(engine: BattleEngine, holder: Battler, on: String) -> Array:
-	var defs: Array[PassiveDef] = []
+	return _trigger_entries(engine, holder, on).map(func(entry: Dictionary) -> Dictionary: return entry.trig)
+
+
+## The same triggers as `_trigger_entries` dictionaries `{trig, once}`: `once` is true for a trigger carried by a
+## consumed or per_battle held item, which fires at most once however many times it is set off.
+static func _trigger_entries(engine: BattleEngine, holder: Battler, on: String) -> Array:
+	var out := []
 	var pdef := engine.db.passive(Passives.active_id(holder.creature))
 	if pdef != null:
-		defs.append(pdef)
+		for trig: Dictionary in pdef.triggers:
+			if trig.on == on:
+				out.append({"trig": trig, "once": false})
 	var item: ItemDef = HeldItems.def_of(engine.db, holder.creature)
 	if item != null and not (item.held_use == "per_battle" and holder.held_spent):
 		# A benched creature (an incoming swap) has no held_def, but its enter triggers still count.
 		var held: PassiveDef = item.held if on == "enter" else engine.passive_rules.held_def(holder)
 		if held != null:
-			defs.append(held)
-	var out := []
-	for d in defs:
-		for trig: Dictionary in d.triggers:
-			if trig.on == on:
-				out.append(trig)
+			var once := item.held_use == "consumed" or item.held_use == "per_battle"
+			for trig: Dictionary in held.triggers:
+				if trig.on == on:
+					out.append({"trig": trig, "once": once})
 	return out
 
 
@@ -397,8 +425,8 @@ static func trigger_value(engine: BattleEngine, b: Battler, holder: Battler, tri
 	ctx.target_side = holder.side
 	if trig.on == "faint":
 		ctx.attacker = landing
-	elif trig.on == "status":
-		ctx.attacker = b  # the engine passes whoever inflicted the status
+	elif trig.on == "status" or trig.on == "hit":
+		ctx.attacker = b  # the engine passes whoever inflicted the status, or landed the hit
 	var total := 0.0
 	for e: Dictionary in trig.effects:
 		if e.op == "apply_field_state":
@@ -465,10 +493,11 @@ static func _effect_value(engine: BattleEngine, holder: Battler, e: Dictionary, 
 	return 0.0
 
 
-## Value to `b`'s side of `incoming` entering the field, from its enter triggers. M6f's swap scoring calls it;
-## nothing in choose does yet.
-static func enter_value(engine: BattleEngine, b: Battler, incoming: Battler, style := "tactician") -> float:
-	var ref := best_damage(engine, b)
+## Value to `b`'s side of `incoming` entering the field, from its enter triggers. `swap_score` calls it (with `ref`
+## already known, inside the in-place evaluation); `ref` is computed from `b` when not given.
+static func enter_value(engine: BattleEngine, b: Battler, incoming: Battler, style := "tactician", ref := -1.0) -> float:
+	if ref < 0.0:
+		ref = best_damage(engine, b)
 	var total := 0.0
 	for trig: Dictionary in _triggers(engine, incoming, "enter"):
 		total += trigger_value(engine, b, incoming, trig, incoming, ref, style)

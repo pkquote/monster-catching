@@ -19,6 +19,9 @@ func before_test() -> void:
 	r.add_entry("passives", {"id": "thorns", "name": "Thorns", "description": "Test passive.",
 		"triggers": [{"on": "hit", "effects": [{"op": "damage", "power": 40, "target": "attacker"}]}]})
 	r.add_entry("creatures", FixtureDB._c("puncher", ["neutral"], FixtureDB.stats({"patk": 150}), [{"level": 1, "move": "hit"}]))
+	r.add_entry("creatures", FixtureDB._c("brute", ["neutral"], FixtureDB.stats({"patk": 255}), [{"level": 1, "move": "hit"}]))
+	r.add_entry("creatures", FixtureDB._c("wall", ["neutral"], FixtureDB.stats({"patk": 255, "pdef": 250, "sdef": 250}), [{"level": 1, "move": "hit"}]))
+	r.add_entry("creatures", FixtureDB._c("frail", ["neutral"], FixtureDB.stats({"hp": 10}), [{"level": 1, "move": "hit"}]))
 	var errors := DataValidator.validate(r)
 	assert(errors.is_empty(), "Test data invalid:\n" + "\n".join(errors))
 	db = Database.from_raw(r)
@@ -56,7 +59,7 @@ func test_swap_avoid_scales_the_damage_avoided_term() -> void:
 	lead.creature.hp = 1
 	var ref := BattleAI.best_damage(e, lead)
 	var avoided := minf(BattleAI.threat(e, lead), float(lead.hp())) - minf(BattleAI.threat(e, bench), float(bench.hp()))
-	avoided += BattleAI.KO_BONUS  # the lead is doomed and the bench creature survives
+	avoided += BattleAI.ko_bonus(ref)  # the lead is doomed and the bench creature survives
 	var base := BattleAI.swap_score(e, lead, bench, "tactician", ref)
 	var def := db.ai_style("tactician")
 	def.swap_avoid = 2.0
@@ -86,7 +89,7 @@ func test_damage_and_ko_weights_scale_a_finishing_hit() -> void:
 	var base := BattleAI.score(e, lead, db.move("hit"), foe.bid, "tactician")
 	var def := db.ai_style("tactician")
 	def.ko = 2.0
-	assert_float(BattleAI.score(e, lead, db.move("hit"), foe.bid, "tactician") - base).is_equal_approx(BattleAI.KO_BONUS, 0.001)
+	assert_float(BattleAI.score(e, lead, db.move("hit"), foe.bid, "tactician") - base).is_equal_approx(BattleAI.ko_bonus(BattleAI.best_damage(e, lead)), 0.001)
 	def.ko = 1.0
 	def.damage = 2.0
 	# the foe has 1 HP, so a hit lands 1 HP: doubling the damage weight adds 1
@@ -189,7 +192,7 @@ func test_passive_prefers_rest_at_low_energy() -> void:
 
 
 func test_passive_never_swaps() -> void:
-	var e := FixtureDB.engine(db, [_make("blob", ["peck"]), _make("tank")], [_make("puncher")])
+	var e := FixtureDB.engine(db, [_make("brute", ["hit"]), _make("wall")], [_make("blob")])
 	_lead(e).creature.hp = 1
 	assert_str(BattleAI.choose(e, _lead(e).bid, "tactician").kind).is_equal("swap")  # the same fixture swaps for the tactician
 	assert_str(_chosen(e).kind).is_not_equal("swap")
@@ -240,7 +243,7 @@ func test_defensive_values_damage_avoided_more() -> void:
 	lead.creature.hp = 1
 	var ref := BattleAI.best_damage(e, lead)
 	var avoided := minf(BattleAI.threat(e, lead), float(lead.hp())) - minf(BattleAI.threat(e, bench), float(bench.hp()))
-	avoided += BattleAI.KO_BONUS
+	avoided += BattleAI.ko_bonus(ref)
 	var gain := BattleAI.swap_score(e, lead, bench, "defensive", ref) - BattleAI.swap_score(e, lead, bench, "tactician", ref)
 	assert_float(gain).is_equal_approx(0.5 * avoided, 0.001)
 
@@ -270,7 +273,7 @@ func test_trickster_prefers_a_status_to_a_hit_more_than_the_tactician() -> void:
 
 
 func test_trickster_still_takes_a_knockout() -> void:
-	var e := _passive_engine(["slam", "burn_touch"])
+	var e := _passive_engine(["slam", "burn_touch"], "frail")
 	_foe(e).creature.hp = 1
 	assert_str(_chosen(e, "trickster").move).is_equal("slam")
 

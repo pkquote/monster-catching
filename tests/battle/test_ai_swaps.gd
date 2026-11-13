@@ -10,6 +10,10 @@ func before() -> void:
 	var learn := [{"level": 1, "move": "hit"}]
 	r.add_entry("creatures", FixtureDB._c("puncher", ["neutral"], FixtureDB.stats({"patk": 150}), learn))
 	r.add_entry("creatures", FixtureDB._c("wimp", ["neutral"], FixtureDB.stats({"patk": 20}), learn))
+	# brute and wall hit equally hard, wall takes almost nothing: a bench creature that makes a doomed lead worth swapping.
+	r.add_entry("creatures", FixtureDB._c("brute", ["neutral"], FixtureDB.stats({"patk": 255}), learn))
+	r.add_entry("creatures", FixtureDB._c("wall", ["neutral"], FixtureDB.stats({"patk": 255, "pdef": 250, "sdef": 250}), learn))
+	r.add_entry("creatures", FixtureDB._c("feeble", ["neutral"], FixtureDB.stats({"patk": 1}), learn))
 	r.add_entry("creatures", FixtureDB._c("glass", ["neutral"], FixtureDB.stats({"pdef": 20, "sdef": 20}), learn))
 	r.add_entry("field_states", {"id": "ward", "name": "Ward", "max_stacks": 3, "default_turns": 3,
 		"passive": [{"op": "stat_mod", "stat": "patk", "mult": 1.2}]})
@@ -48,7 +52,7 @@ func test_damage_avoided_when_lead_is_doomed() -> void:
 	var d_bench := BattleAI.threat(e, _bench(e))
 	assert_bool(d_lead >= 1.0).is_true()
 	assert_bool(d_bench < float(_bench(e).hp())).is_true()
-	assert_float(_score(e)).is_equal_approx(1.0 - d_bench + BattleAI.KO_BONUS, 0.001)
+	assert_float(_score(e)).is_equal_approx(1.0 - d_bench + BattleAI.ko_bonus(BattleAI.best_damage(e, _lead(e))), 0.001)
 
 
 func test_no_damage_avoided_when_lead_is_healthy() -> void:
@@ -146,7 +150,7 @@ func _kind(e: BattleEngine, b: Battler, style := "tactician") -> String:
 
 
 func test_doomed_tactician_swaps() -> void:
-	var e := _engine("blob", "tank", "puncher")
+	var e := _engine("brute", "wall", "blob")
 	_lead(e).creature.hp = 1
 	var a := BattleAI.choose(e, _lead(e).bid, "tactician")
 	assert_str(a.kind).is_equal("swap")
@@ -184,8 +188,8 @@ func test_swap_is_chosen_exactly_when_it_clears_the_margin() -> void:
 
 ## A doomed lead with two moves and a healthy bench: the situation where the tactician swaps.
 func _doomed_two_move_engine() -> BattleEngine:
-	var e: BattleEngine = FixtureDB.engine(db, [FixtureDB.make(db, "blob", 10, ["hit", "quick_jab"]), _make("tank")],
-		[_make("puncher")])
+	var e: BattleEngine = FixtureDB.engine(db, [FixtureDB.make(db, "brute", 10, ["hit", "quick_jab"]), _make("wall")],
+		[_make("blob")])
 	_lead(e).creature.hp = 1
 	return e
 
@@ -215,8 +219,8 @@ func test_basic_never_swaps_and_draws_exactly_one_pick() -> void:
 
 
 func test_two_doomed_actives_claim_distinct_bench() -> void:
-	var e: BattleEngine = FixtureDB.engine(db, [_make("blob"), _make("blob"), _make("tank")],
-		[_make("blob"), _make("blob")], 2, 2)
+	var e: BattleEngine = FixtureDB.engine(db, [_make("brute"), _make("brute"), _make("wall")],
+		[_make("feeble"), _make("feeble")], 2, 2)
 	for b in e.sides[0].active():
 		b.creature.hp = 1
 	e.sides[0].ai = "tactician"
@@ -228,8 +232,8 @@ func test_two_doomed_actives_claim_distinct_bench() -> void:
 
 
 func test_two_doomed_actives_two_bench() -> void:
-	var e: BattleEngine = FixtureDB.engine(db, [_make("blob"), _make("blob"), _make("tank"), _make("tank")],
-		[_make("blob"), _make("blob")], 2, 2)
+	var e: BattleEngine = FixtureDB.engine(db, [_make("brute"), _make("brute"), _make("wall"), _make("wall")],
+		[_make("feeble"), _make("feeble")], 2, 2)
 	for b in e.sides[0].active():
 		b.creature.hp = 1
 	e.sides[0].ai = "tactician"
@@ -239,8 +243,8 @@ func test_two_doomed_actives_two_bench() -> void:
 
 
 func test_swapper_takes_no_further_actions() -> void:
-	var e: BattleEngine = FixtureDB.engine(db, [_make("blob"), _make("blob"), _make("tank")],
-		[_make("blob"), _make("blob")], 2, 2)
+	var e: BattleEngine = FixtureDB.engine(db, [_make("brute"), _make("brute"), _make("wall")],
+		[_make("feeble"), _make("feeble")], 2, 2)
 	e.sides[0].underdog = {"bonus_actions": 1}
 	var doomed: Battler = e.sides[0].active()[0]
 	var healthy: Battler = e.sides[0].active()[1]
@@ -252,7 +256,7 @@ func test_swapper_takes_no_further_actions() -> void:
 
 
 func test_fresh_swap_in_does_not_swap_back() -> void:
-	var e := _engine("blob", "blob", "puncher")
+	var e := _engine("wall", "brute", "blob")
 	var old_lead := _lead(e)
 	var newcomer := _bench(e)
 	e.resolve_round([BattleAction.swap(old_lead.bid, newcomer.bid)])

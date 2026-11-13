@@ -1,8 +1,8 @@
 # Handoff: godot-monster-catching-game
 
-Date: 2026-11-12. Branch: `milestone/M6`. Last commit: `09332e4` ("Make AI styles data and add passive, defensive and trickster (M6)").
-Everything through M6g is committed. After that commit the working tree holds only the 2026-11-12 documentation sweep
-(see "What changed in the docs sweep"), uncommitted for the user to commit.
+Date: 2026-11-12. Branch: `milestone/M6`. Last commit: `91d7e0e` ("Fix replace() event order and auto-replace refill, and backfill track fallback (M6)").
+Everything through the small behaviour fixes is committed. The working tree holds only M6h, the AI accuracy pass
+(see "What changed in M6h"), uncommitted for the user to commit.
 
 ## Read this first: standing rules
 - **Never commit, stage or stash.** The user writes every commit. Leave changes in the working tree.
@@ -60,7 +60,7 @@ Godot 4.7.2 (.NET build, but GDScript only) monster-catching RPG.
 - **Done:** M0 to M5 (engine, battle scene, overworld, progression, box and party screens, shared UI), **M6 engine backlog**
   (status cure; growth tiers and starter evolutions M6b; multi-hit moves M6c; the pinned `one_ally` and Underdog-swap rulings M6d;
   AI modelling of knockout/faint/status/round-end/enter triggers M6e; AI swapping M6f; AI styles as data plus `passive`,
-  `defensive`, `trickster` M6g), and **M7** (tracking, Codex screens, achievements).
+  `defensive`, `trickster` M6g; the AI accuracy pass M6h), and **M7** (tracking, Codex screens, achievements).
 - **Next in the roadmap:** M8 art and audio (all art is placeholder), M9 content expansion.
 - **Facts worth knowing about the AI** (details in `battle-engine.md` → AI styles):
   - A style is an entry in `data/ai_styles.json`; a tamer's `ai` is optional and defaults to `basic`.
@@ -69,15 +69,17 @@ Godot 4.7.2 (.NET build, but GDScript only) monster-catching RPG.
 
 ## Open work
 - **Minors:** the docs sweep, the test hardening and the small behaviour fixes are done (see the progress section of the audit). One triaged list is in `.superpowers/2026-11-12-minors-and-docs-audit.md` (what to drop, what to fix, test hardening, AI accuracy). The original passives list, with the cost of each if wrong, is `.superpowers/2026-11-04-passives-handoff.md`; per-piece minors of M6c to M6g are in the history file.
-- **Possible, none requested:** the audit's remaining pieces (an AI accuracy pass; checking friendly-fire knockout credit; splitting the AI sections out of `battle-engine.md` into `documentation/ai.md`).
+- **Possible, none requested:** the audit's remaining pieces (checking friendly-fire knockout credit; splitting the AI sections out of `battle-engine.md` into `documentation/ai.md`).
 - **To do as part of M9:** reorganize `data/creatures/` by evolution family, one file per family, in subfolders by where the species is obtained (`starters/`, `route_01/`, ...), roughly 5 to 15 species per file. The loader already walks subfolders. Add two data tests: creature ids unique across files, and dex numbers unique with no gaps.
 - Ask the user what is next before starting anything. New features go through brainstorming first.
 
-## What changed in the docs sweep (2026-11-12, uncommitted)
-- `documentation/battle-engine.md`: "four parts", the 15 missing suites in the Testing table, a new "Effect ops" reference, the `capture_failed` event.
-- `tests/data/test_docs_drift.gd` (new): the guard described above.
-- `README.md`, `documentation/developer-guide.md`: M6 status, roadmap bullets, AI styles in the content reference and "where do I find".
-- Spec statuses: roadmap, M6e/f/g, logging, M2. The M6 list in the roadmap shows what was done.
-- Code comments: `battle_ai.gd` header (six styles), `battle_engine.gd` ("four parts"); `tools/compendium_builder.gd` AI-styles table gained `trigger_setup`, `seeks_status` and `swap_avoid`.
-- Bug found by the sweep: the M6g compendium AI-styles table printed a literal `%g` for every weight (GDScript format strings have no `%g`); fixed with `EffectText.num`, with two regression tests in `tests/data/test_compendium.gd`.
-- This file was rewritten from 47 KB; the old one is `.superpowers/history/HANDOFF-through-M6g.md`.
+## What changed in M6h, the AI accuracy pass (2026-11-12, uncommitted)
+Spec `documentation/specs/2026-11-12-m6h-ai-accuracy-design.md`, plan `documentation/plans/2026-11-12-m6h-ai-accuracy.md`.
+- **Retaliation through `trigger_value`:** the tactician's hit-trigger cost no longer has its own code. A foe's self-heal on hit now counts as a cost, more ops are priced, and the style's `trigger_setup` applies. `trigger_value` now sets `ctx.attacker` for hit triggers (a bug that M6e never hit). Simulator output was byte-identical to the baseline on shipped data and on the test pack.
+- **Scaled knockout bonus:** `KO_BONUS` 30 is replaced by `ko_bonus(ref)` = `KO_FACTOR` 1.4 x `ref` (30 only suited level 10: 1.4 best hits there, 0.5 at level 40, 0.3 at level 70).
+- **Swap scoring in place:** `BattleAI._with_swapped_in` evaluates `threat(c)`, `best_damage(c)` and `enter_value(c)` with the bench creature standing in the leaver's slot, so its passive, held item, `field_boost` and the allies' auras count.
+- **Expected threat:** `threat(x)` weights each foe move by `_share` (single target 1/n, `two_enemies` min(2, n)/n, spread 1).
+- **Measured (2v2, 200 battles, seed 1):** swaps per battle about 0.55 to 0.8 before and after; tactician win shares moved at most 2 points at each step; the M6g targets still hold (passive 16.0% and 9.8% against the tactician, defensive about 49%, trickster 47.5% and 50.2%, draws under 2%).
+- **Review fixes (Opus):** hit triggers are priced at the HP the target is left with (the engine fires them after the damage), and a consumed or per_battle item is charged once per move, not per hit; this mattered for the shipped Oran Berry, which the old retaliation code ignored (the spec had wrongly said shipped numbers were unchanged). The doomed knockout bonus now flips where the expected threat reaches `hp_b`, which is not a 50% knockout chance (documented, not changed).
+- **Tests:** `tests/battle/test_ai_accuracy.gd` (18). Some fixtures in `test_ai_swaps.gd` and `test_ai_styles.gd` changed: the doomed-swap cases use a `brute` lead, a `wall` bench and weak foes, because at the old fixture scale (a foe's threat as large as the lead's own damage) the scaled bonus no longer made a swap worth it; real data has threat about 0.4 x `ref`.
+- **Not done:** a test for a benched creature's `field_boost` (an own helpful state's value does not depend on stacks, so nothing observable); `KO_FACTOR` was not tuned.

@@ -18,12 +18,15 @@ func _build(balance_overrides := {}) -> Database:
 		["zapper", 20, 100, dmg, {"hits": {"min": 3, "max": 3}, "type": "electric"}],
 		["cashin", 20, 100, [{"op": "bonus_if_field", "side": "target", "state": "soaked", "mult": 1.5, "consume": true},
 			{"op": "damage"}], {"hits": {"min": 3, "max": 3}}],
+		["stacker", 20, 100, [{"op": "damage"}, {"op": "stat_stage", "stat": "patk", "stages": 1, "target": "self"}],
+			{"hits": {"min": 3, "max": 3}}],
 		["single", 20, 100, dmg, {}],
 		["single_one", 20, 100, dmg, {"hits": {"min": 1, "max": 1}}],
 	]:
 		r.add_entry("moves", FixtureDB.move(spec[0], "neutral", "physical", spec[1], spec[2], "one_enemy", spec[3], spec[4]))
 	for p in [
 		{"id": "pricker", "triggers": [{"on": "hit", "effects": [{"op": "stat_stage", "stat": "patk", "stages": -1}]}]},
+		{"id": "trail", "triggers": [{"on": "faint", "effects": [{"op": "apply_field_state", "side": "enemy", "state": "scorched"}]}]},
 		{"id": "sponge", "effects": [{"op": "absorb_type", "type": "electric", "fraction": 0.25}]},
 		{"id": "thorns", "triggers": [{"on": "hit", "effects": [{"op": "damage", "power": 200, "target": "attacker"}]}]},
 	]:
@@ -47,12 +50,12 @@ func _mk(species := "blob", moves: Array = ["hit"]) -> CreatureInstance:
 
 
 ## One attacker knowing every test move against `foes` tanks fielded plus `bench` waiting.
-func _versus(foes: int, bench := 0, seed_value := 1, the_db: Database = null) -> BattleEngine:
+func _versus(foes: int, bench := 0, seed_value := 1, the_db: Database = null, foe_species := "tank") -> BattleEngine:
 	var d := the_db if the_db != null else db
-	var mine := [FixtureDB.make(d, "blob", 10, ["triple", "quint", "flurry", "shaky", "doubled", "jolting", "single", "single_one", "zapper", "cashin", "drench"])]
+	var mine := [FixtureDB.make(d, "blob", 10, ["triple", "quint", "flurry", "shaky", "doubled", "jolting", "single", "single_one", "zapper", "cashin", "drench", "stacker"])]
 	var theirs: Array = []
 	for i in foes + bench:
-		theirs.append(FixtureDB.make(d, "tank", 10, ["hit"]))
+		theirs.append(FixtureDB.make(d, foe_species, 10, ["hit"]))
 	return FixtureDB.engine(d, mine, theirs, 1, foes, seed_value)
 
 
@@ -164,13 +167,21 @@ func test_hit_triggers_fire_once_per_hit() -> void:
 
 
 func test_resolve_endure_happens_at_most_once() -> void:
+	# A very resolute foe (resolve 255, endure cap 1.0) with a few HP: the first hit would kill it, so it may endure at
+	# 1 HP. Later hits of the same move must finish it, not be endured again. (At 1 HP there is nothing to endure.)
 	var strict := _build({"resolve": {"resist_cap": 0.0, "endure_cap": 1.0}})
+	var endured_runs := 0
 	for seed_value in range(1, 21):
-		var e := _versus(1, 0, seed_value, strict)
+		var e := _versus(1, 0, seed_value, strict, "stoic")
 		var foe: Battler = _foes(e)[0]
-		foe.creature.hp = 1
+		foe.creature.hp = 5
 		var events := _use(e, "triple", foe)
-		assert_int(_count(events, BattleEvents.ENDURED)).is_less_equal(1)
+		var endured := _count(events, BattleEvents.ENDURED)
+		assert_int(endured).is_less_equal(1)
+		if endured == 1:
+			endured_runs += 1
+			assert_int(_count(events, BattleEvents.FAINT)).is_equal(1)  # the next hit finished it
+	assert_int(endured_runs).is_greater(0)  # the test does exercise an endure
 
 
 func test_affinity_from_hits_is_earned_once_per_move() -> void:
@@ -295,3 +306,40 @@ func test_an_absorber_absorbs_every_hit_and_each_counts() -> void:
 	assert_int(_count(events, BattleEvents.HEAL)).is_equal(3)
 	assert_int(_count(events, BattleEvents.DAMAGE)).is_equal(0)
 	assert_int(_hits_landed(events)).is_equal(3)
+
+
+# --- hardening (2026-11-12 audit; the spec section 9 gaps) --------------------------------------------------
+
+func test_a_self_buff_in_the_effect_list_stacks_once_per_hit() -> void:
+	var e := _versus(1)
+	var foe: Battler = _foes(e)[0]
+	_use(e, "stacker", foe)
+	assert_int(int(_me(e).stages["patk"])).is_equal(3)
+
+
+func test_a_cash_in_is_consumed_once_for_the_whole_move() -> void:
+	var e := _versus(1)
+	var foe: Battler = _foes(e)[0]
+	e.resolve_round([BattleAction.use_move(_me(e).bid, "drench")])
+	assert_bool(e.sides[1].field.has("soaked")).is_true()
+	var events := _use(e, "cashin", foe)
+	assert_int(_count(events, BattleEvents.DAMAGE)).is_equal(3)
+	var cashed := FixtureDB.events_of(events, BattleEvents.FIELD_REMOVED).filter(func(ev): return ev.reason == "cashed_in")
+	assert_int(cashed.size()).is_equal(1)
+	assert_bool(e.sides[1].field.has("soaked")).is_false()
+
+
+func test_the_battle_ending_knockout_runs_no_faint_trigger() -> void:
+	# Control: with a bench foe waiting the same knockout does run the faint trigger.
+	var control := _versus(1, 1)
+	_foes(control)[0].creature.passive = "trail"
+	_foes(control)[0].creature.hp = 1
+	var with_bench := _use(control, "triple", _foes(control)[0])
+	assert_int(_count(with_bench, BattleEvents.PASSIVE_TRIGGERED)).is_equal(1)
+	# The last foe: the battle is over, so no trigger.
+	var e := _versus(1)
+	_foes(e)[0].creature.passive = "trail"
+	_foes(e)[0].creature.hp = 1
+	var events := _use(e, "triple", _foes(e)[0])
+	assert_int(_count(events, BattleEvents.BATTLE_END)).is_equal(1)
+	assert_int(_count(events, BattleEvents.PASSIVE_TRIGGERED)).is_equal(0)

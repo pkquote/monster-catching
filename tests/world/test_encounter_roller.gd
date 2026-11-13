@@ -56,3 +56,17 @@ func test_encounter_rate_mult() -> void:
 		if r.on_grass_tile("route_01_grass", true, 0.5):
 			hits += 1
 	assert_float(hits / 10000.0).is_equal_approx(0.5, 0.03)
+
+
+func test_a_zero_rate_mult_still_draws_one_number_per_tile() -> void:
+	# A creature that suppresses encounters must not change what the generator does afterwards: every tile rolls once.
+	var always := FixtureDB.build({"overworld": {"walk_speed": 4.0, "run_speed": 7.0, "encounter_rate": 1.0,
+		"encounter_grace_tiles": 4, "walk_energy_tiles": 8, "defeat_money_fraction": 0.1, "sell_fraction": 0.5}})
+	var r := EncounterRoller.new(always.balance, rng)
+	var expected := RandomNumberGenerator.new()
+	expected.seed = rng.seed
+	expected.state = rng.state
+	for i in 5:
+		assert_bool(r.on_grass_tile("route_01_grass", true, 0.0)).is_false()
+		expected.randf()
+	assert_int(rng.state).is_equal(expected.state)

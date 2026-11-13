@@ -52,3 +52,17 @@ func test_faint_replacement_has_not_acted() -> void:
 	assert_bool(lead.alive()).is_false()
 	e.replace(0, bench.bid)
 	assert_bool(bench.acted).is_false()
+
+
+func test_placing_at_battle_start_marks_acted_and_placing_later_does_not() -> void:
+	# The default is true, so test_lead_creatures_start_acted cannot tell whether place() wrote it. Here the flag is
+	# cleared first and place() must set it from whether the battle is starting.
+	var e: BattleEngine = FixtureDB.engine(db, [_mk(), _mk()], [_mk("tank")])
+	var lead: Battler = e.sides[0].active()[0]
+	lead.acted = false
+	e._starting = true
+	e.place(e.sides[0], 0, lead)
+	assert_bool(lead.acted).is_true()
+	e._starting = false
+	e.place(e.sides[0], 0, lead)
+	assert_bool(lead.acted).is_false()

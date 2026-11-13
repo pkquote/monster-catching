@@ -68,8 +68,8 @@ Godot 4.7.2 (.NET build, but GDScript only) monster-catching RPG.
   - Simulator (2v2, 200 battles, seed 1, both orders): `passive` wins about 16% (level 10) and 8% (level 40) against the tactician, `defensive` and `trickster` about 49%; swapping is neutral for the tactician's win rate.
 
 ## Open work
-- **Minors:** one triaged list is in `.superpowers/2026-11-12-minors-and-docs-audit.md` (what to drop, what to fix, test hardening, AI accuracy). The original passives list, with the cost of each if wrong, is `.superpowers/2026-11-04-passives-handoff.md`; per-piece minors of M6c to M6g are in the history file.
-- **Possible, none requested:** the audit's pieces (test hardening; small behaviour fixes such as the stray `UNDERDOG` event after `BATTLE_END` in `replace()`; an AI accuracy pass; splitting the AI sections out of `battle-engine.md` into `documentation/ai.md`).
+- **Minors:** the docs sweep and the test hardening are done (see the progress section of the audit). One triaged list is in `.superpowers/2026-11-12-minors-and-docs-audit.md` (what to drop, what to fix, test hardening, AI accuracy). The original passives list, with the cost of each if wrong, is `.superpowers/2026-11-04-passives-handoff.md`; per-piece minors of M6c to M6g are in the history file.
+- **Possible, none requested:** the audit's remaining pieces (small behaviour fixes such as the stray `UNDERDOG` event after `BATTLE_END` in `replace()`; an AI accuracy pass; splitting the AI sections out of `battle-engine.md` into `documentation/ai.md`).
 - **To do as part of M9:** reorganize `data/creatures/` by evolution family, one file per family, in subfolders by where the species is obtained (`starters/`, `route_01/`, ...), roughly 5 to 15 species per file. The loader already walks subfolders. Add two data tests: creature ids unique across files, and dex numbers unique with no gaps.
 - Ask the user what is next before starting anything. New features go through brainstorming first.
 

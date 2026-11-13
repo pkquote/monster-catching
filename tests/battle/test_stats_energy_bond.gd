@@ -266,3 +266,18 @@ func test_bond_gain_only_scales_gains() -> void:
 	me.creature.hp = 1
 	e.resolve_round([BattleAction.pass_turn(me.bid), BattleAction.use_move(_foe(e).bid, "hit", me.bid)])
 	assert_int(me.creature.bond).is_equal(-4)
+
+
+func test_the_foes_bond_is_not_scaled_by_the_players_bond_gain() -> void:
+	# setup.bond_gain is the player's lead passive; the foe side earns Bond at 1x whatever it is.
+	var gained := []
+	for gain in [1.0, 3.0]:
+		var e := FixtureDB.engine(db, [FixtureDB.make(db, "blob", 10, ["hit"])], [FixtureDB.make(db, "tank", 30, ["hit"])])
+		e.setup.bond_gain = gain
+		var me := _me(e)
+		me.creature.hp = 1
+		var bond_before := _foe(e).creature.bond
+		e.resolve_round([BattleAction.pass_turn(me.bid), BattleAction.use_move(_foe(e).bid, "hit", me.bid)])
+		gained.append(_foe(e).creature.bond - bond_before)
+	assert_int(gained[0]).is_greater(0)  # the foe does earn Bond for the knockout
+	assert_int(gained[1]).is_equal(gained[0])

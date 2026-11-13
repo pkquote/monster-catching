@@ -305,6 +305,10 @@ func test_pack_simulations_keep_their_invariants_and_cover_the_pack() -> void:
 	print("pack moves never used by the AI (exempt): %s" % [unused_moves])
 	print("pack triggers never fired (exempt): %s" % [silent])
 	print("pack banners: %s" % [banners])
+	# Report-only: listed entries this run did reach. Some are chance-driven or shift with the seeded run, so these do not
+	# fail the test, but a long-standing one is a candidate to delete from the list (it frees room under the cap).
+	print("exempt moves that were used this run (candidates to delist): %s" % [EXEMPT_MOVES.keys().filter(func(id: String) -> bool: return not unused_moves.has(id))])
+	print("exempt triggers that fired this run (candidates to delist): %s" % [EXEMPT_TRIGGERS.keys().filter(func(id: String) -> bool: return not silent.has(id))])
 	var unlisted_moves: Array = unused_moves.filter(func(id: String) -> bool: return not EXEMPT_MOVES.has(id))
 	assert_array(unlisted_moves).override_failure_message("unused pack moves missing from EXEMPT_MOVES: %s" \
 		% [unlisted_moves]).is_empty()

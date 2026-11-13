@@ -45,6 +45,8 @@ func before() -> void:
 		# Protection.
 		{"id": "fireproof", "effects": [{"op": "status_immune", "status": "burn"}]},
 		{"id": "pure", "effects": [{"op": "status_immune"}]},
+		{"id": "recoup", "triggers": [{"on": "hit", "effects": [{"op": "heal", "fraction": 0.25, "target": "self"}]}]},
+		{"id": "burner", "triggers": [{"on": "hit", "effects": [{"op": "apply_status", "status": "burn", "target": "attacker"}]}]},
 		{"id": "sturdy_all", "effects": [{"op": "guard_stages"}]},
 		{"id": "grip", "effects": [{"op": "guard_stages", "stat": "patk"}]},
 		{"id": "dry", "effects": [{"op": "field_shelter", "state": "soaked"}]},
@@ -749,3 +751,52 @@ func test_trigger_with_some_real_effect_still_fires() -> void:
 	var events := _round(e, {})
 	assert_int(_triggered(events).size()).is_equal(1)
 	assert_int(me.stages.spd).is_equal(1)
+
+
+# --- hardening (2026-11-12 audit) --------------------------------------------------------------------------
+
+func test_a_trigger_without_a_chance_draws_no_rng() -> void:
+	# The same battle with and without a chance-less hit trigger on the foe (a heal: no stat drop, so no resist roll) must
+	# leave the generator in the same place.
+	var states := []
+	for passive in ["", "recoup"]:
+		var e := FixtureDB.engine(db, [_make("blob", "")], [_make("tank", passive)], -1, -1, 7)
+		var me := _first(e, 0)
+		var events := e.resolve_round([BattleAction.use_move(me.bid, "hit", _first(e, 1).bid),
+			BattleAction.pass_turn(_first(e, 1).bid)])
+		assert_int(_triggered(events).size()).is_equal(1 if passive == "recoup" else 0)
+		states.append(e.rng.state)
+	assert_int(states[1]).is_equal(states[0])
+
+
+func test_a_status_blocked_inside_a_trigger_shows_the_block_not_the_status() -> void:
+	# The foe's hit trigger tries to burn the attacker, who is immune: two banners (the trigger, then the block) and no
+	# STATUS_APPLIED.
+	var e := FixtureDB.engine(db, [_make("blob", "pure")], [_make("tank", "burner")])
+	var me := _first(e, 0)
+	var foe := _first(e, 1)
+	var events := e.resolve_round([BattleAction.use_move(me.bid, "hit", foe.bid), BattleAction.pass_turn(foe.bid)])
+	assert_str(me.status()).is_equal("")
+	assert_array(FixtureDB.events_of(events, BattleEvents.STATUS_APPLIED)).is_empty()
+	var banners := _triggered(events)
+	assert_int(banners.size()).is_equal(2)
+	assert_str(banners[0].passive).is_equal("burner")
+	assert_str(banners[1].passive).is_equal("pure")
+	# Without the immunity the same trigger does burn the attacker.
+	var open := FixtureDB.engine(db, [_make("blob", "")], [_make("tank", "burner")])
+	open.resolve_round([BattleAction.use_move(_first(open, 0).bid, "hit", _first(open, 1).bid),
+		BattleAction.pass_turn(_first(open, 1).bid)])
+	assert_str(_first(open, 0).status()).is_equal("burn")
+
+
+func test_guard_stages_lets_a_foe_raise_the_stage_and_an_ally_lower_it() -> void:
+	var e := FixtureDB.engine(db, [_make("blob", ""), _make("blob", "")], [_make("tank", "sturdy_all"), _make("tank", "")], 2, 2)
+	var guarded: Battler = e.sides[1].active()[0]
+	var ally: Battler = e.sides[1].active()[1]
+	var foe: Battler = e.sides[0].active()[0]
+	e.shift_stage(guarded, "patk", -1, foe)  # a foe's drop is blocked
+	assert_int(guarded.stages.patk).is_equal(0)
+	e.shift_stage(guarded, "patk", 1, foe)  # a foe's raise is not a drop
+	assert_int(guarded.stages.patk).is_equal(1)
+	e.shift_stage(guarded, "spd", -1, ally)  # an ally's drop is not a foe's drop (the guard is against foes)
+	assert_int(guarded.stages.spd).is_equal(-1)

@@ -10,6 +10,7 @@ func before() -> void:
 	var learn := [{"level": 1, "move": "hit"}]
 	r.add_entry("creatures", FixtureDB._c("puncher", ["neutral"], FixtureDB.stats({"patk": 150}), learn))
 	r.add_entry("creatures", FixtureDB._c("wimp", ["neutral"], FixtureDB.stats({"patk": 20}), learn))
+	r.add_entry("creatures", FixtureDB._c("glass", ["neutral"], FixtureDB.stats({"pdef": 20, "sdef": 20}), learn))
 	r.add_entry("field_states", {"id": "ward", "name": "Ward", "max_stacks": 3, "default_turns": 3,
 		"passive": [{"op": "stat_mod", "stat": "patk", "mult": 1.2}]})
 	r.add_entry("passives", {"id": "welcome_ward", "name": "Welcome Ward", "description": "Test passive.",
@@ -51,8 +52,17 @@ func test_damage_avoided_when_lead_is_doomed() -> void:
 
 
 func test_no_damage_avoided_when_lead_is_healthy() -> void:
+	# Same species: nothing to gain, nothing to lose.
 	var e := _engine("blob", "blob", "blob")
 	assert_float(_score(e)).is_equal_approx(0.0, 0.001)
+	# A bench creature that takes more damage (lower defences) is worse by exactly the extra damage, with no knockout
+	# bonus (the lead is not doomed): the avoided-damage term is threat(lead) - threat(bench) while both survive.
+	var e2 := _engine("blob", "glass", "blob")
+	var t_lead := BattleAI.threat(e2, _lead(e2))
+	var t_bench := BattleAI.threat(e2, _bench(e2))
+	assert_bool(t_lead < float(_lead(e2).hp()) and t_bench < float(_bench(e2).hp())).is_true()
+	assert_bool(t_bench > t_lead).is_true()
+	assert_float(_score(e2)).is_equal_approx(t_lead - t_bench, 0.001)
 
 
 func test_doomed_bench_gains_nothing() -> void:
@@ -172,19 +182,36 @@ func test_swap_is_chosen_exactly_when_it_clears_the_margin() -> void:
 	assert_bool(in_zone).is_true()
 
 
-func test_basic_and_aggressive_never_swap() -> void:
-	for style in ["basic", "aggressive"]:
-		var e := _engine("blob", "tank", "puncher")
-		_lead(e).creature.hp = 1
-		assert_str(_kind(e, _lead(e), style)).is_not_equal("swap")
-	# basic draws the same randomness with or without a bench
-	var with_bench := _engine("blob", "tank", "puncher")
-	var alone: BattleEngine = FixtureDB.engine(db, [_make("blob")], [_make("puncher")])
-	_lead(with_bench).creature.hp = 1
-	_lead(alone).creature.hp = 1
-	_kind(with_bench, _lead(with_bench), "basic")
-	_kind(alone, _lead(alone), "basic")
-	assert_int(with_bench.rng.state).is_equal(alone.rng.state)
+## A doomed lead with two moves and a healthy bench: the situation where the tactician swaps.
+func _doomed_two_move_engine() -> BattleEngine:
+	var e: BattleEngine = FixtureDB.engine(db, [FixtureDB.make(db, "blob", 10, ["hit", "quick_jab"]), _make("tank")],
+		[_make("puncher")])
+	_lead(e).creature.hp = 1
+	return e
+
+
+func test_aggressive_never_swaps_and_plays_its_best_move() -> void:
+	var e := _doomed_two_move_engine()
+	assert_str(_kind(e, _lead(e), "tactician")).is_equal("swap")  # the same fixture does swap for the tactician
+	var a := BattleAI.choose(e, _lead(e).bid, "aggressive")
+	assert_str(a.kind).is_equal("move")
+	var ref := BattleAI.best_damage(e, _lead(e))
+	for mid in e.usable_moves(_lead(e).bid):
+		for t in e.targets_for(_lead(e).bid, mid):
+			assert_bool(BattleAI.score(e, _lead(e), db.move(mid), t, "aggressive", ref)
+				<= BattleAI.score(e, _lead(e), db.move(a.move), a.target, "aggressive", ref) + 0.0001).is_true()
+
+
+func test_basic_never_swaps_and_draws_exactly_one_pick() -> void:
+	var e := _doomed_two_move_engine()
+	var expected := RandomNumberGenerator.new()
+	expected.seed = e.rng.seed
+	expected.state = e.rng.state
+	assert_str(_kind(e, _lead(e), "basic")).is_not_equal("swap")
+	# One random pick among the two moves (a swap option would change the pool size, and a draw for scoring would
+	# change the count): the generator is exactly where one randi_range(0, 1) leaves it.
+	expected.randi_range(0, 1)
+	assert_int(e.rng.state).is_equal(expected.state)
 
 
 func test_two_doomed_actives_claim_distinct_bench() -> void:

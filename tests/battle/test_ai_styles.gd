@@ -6,7 +6,8 @@ extends GdUnitTestSuite
 var db: Database
 
 
-func before() -> void:
+## A fresh Database per test: several tests change a shared style object (def.heal = 2.0) and must not leak into the next.
+func before_test() -> void:
 	var r := FixtureDB.raw()
 	r.add_entry("moves", FixtureDB.move("focus", "neutral", "status", 0, 100, "self",
 		[{"op": "stat_stage", "stat": "patk", "stages": 1}], {"always_hits": true}))
@@ -14,6 +15,7 @@ func before() -> void:
 	r.add_entry("moves", FixtureDB.move("slam", "neutral", "physical", 90, 100, "one_enemy", [{"op": "damage"}]))
 	r.add_entry("moves", FixtureDB.move("empower", "neutral", "physical", 20, 100, "one_enemy",
 		[{"op": "damage"}, {"op": "stat_stage", "stat": "patk", "stages": 1, "target": "self"}]))
+	r.add_entry("passives", {"id": "pure", "name": "Pure", "description": "Test passive.", "effects": [{"op": "status_immune"}]})
 	r.add_entry("passives", {"id": "thorns", "name": "Thorns", "description": "Test passive.",
 		"triggers": [{"on": "hit", "effects": [{"op": "damage", "power": 40, "target": "attacker"}]}]})
 	r.add_entry("creatures", FixtureDB._c("puncher", ["neutral"], FixtureDB.stats({"patk": 150}), [{"level": 1, "move": "hit"}]))
@@ -203,9 +205,9 @@ func test_passive_scoring_draws_no_rng() -> void:
 # --- defensive: survival, earlier heals, heavier retaliation, swaps more readily ----------------------------
 
 ## The highest HP percentage (stepping down from 100 in 5s) at which `style` picks the heal over a strong hit, or 0.
-func _heal_threshold(style: String) -> int:
+func _heal_threshold(style: String, moves: Array = ["hit", "mend"]) -> int:
 	for pct in range(100, 0, -5):
-		var e := FixtureDB.engine(db, [_make("puncher", ["hit", "mend"]), _make("tank")], [_make("tank")])
+		var e := FixtureDB.engine(db, [_make("puncher", moves), _make("tank")], [_make("tank")])
 		_lead(e).creature.hp = maxi(1, int(_lead(e).creature.max_hp(db) * pct / 100.0))
 		if _chosen(e, style).move == "mend":
 			return pct
@@ -309,3 +311,58 @@ func test_buff_value_follows_the_effects_own_target() -> void:
 	var gain := BattleAI.score(e, _lead(e), db.move("empower"), _foe(e).bid, "passive") \
 		- BattleAI.score(e, _lead(e), db.move("peck"), _foe(e).bid, "passive")
 	assert_float(gain).is_equal_approx(BattleAI.DEBUFF_VALUE.patk * ref, 0.001)
+
+
+# --- hardening: each weight is isolated, and the blocked-status case is a real blocker -------------------------
+
+func test_retaliation_weight_scales_and_zeroes_the_retaliation_cost() -> void:
+	var plain := _passive_engine(["hit"])
+	var spiky := _passive_engine(["hit"])
+	_foe(spiky).creature.passive = "thorns"
+	var cost := func() -> float:
+		return BattleAI.score(plain, _lead(plain), db.move("hit"), _foe(plain).bid, "tactician") \
+			- BattleAI.score(spiky, _lead(spiky), db.move("hit"), _foe(spiky).bid, "tactician")
+	var full: float = cost.call()
+	assert_bool(full > 0.0).is_true()
+	var def := db.ai_style("tactician")
+	def.retaliation = 0.5
+	assert_float(cost.call()).is_equal_approx(full * 0.5, 0.001)
+	def.retaliation = 0.0
+	assert_float(cost.call()).is_equal_approx(0.0, 0.0001)
+
+
+func test_the_heal_weight_alone_moves_the_defensive_heal_threshold() -> void:
+	# puncher with slam: slam scores 21.7 (x0.7 for defensive), mend 15 at heal 1.0 and 22.5 at heal 1.5
+	var shipped := _heal_threshold("defensive", ["slam", "mend"])
+	db.ai_style("defensive").heal = 1.0
+	assert_int(shipped).is_greater(_heal_threshold("defensive", ["slam", "mend"]))
+
+
+func test_the_swap_margin_alone_decides_a_defensive_swap() -> void:
+	# One pdef drop makes the swap exactly as good as the best move; each further spd drop adds 0.08 x ref of escape
+	# value, so the edge walks 0, 0.72, 1.44, 2.16... against margins of 0.9 (0.1 x ref) and 2.25 (0.25 x ref).
+	var swaps_at := func() -> Array:
+		var out := []
+		for spd_stage in [0, -1, -2, -3, -4, -5, -6]:
+			var e := FixtureDB.engine(db, [_make("blob", ["hit"]), _make("tank")], [_make("blob")])
+			_lead(e).stages.pdef = -1
+			_lead(e).stages.spd = spd_stage
+			out.append(_chosen(e, "defensive").kind == "swap")
+		return out
+	var narrow: Array = swaps_at.call()  # the shipped margin, 0.1
+	db.ai_style("defensive").swap_margin = 0.25
+	var wide: Array = swaps_at.call()
+	var only_narrow := 0
+	for i in narrow.size():
+		assert_bool(wide[i] and not narrow[i]).override_failure_message("a wider margin never adds a swap").is_false()
+		if narrow[i] and not wide[i]:
+			only_narrow += 1
+	assert_int(only_narrow).is_greater(0)
+
+
+func test_trickster_ignores_a_status_the_foe_cannot_be_given() -> void:
+	var e := _passive_engine(["peck", "burn_touch"])
+	_foe(e).creature.passive = "pure"  # status_immune
+	assert_bool(e.passive_rules.blocks_status(_foe(e), "burn")).is_true()
+	assert_float(BattleAI.score(e, _lead(e), db.move("burn_touch"), _foe(e).bid, "trickster")).is_equal_approx(0.0, 0.0001)
+	assert_str(_chosen(e, "trickster").move).is_equal("peck")

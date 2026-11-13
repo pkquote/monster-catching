@@ -1,8 +1,8 @@
 # Handoff: godot-monster-catching-game
 
-Date: 2026-11-12. Branch: `milestone/M6`. Last commit: `91d7e0e` ("Fix replace() event order and auto-replace refill, and backfill track fallback (M6)").
-Everything through the small behaviour fixes is committed. The working tree holds only M6h, the AI accuracy pass
-(see "What changed in M6h"), uncommitted for the user to commit.
+Date: 2026-11-13. Branch: `milestone/M6`. Last commit: `6ea9988` ("Make the AI's knockout, swap and retaliation numbers hold at every level and format (M6)").
+Everything through M6h (the AI accuracy pass) is committed. The working tree holds only a pinning test for
+friendly-fire knockout credit (not a bug: see the audit) and the split of the AI docs into `documentation/ai.md`, uncommitted for the user to commit.
 
 ## Read this first: standing rules
 - **Never commit, stage or stash.** The user writes every commit. Leave changes in the working tree.
@@ -40,7 +40,8 @@ Godot 4.7.2 (.NET build, but GDScript only) monster-catching RPG.
 ## Where the documentation is
 - `README.md`: what the game is, layout, running, checks.
 - `documentation/developer-guide.md`: how to change things (a recipe per change), where things live, troubleshooting.
-- `documentation/battle-engine.md`: the engine API, round order, formulas, effect ops, passives and held items, **AI styles and swapping**, events, tests.
+- `documentation/battle-engine.md`: the engine API, round order, formulas, effect ops, passives and held items, events, tests.
+- `documentation/ai.md`: the battle AI: styles (`data/ai_styles.json`), scoring, swapping, what it values from passives, held items and triggers.
 - `documentation/compendium.md`: generated from `data/` (never edit by hand). Also `map-building.md`, `codex.md`, `tracking.md`, `achievements.md`, `logging.md`.
 - `documentation/specs/` (the design of each piece) and `documentation/plans/` (how it was built). The roadmap is `specs/2026-11-05-roadmap-m5-m8.md`.
 - `tests/data/test_docs_drift.gd` fails when an event, an effect op or a battle suite is missing from `battle-engine.md`.
@@ -69,11 +70,11 @@ Godot 4.7.2 (.NET build, but GDScript only) monster-catching RPG.
 
 ## Open work
 - **Minors:** the docs sweep, the test hardening and the small behaviour fixes are done (see the progress section of the audit). One triaged list is in `.superpowers/2026-11-12-minors-and-docs-audit.md` (what to drop, what to fix, test hardening, AI accuracy). The original passives list, with the cost of each if wrong, is `.superpowers/2026-11-04-passives-handoff.md`; per-piece minors of M6c to M6g are in the history file.
-- **Possible, none requested:** the audit's remaining pieces (checking friendly-fire knockout credit; splitting the AI sections out of `battle-engine.md` into `documentation/ai.md`).
+- **Possible, none requested:** the small AI modelling gaps listed in the audit (each needs simulator runs); M9 groundwork (reorganize `data/creatures/`); a brainstorm of M8 (art and audio) or M9 (content).
 - **To do as part of M9:** reorganize `data/creatures/` by evolution family, one file per family, in subfolders by where the species is obtained (`starters/`, `route_01/`, ...), roughly 5 to 15 species per file. The loader already walks subfolders. Add two data tests: creature ids unique across files, and dex numbers unique with no gaps.
 - Ask the user what is next before starting anything. New features go through brainstorming first.
 
-## What changed in M6h, the AI accuracy pass (2026-11-12, uncommitted)
+## What changed in M6h, the AI accuracy pass (2026-11-12, committed in `6ea9988`)
 Spec `documentation/specs/2026-11-12-m6h-ai-accuracy-design.md`, plan `documentation/plans/2026-11-12-m6h-ai-accuracy.md`.
 - **Retaliation through `trigger_value`:** the tactician's hit-trigger cost no longer has its own code. A foe's self-heal on hit now counts as a cost, more ops are priced, and the style's `trigger_setup` applies. `trigger_value` now sets `ctx.attacker` for hit triggers (a bug that M6e never hit). Simulator output was byte-identical to the baseline on shipped data and on the test pack.
 - **Scaled knockout bonus:** `KO_BONUS` 30 is replaced by `ko_bonus(ref)` = `KO_FACTOR` 1.4 x `ref` (30 only suited level 10: 1.4 best hits there, 0.5 at level 40, 0.3 at level 70).

@@ -42,3 +42,16 @@ func test_every_battle_suite_is_in_the_testing_table() -> void:
 			suites.append(file)
 	assert_array(suites).is_not_empty()
 	assert_array(_missing(suites, "`%s`")).override_failure_message("battle suites missing from the Testing table").is_empty()
+
+
+func test_the_ai_reference_covers_every_shipped_style_and_the_engine_doc_points_to_it() -> void:
+	# The AI material lives in documentation/ai.md; battle-engine.md only summarises it and links to it.
+	var ai := FileAccess.get_file_as_string("res://documentation/ai.md")
+	assert_bool(ai.is_empty()).is_false()
+	var db: Database = DataLoader.load_database("res://data", "res://dialogue").db
+	var missing := []
+	for id: String in db.ids("ai_styles"):
+		if not ai.contains("`%s`" % id):
+			missing.append(id)
+	assert_array(missing).override_failure_message("styles missing from ai.md").is_empty()
+	assert_bool(_text.contains("(ai.md)")).override_failure_message("battle-engine.md should link to ai.md").is_true()

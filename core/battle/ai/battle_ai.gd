@@ -1,7 +1,7 @@
 class_name BattleAI
 extends RefCounted
 ## Chooses actions for AI-controlled sides. A style is a data entry (data/ai_styles.json, AiStyleDef) whose weights
-## this class reads; see "AI styles" in documentation/battle-engine.md. The shipped styles:
+## this class reads; see documentation/ai.md. The shipped styles:
 ##   basic      : random usable move and target (the default)
 ##   aggressive : most expected damage, favouring knockouts
 ##   tactician  : aggressive scoring plus the expected payoff of field setup, reactions, statuses and debuffs,

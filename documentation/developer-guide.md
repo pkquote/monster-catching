@@ -110,7 +110,7 @@ change also pushes a key into `AchievementWatch`; the service checks only the ac
 | What people say, and story events | `dialogue/<area>/*.dialogue` |
 | The story state a script reads/writes | `Story` (`game/autoload/story.gd`); data in `core/story/story_state.gd` |
 | How a battle plays out (damage, order, effects, AI) | `core/battle/` ([battle-engine.md](battle-engine.md)) |
-| How an AI opponent behaves (its styles and their weights) | `data/ai_styles.json` (the styles), `core/battle/ai/battle_ai.gd` (the scoring); [battle-engine.md](battle-engine.md) → AI styles |
+| How an AI opponent behaves (its styles and their weights) | `data/ai_styles.json` (the styles), `core/battle/ai/battle_ai.gd` (the scoring); [ai.md](ai.md) |
 | Creature stats, XP, growth, Bond, passives, training | `core/progress/` |
 | Menus, screens, their layout | `game/progress/`, `game/menus/`, `game/overworld/ui/`, `game/battle/` |
 | Colours, fonts, shared widgets | `game/ui/ui_kit.gd` and the widgets beside it |
@@ -165,7 +165,7 @@ creature's `passives` or `affinity_passives`. Triggers and when they fire: battl
 3. In the `before_title` dialogue, call `$> Story.start_battle("<tamer_id>")`.
 
 ### Add or tune an AI style
-Entry in `data/ai_styles.json`: a name and the fourteen weight fields (all required; ranges in `DataSchemas.ENTRY["ai_styles"]`). A tamer picks it with `ai`. What each field does, and the shipped styles: battle-engine.md → AI styles. Compare styles with `tools/simulate.gd --ai=A,B`.
+Entry in `data/ai_styles.json`: a name and the fourteen weight fields (all required; ranges in `DataSchemas.ENTRY["ai_styles"]`). A tamer picks it with `ai`. What each field does, and the shipped styles: [ai.md](ai.md). Compare styles with `tools/simulate.gd --ai=A,B`.
 
 ### Add a wild area
 1. Encounter table in `data/encounters/` (species, weights, level range, pack size).

@@ -281,3 +281,20 @@ func test_the_foes_bond_is_not_scaled_by_the_players_bond_gain() -> void:
 		gained.append(_foe(e).creature.bond - bond_before)
 	assert_int(gained[0]).is_greater(0)  # the foe does earn Bond for the knockout
 	assert_int(gained[1]).is_equal(gained[0])
+
+
+func test_knocking_out_your_own_ally_earns_no_knockout_credit() -> void:
+	# `quake` hits everyone, so it can finish a 1 HP ally. Only a blow from the other side sets last_hit_by, so the
+	# ally's fall credits nobody: no knockout Bond and no knockout Affinity (the hit on the foe still counts once).
+	var a := FixtureDB.make(db, "blob", 10, ["quake"])
+	var b := FixtureDB.make(db, "blob", 10, ["hit"])
+	var e: BattleEngine = FixtureDB.engine(db, [a, b], [FixtureDB.make(db, "tank", 10, ["hit"])], 2, 1)
+	var me: Battler = e.sides[0].active()[0]
+	var ally: Battler = e.sides[0].active()[1]
+	ally.creature.hp = 1
+	var bond_before := me.creature.bond
+	e.resolve_round([BattleAction.use_move(me.bid, "quake", -1), BattleAction.pass_turn(ally.bid)])
+	assert_bool(ally.fainted).is_true()
+	assert_int(ally.last_hit_by).is_equal(-1)
+	assert_int(me.creature.bond - bond_before).is_equal(0)
+	assert_int(int(e.rewards.affinity_log.get(me.bid, {}).get("striker", 0))).is_equal(1)  # one hit_dealt, on the foe

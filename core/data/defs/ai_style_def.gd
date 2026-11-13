@@ -1,7 +1,7 @@
 class_name AiStyleDef
 extends RefCounted
-## One AI style: a profile of weights that BattleAI reads (see data/ai_styles.json and "AI styles" in
-## documentation/battle-engine.md). 1.0 means "as the tactician does today".
+## One AI style: a profile of weights that BattleAI reads (see data/ai_styles.json and documentation/ai.md).
+## 1.0 means "as the tactician does today".
 
 var id: String
 var name: String

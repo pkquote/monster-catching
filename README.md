@@ -16,8 +16,11 @@ Design spec: [documentation/specs/2026-11-03-monster-rpg-design.md](documentatio
 Content reference (every creature, move, item, status, field state, reaction, passive, AI style, tamer, encounter and achievement):
 [documentation/compendium.md](documentation/compendium.md). It is generated from `data/` by `tools/generate_compendium.gd` (via `tools/compendium_builder.gd`), so don't edit it by hand. Rules and Balance come first, then Types through Held items, Moves, Items, Creatures, AI Styles, Tamers, Encounters and Achievements.
 
-Battle engine reference (API, round order, formulas, passives and their triggers, events, effect ops, AI styles and swapping):
+Battle engine reference (API, round order, formulas, passives and their triggers, events, effect ops, tests):
 [documentation/battle-engine.md](documentation/battle-engine.md)
+
+Battle AI (the styles, how moves, Rest and swaps are scored, what it values from passives, held items and triggers):
+[documentation/ai.md](documentation/ai.md)
 
 Building maps (painting tiles, placing doors, NPCs, items, tamers, triggers; checking them):
 [documentation/map-building.md](documentation/map-building.md)

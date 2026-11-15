@@ -108,7 +108,8 @@
 		{"level": 1, "move": "ember_flick"},
 		{"level": 1, "move": "scorch_field"},
 		{"level": 1, "move": "haunt"},
-		{"level": 16, "move": "wail"}
+		{"level": 16, "move": "wail"},
+		{"level": 20, "move": "spirit_touch"}
 	  ],
 	  "growth_rates": {
 		"sdef": "fast",

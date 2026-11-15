@@ -486,7 +486,7 @@ Grouped by type. Physical moves use P.Atk vs P.Def; special moves use S.Atk vs S
 | Move | Id | Cat. | Power | Cost | Acc | Pri | Target | Effects | Learned by |
 |---|---|---|---|---|---|---|---|---|---|
 | **Haunt** | `haunt` | Status | — | 4 | — | 0 | Enemy side | Applies Haunted to the enemy side<br>*Calls restless spirits onto the enemy side.* | Cinderwisp, Mossweaver |
-| **Spirit Touch** | `spirit_touch` | Physical | 40 | 2 | 100% | 0 | One enemy | Damage<br>*A chilling touch from beyond.* | — |
+| **Spirit Touch** | `spirit_touch` | Physical | 40 | 2 | 100% | 0 | One enemy | Damage<br>*A chilling touch from beyond.* | Cinderwisp |
 | **Wail** | `wail` | Special | 50 | 4 | 100% | 0 | One enemy | Damage<br>*A mournful cry that rattles the soul.* | Cinderwisp, Mossweaver |
 
 ### Grass moves
@@ -638,6 +638,7 @@ Base stats. *Total* sums the six battle stats (HP to Spd); Luck, Resolve and Sta
 | 1 | Scorch Field | Fire | Status | — | 4 | — |
 | 1 | Haunt | Ghost | Status | — | 4 | — |
 | 16 | Wail | Ghost | Special | 50 | 4 | 100% |
+| 20 | Spirit Touch | Ghost | Physical | 40 | 2 | 100% |
 
 ### Emberkit
 

@@ -23,7 +23,7 @@ Non-goals: moving any data file; changing content; tests for the test pack (`dat
 
 | Topic | Decision |
 |---|---|
-| Where | `tests/data/test_content_reachability.gd` for the guards, with their logic in `tools/content_audit.gd` (`ContentAudit`, unit-tested on synthetic data in `tests/tools/test_content_audit.gd`); `tools/species_scaffold.gd` (a pure builder, class `SpeciesScaffold`) and `tools/new_species_line.gd` (the runner) for the scaffold |
+| Where | `tests/data/test_content_reachability.gd` for the guards, with their logic in `tools/content_audit.gd` (`ContentAudit`, unit-tested on synthetic data in `tests/tools/test_content_audit.gd`); `tools/species_scaffold.gd` (class `SpeciesScaffold`: a pure `build` and a `write_line` that validates before writing) and `tools/new_species_line.gd` (the runner) for the scaffold |
 | Data scanned | Shipped data only (`res://data`, `res://dialogue`). Map scenes `res://game/maps/*.tscn` as text, ignoring `test_*` maps |
 | Reachability | Every shipped species is obtainable: given by dialogue (`Story.give_creature("id"`), found in an encounter table that some location uses (`data/locations.json`), or the evolution target (`growth.into`) of an obtainable species, repeated until nothing changes |
 | Orphan passives | Every shipped passive is some species' `passives` entry or `affinity_passives` value |

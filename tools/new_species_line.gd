@@ -30,15 +30,14 @@ func _run() -> int:
 	if name == "":
 		printerr("new_species_line: --name=<snake_case> is required")
 		return 1
-	var loaded := DataLoader.load_database("res://data", "res://dialogue")
-	if not loaded.ok():
-		for e in loaded.errors:
+	var errs := PackedStringArray()
+	var raw := DataLoader.read_raw("res://data", errs)
+	if not errs.is_empty():
+		for e in errs:
 			printerr(e)
 		printerr("new_species_line: fix the existing data first")
 		return 1
-	var errs := PackedStringArray()
-	var raw := DataLoader.read_raw("res://data", errs)
-	var written := SpeciesScaffold.write_line(raw, loaded.db, OUT_DIR, name, types, stages)
+	var written := SpeciesScaffold.write_line(raw, OUT_DIR, name, types, stages)
 	if not written.ok:
 		printerr("new_species_line: " + written.error)
 		return 1

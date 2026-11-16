@@ -3,7 +3,7 @@ extends RefCounted
 ## The M9 content guards as pure functions: each takes a Database (and, where the answer lives in
 ## dialogue or map scenes, their source text) and returns a sorted Array of offending ids; empty is clean.
 ## Used by tests/data/test_content_reachability.gd. Item and gift detection searches source text for
-## the quoted id, so renaming an id in a dialogue or scene must keep the string.
+## specific call and property patterns, so renaming an id in a dialogue or scene must keep the string.
 
 const DIALOGUE_ROOT := "res://dialogue"
 const MAPS_ROOT := "res://game/maps"
@@ -30,7 +30,7 @@ static func shipped_text() -> String:
 ## Species nobody can obtain: not given by dialogue, not in a table some location uses, and not an
 ## evolution (repeated) of one that is.
 static func unobtainable_species(db: Database, source: String) -> Array:
-	var text := giving_text(source)
+	var text := _without_comments(source)
 	var reached := {}
 	for id in db.ids("creatures"):
 		if text.contains('give_creature("%s"' % id):
@@ -49,12 +49,7 @@ static func unobtainable_species(db: Database, source: String) -> Array:
 				if not reached.has(g.into):
 					reached[g.into] = true
 					changed = true
-	var out: Array = []
-	for id in db.ids("creatures"):
-		if not reached.has(id):
-			out.append(id)
-	out.sort()
-	return out
+	return _missing(db.ids("creatures"), reached)
 
 
 static func orphan_passives(db: Database) -> Array:
@@ -65,22 +60,15 @@ static func orphan_passives(db: Database) -> Array:
 			used[p] = true
 		for p in c.affinity_passives.values():
 			used[p] = true
-	var out: Array = []
-	for id in db.ids("passives"):
-		if not used.has(id):
-			out.append(id)
-	out.sort()
-	return out
+	return _missing(db.ids("passives"), used)
 
 
+## Items nothing gives, sells or places. Placing is an allowlist of the three ways content supplies an
+## item: `give_item("id"` in dialogue, an `item = "id"` pickup property, and a shop
+## `stock = PackedStringArray(...)`. Any other mention of the id (a check, a removal, a flag) does not count.
 static func orphan_items(db: Database, source: String) -> Array:
-	var text := giving_text(source)
-	var out: Array = []
-	for id in db.ids("items"):
-		if not text.contains('"%s"' % id):
-			out.append(id)
-	out.sort()
-	return out
+	var placed := _placed_item_ids(_without_comments(source))
+	return _missing(db.ids("items"), placed)
 
 
 static func unused_encounters(db: Database) -> Array:
@@ -88,12 +76,7 @@ static func unused_encounters(db: Database) -> Array:
 	for loc in db.ids("locations"):
 		for t in db.location(loc).areas:
 			used[t] = true
-	var out: Array = []
-	for id in db.ids("encounters"):
-		if not used.has(id):
-			out.append(id)
-	out.sort()
-	return out
+	return _missing(db.ids("encounters"), used)
 
 
 ## Moves some species could have (it has the move's type) but nobody learns. The fallback move is excluded.
@@ -115,6 +98,16 @@ static func orphan_moves(db: Database) -> Array:
 	return out
 
 
+## The ids not in `used` (a Dictionary keyed by id), sorted.
+static func _missing(ids, used: Dictionary) -> Array:
+	var out: Array = []
+	for id in ids:
+		if not used.has(id):
+			out.append(id)
+	out.sort()
+	return out
+
+
 static func _walk(dir: String, suffix: String, out: Array) -> void:
 	for f in DirAccess.get_files_at(dir):
 		if f.ends_with(suffix):
@@ -123,13 +116,23 @@ static func _walk(dir: String, suffix: String, out: Array) -> void:
 		_walk(dir.path_join(d), suffix, out)
 
 
-## `source` without what cannot supply content: comment lines (`#` in dialogue, `;` in scenes) and item
-## checks or removals (`has_item("x"`, `take_item("x"`), which name an item without providing it.
-static func giving_text(source: String) -> String:
+## `source` without its comment lines (`#` in dialogue, `;` in scenes).
+static func _without_comments(source: String) -> String:
 	var kept := PackedStringArray()
 	for line in source.split("\n"):
 		var s := line.strip_edges(true, false)
 		if not (s.begins_with("#") or s.begins_with(";")):
 			kept.append(line)
-	var rx := RegEx.create_from_string(r'(has_item|take_item)\("[^"]*"')
-	return rx.sub("\n".join(kept), "", true)
+	return "\n".join(kept)
+
+
+static func _placed_item_ids(text: String) -> Dictionary:
+	var placed := {}
+	var id_rx := RegEx.create_from_string(r'"([a-z0-9_]+)"')
+	for pattern in [r'give_item\("([a-z0-9_]+)"', r'\bitem = "([a-z0-9_]+)"']:
+		for m in RegEx.create_from_string(pattern).search_all(text):
+			placed[m.get_string(1)] = true
+	for m in RegEx.create_from_string(r'\bstock = PackedStringArray\(([^)]*)\)').search_all(text):
+		for q in id_rx.search_all(m.get_string(1)):
+			placed[q.get_string(1)] = true
+	return placed

@@ -134,30 +134,36 @@ func test_fallback_move_is_never_orphan() -> void:
 
 # --- scanning ---
 
-func test_shipped_files_skip_test_maps_and_text_reads_dialogue() -> void:
+func test_shipped_files_include_dialogue_and_maps_and_the_text_reads_them() -> void:
 	var files := ContentAudit.shipped_files()
 	assert_bool(files.any(func(p: String) -> bool: return p.ends_with("story.dialogue"))).is_true()
 	assert_bool(files.any(func(p: String) -> bool: return p.ends_with("town_01_center.tscn"))).is_true()
-	assert_bool(files.any(func(p: String) -> bool: return p.get_file().begins_with("test_"))).is_false()
 	assert_str(ContentAudit.shipped_text()).contains('Story.give_creature("tidepup"')
 
 
 func test_comments_and_item_checks_do_not_count_as_giving() -> void:
-	var raw := _raw()
 	var text := "\n".join([
 		'# $> Story.give_item("tonic")',
 		'\t; stock = PackedStringArray("seed")',
 		'$> Story.has_item("potion")',
 		'$> Story.take_item("net", 2)',
+		'$> Story.count_item("master_cage")',
 		'# $> Story.give_creature("flame", 5)',
 		'$> Story.give_item("cage")',
 	])
-	var db := _db(raw)
-	var items := ContentAudit.orphan_items(db, text)
-	for id: String in ["tonic", "seed", "potion", "net"]:
-		assert_array(items).contains([id])
-	assert_array(items).not_contains(["cage"])
-	assert_array(ContentAudit.unobtainable_species(db, text)).contains(["flame"])
+	var db := _db(_raw())
+	assert_array(ContentAudit.orphan_items(db, text)).is_equal(_except(db, "items", ["cage"]))
+	assert_array(ContentAudit.unobtainable_species(db, text)).is_equal(_except(db, "creatures", []))
+
+
+func test_items_are_placed_by_give_item_the_item_property_and_stock() -> void:
+	var text := "\n".join([
+		'$> Story.give_item("tonic", 5)',
+		'item = "potion"',
+		'stock = PackedStringArray("seed", "net")',
+	])
+	var db := _db(_raw())
+	assert_array(ContentAudit.orphan_items(db, text)).is_equal(["cage", "master_cage"])
 
 
 func test_a_cycle_reached_from_a_gift_is_obtainable_and_terminates() -> void:
@@ -168,12 +174,6 @@ func test_a_cycle_reached_from_a_gift_is_obtainable_and_terminates() -> void:
 	assert_array(out).not_contains(["cyc_a"])
 	assert_array(out).not_contains(["cyc_b"])
 
-
-func test_content_named_only_in_a_test_map_stays_unreachable() -> void:
-	# The text the audit scans must not include any test map's content.
-	var test_map := FileAccess.get_file_as_string("res://game/maps/test_a.tscn")
-	assert_str(test_map).contains('[node name="TestA"')
-	assert_str(ContentAudit.shipped_text()).not_contains('[node name="TestA"')
 
 
 func test_template_and_test_maps_are_not_shipped() -> void:
